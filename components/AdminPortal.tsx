@@ -1,14 +1,17 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PortfolioData, Project } from '../types';
 import { updateAboutMe, addProject, deleteProject } from '../services/storageService';
 
 interface AdminPortalProps {
   data: PortfolioData;
   onRefresh: () => void;
+  onLogout: () => void;
 }
 
-const AdminPortal: React.FC<AdminPortalProps> = ({ data, onRefresh }) => {
+const AdminPortal: React.FC<AdminPortalProps> = ({ data, onRefresh, onLogout }) => {
+  const navigate = useNavigate();
   const [aboutText, setAboutText] = useState(data.aboutMe);
   const [isUploading, setIsUploading] = useState(false);
   const [activeTab, setActiveTab] = useState<'content' | 'deployment'>('content');
@@ -77,6 +80,11 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ data, onRefresh }) => {
     setIsUploading(false);
   };
 
+  const handleLogout = () => {
+    onLogout();
+    navigate('/');
+  };
+
   return (
     <div className="max-w-6xl mx-auto py-40 px-8 space-y-24 font-sans bg-white">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -88,7 +96,7 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ data, onRefresh }) => {
           </div>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-end">
           <button 
             onClick={() => setActiveTab('content')}
             className={`px-6 py-3 text-[10px] uppercase tracking-widest font-bold border-4 border-midnight transition-colors ${activeTab === 'content' ? 'bg-midnight text-white' : 'bg-white text-midnight hover:bg-mist'}`}
@@ -100,6 +108,12 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ data, onRefresh }) => {
             className={`px-6 py-3 text-[10px] uppercase tracking-widest font-bold border-4 border-midnight transition-colors ${activeTab === 'deployment' ? 'bg-midnight text-white' : 'bg-white text-midnight hover:bg-citron'}`}
           >
             Domain Setup
+          </button>
+          <button 
+            onClick={handleLogout}
+            className="px-6 py-3 text-[10px] uppercase tracking-widest font-bold border-4 border-midnight bg-white text-midnight hover:bg-red-500 hover:text-white transition-colors"
+          >
+            Logout
           </button>
         </div>
       </header>

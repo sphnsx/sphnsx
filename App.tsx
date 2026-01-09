@@ -180,7 +180,7 @@ const ProjectsPage: React.FC<{ data: PortfolioData }> = ({ data }) => {
                   <ProjectAnimation imageUrl={project.imageUrl} />
                   <div className="absolute bottom-8 right-8 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 bg-white p-6 border-4 border-midnight shadow-[8px_8px_0px_0px_rgba(231,255,110,1)] z-20">
                     <h3 className="text-sm font-bold uppercase tracking-[0.5em]">{project.title}</h3>
-                    <p className="text-[10px] uppercase tracking-widest mt-2 text-midnight/40">{project.year} Series</p>
+                    <p className="text-[10px] uppercase tracking-widest mt-2 text-midnight/40">{project.year}</p>
                   </div>
                   <div className="absolute inset-0 z-10" onContextMenu={e => e.preventDefault()}></div>
                 </Link>
@@ -203,16 +203,49 @@ const NotFoundPage: React.FC = () => (
 );
 
 const AdminWrapper: React.FC<{ data: PortfolioData, onRefresh: () => void }> = ({ data, onRefresh }) => {
+  const AUTH_STORAGE_KEY = 'sphnsx_admin_authenticated';
+  const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+
+  // Check for existing authentication on mount
+  useEffect(() => {
+    const authData = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (authData) {
+      try {
+        const { timestamp } = JSON.parse(authData);
+        const now = Date.now();
+        // Check if session hasn't expired
+        if (now - timestamp < SESSION_DURATION) {
+          setIsAuthenticated(true);
+        } else {
+          // Session expired, clear it
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+        }
+      } catch (e) {
+        // Invalid data, clear it
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+      }
+    }
+  }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (password === ADMIN_PASSWORD) {
       setIsAuthenticated(true);
+      // Store authentication with timestamp
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
+        timestamp: Date.now()
+      }));
     } else {
       alert('Unauthorised access denied.');
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    setIsAuthenticated(false);
   };
 
   if (!isAuthenticated) {
@@ -238,7 +271,7 @@ const AdminWrapper: React.FC<{ data: PortfolioData, onRefresh: () => void }> = (
     );
   }
 
-  return <AdminPortal data={data} onRefresh={onRefresh} />;
+  return <AdminPortal data={data} onRefresh={onRefresh} onLogout={handleLogout} />;
 };
 
 const App: React.FC = () => {
@@ -263,6 +296,7 @@ const App: React.FC = () => {
           <Route path="/project/:id" element={<ProjectDetailsPage data={data} />} />
           <Route path="/about" element={<AboutPage data={data} />} />
           <Route path="/admin" element={<AdminWrapper data={data} onRefresh={refreshData} />} />
+          <Route path="/a" element={<AdminWrapper data={data} onRefresh={refreshData} />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
 
