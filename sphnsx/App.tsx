@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
-import Navbar from './components/Navbar';
+import { HashRouter as Router, Routes, Route, Link, useParams, useNavigate, Navigate } from 'react-router-dom';
+import ShowcaseView from './components/ShowcaseView';
 import AdminPortal from './components/AdminPortal';
 import ProjectAnimation from './components/ProjectAnimation';
-import { PortfolioData, Project } from './types';
+import { PortfolioData } from './types';
 import { getPortfolioData } from './services/storageService';
 import { ADMIN_PASSWORD } from './constants';
 
@@ -28,18 +28,12 @@ const ProtectedImage: React.FC<{ src: string; alt: string; className?: string }>
   );
 };
 
-const AboutPage: React.FC<{ data: PortfolioData }> = ({ data }) => (
-  <main className="min-h-screen pt-24 px-6 pb-16">
-    <div className="max-w-3xl mx-auto">
-      <h1 className="text-4xl font-bold mb-8">About</h1>
-      <p className="text-lg leading-relaxed whitespace-pre-line">{data.aboutMe}</p>
-    </div>
-  </main>
+const AboutRedirect: React.FC = () => (
+  <Navigate to="/" replace state={{ scrollTo: 'about' }} />
 );
 
 const ProjectDetailsPage: React.FC<{ data: PortfolioData }> = ({ data }) => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const project = data.projects.find(p => p.id === id);
 
   if (!project) return (
@@ -51,9 +45,12 @@ const ProjectDetailsPage: React.FC<{ data: PortfolioData }> = ({ data }) => {
   return (
     <main className="min-h-screen pt-24 px-6 pb-16">
       <div className="max-w-4xl mx-auto">
-        <button onClick={() => navigate(-1)} className="text-sm text-gray-600 hover:text-black mb-8">
-          ← Back
-        </button>
+        <Link
+          to="/"
+          className="inline-block font-mono text-xs uppercase tracking-wider border border-black px-4 py-3 mb-8 hover:bg-black hover:text-white transition-colors duration-200"
+        >
+          ← Back to Home
+        </Link>
         <p className="text-sm text-gray-500 mb-2">{project.year}</p>
         <h1 className="text-3xl font-bold mb-6">{project.title}</h1>
         <p className="text-gray-700 whitespace-pre-line mb-12">{project.description}</p>
@@ -74,24 +71,6 @@ const ProjectDetailsPage: React.FC<{ data: PortfolioData }> = ({ data }) => {
     </main>
   );
 };
-
-const ProjectsPage: React.FC<{ data: PortfolioData }> = ({ data }) => (
-  <main className="min-h-screen pt-24 px-6 pb-16">
-    <div className="max-w-4xl mx-auto space-y-12">
-      {data.projects.map((project) => (
-        <div key={project.id}>
-          <Link to={`/project/${project.id}`} className="block">
-            <div className="overflow-hidden bg-gray-100 border border-gray-200">
-              <ProjectAnimation imageUrl={project.imageUrl} />
-            </div>
-            <h2 className="text-xl font-bold mt-4">{project.title}</h2>
-            <p className="text-sm text-gray-500">{project.year}</p>
-          </Link>
-        </div>
-      ))}
-    </div>
-  </main>
-);
 
 const NotFoundPage: React.FC = () => (
   <main className="min-h-screen flex flex-col items-center justify-center p-8 text-center">
@@ -168,23 +147,15 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="min-h-screen bg-white text-gray-900">
-        <Navbar />
+      <div className="min-h-screen bg-white text-black font-sans">
         <Routes>
-          <Route path="/" element={<ProjectsPage data={data} />} />
+          <Route path="/" element={<ShowcaseView data={data} />} />
           <Route path="/project/:id" element={<ProjectDetailsPage data={data} />} />
-          <Route path="/about" element={<AboutPage data={data} />} />
+          <Route path="/about" element={<AboutRedirect />} />
           <Route path="/admin" element={<AdminWrapper data={data} onRefresh={refreshData} />} />
           <Route path="/a" element={<AdminWrapper data={data} onRefresh={refreshData} />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
-        <footer className="px-6 py-8 border-t border-gray-200 text-sm text-gray-500 flex justify-between items-center">
-          <span>© SPHNSX</span>
-          <div className="flex gap-6">
-            <a href="#" className="hover:underline">Instagram</a>
-            <a href="#" className="hover:underline">Contact</a>
-          </div>
-        </footer>
       </div>
     </Router>
   );
