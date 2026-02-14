@@ -1,32 +1,51 @@
 import React from 'react';
-import LeftNav from './LeftNav';
+import ResizableColumn from './ResizableColumn';
 
 interface ThreeColumnLayoutProps {
-  middle: React.ReactNode;
-  right: React.ReactNode;
-  scrollToAbout?: () => void;
-  scrollToContact?: () => void;
+  leftRows: React.ReactNode[];
+  middleRows: React.ReactNode[];
+  rightRows: React.ReactNode[];
+  leftHeights: number[];
+  middleHeights: number[];
+  rightHeights: number[];
+  onLeftHeightsChange: (heights: number[]) => void;
+  onMiddleHeightsChange: (heights: number[]) => void;
+  onRightHeightsChange: (heights: number[]) => void;
 }
 
 const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
-  middle,
-  right,
-  scrollToAbout,
-  scrollToContact,
+  leftRows,
+  middleRows,
+  rightRows,
+  leftHeights,
+  middleHeights,
+  rightHeights,
+  onLeftHeightsChange,
+  onMiddleHeightsChange,
+  onRightHeightsChange,
 }) => {
   return (
     <div className="h-screen w-full flex overflow-hidden bg-white text-black">
-      {/* Left: 1/5 - Navigation */}
-      <aside className="w-[20%] min-w-[160px] shrink-0 h-full overflow-y-auto overflow-x-hidden">
-        <LeftNav scrollToAbout={scrollToAbout} scrollToContact={scrollToContact} />
+      <aside className="w-[20%] min-w-[160px] shrink-0 h-full border-r border-black">
+        <ResizableColumn
+          rows={leftRows}
+          heights={leftHeights}
+          onHeightsChange={onLeftHeightsChange}
+        />
       </aside>
-      {/* Middle: 2/5 */}
-      <main className="w-[40%] shrink-0 h-full overflow-y-auto overflow-x-hidden border-r border-black">
-        {middle}
+      <main className="w-[40%] shrink-0 h-full border-r border-black">
+        <ResizableColumn
+          rows={middleRows}
+          heights={middleHeights}
+          onHeightsChange={onMiddleHeightsChange}
+        />
       </main>
-      {/* Right: 2/5 */}
-      <aside className="w-[40%] shrink-0 h-full overflow-y-auto overflow-x-hidden">
-        {right}
+      <aside className="w-[40%] shrink-0 h-full">
+        <ResizableColumn
+          rows={rightRows}
+          heights={rightHeights}
+          onHeightsChange={onRightHeightsChange}
+        />
       </aside>
     </div>
   );

@@ -1,11 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Link, useParams, useNavigate, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link, useParams } from 'react-router-dom';
 import ShowcaseView from './components/ShowcaseView';
 import AdminPortal from './components/AdminPortal';
-import ProjectAnimation from './components/ProjectAnimation';
 import { PortfolioData } from './types';
 import { getPortfolioData } from './services/storageService';
 import { ADMIN_PASSWORD } from './constants';
+
+const BackButton: React.FC = () => (
+  <Link
+    to="/"
+    className="fixed top-0 left-0 z-50 m-4 font-mono text-xs uppercase tracking-wider border border-black px-4 py-3 bg-white hover:bg-black hover:text-white transition-colors duration-200"
+  >
+    ← Back
+  </Link>
+);
+
+const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="fixed inset-0 bg-white overflow-y-auto">
+    <BackButton />
+    {children}
+  </div>
+);
 
 const ProtectedImage: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
   if (!src) return (
@@ -28,49 +43,74 @@ const ProtectedImage: React.FC<{ src: string; alt: string; className?: string }>
   );
 };
 
-const AboutRedirect: React.FC = () => (
-  <Navigate to="/" replace state={{ scrollTo: 'about' }} />
-);
-
 const ProjectDetailsPage: React.FC<{ data: PortfolioData }> = ({ data }) => {
   const { id } = useParams<{ id: string }>();
   const project = data.projects.find(p => p.id === id);
 
   if (!project) return (
-    <main className="min-h-screen pt-24 px-6">
-      <p>Project not found.</p>
-    </main>
+    <FullScreenDetail>
+      <main className="pt-24 px-6">
+        <p>Project not found.</p>
+      </main>
+    </FullScreenDetail>
   );
 
   return (
-    <main className="min-h-screen pt-24 px-6 pb-16">
-      <div className="max-w-4xl mx-auto">
-        <Link
-          to="/"
-          className="inline-block font-mono text-xs uppercase tracking-wider border border-black px-4 py-3 mb-8 hover:bg-black hover:text-white transition-colors duration-200"
-        >
-          ← Back to Home
-        </Link>
-        <p className="text-sm text-gray-500 mb-2">{project.year}</p>
-        <h1 className="text-3xl font-bold mb-6">{project.title}</h1>
-        <p className="text-gray-700 whitespace-pre-line mb-12">{project.description}</p>
-        {project.gallery && project.gallery.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-            {project.gallery.map((img, index) => (
-              <div key={index}>
-                <ProtectedImage src={img} alt={`${project.title} ${index + 1}`} />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="py-16 text-center text-gray-500 border border-dashed border-gray-300">
-            No images in this project.
-          </div>
-        )}
-      </div>
-    </main>
+    <FullScreenDetail>
+      <main className="pt-24 px-6 pb-16">
+        <div className="max-w-4xl mx-auto">
+          <p className="text-sm text-gray-500 mb-2">{project.year}</p>
+          <h1 className="text-3xl font-bold mb-6">{project.title}</h1>
+          <p className="text-gray-700 whitespace-pre-line mb-12">{project.description}</p>
+          {project.gallery && project.gallery.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              {project.gallery.map((img, index) => (
+                <div key={index}>
+                  <ProtectedImage src={img} alt={`${project.title} ${index + 1}`} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-16 text-center text-gray-500 border border-dashed border-gray-300">
+              No images in this project.
+            </div>
+          )}
+        </div>
+      </main>
+    </FullScreenDetail>
   );
 };
+
+const AboutPage: React.FC<{ data: PortfolioData }> = ({ data }) => (
+  <FullScreenDetail>
+    <main className="pt-24 px-6 pb-16">
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">About me</h1>
+        <p className="text-lg leading-relaxed whitespace-pre-line">{data.aboutMe}</p>
+      </div>
+    </main>
+  </FullScreenDetail>
+);
+
+const ContactPage: React.FC = () => (
+  <FullScreenDetail>
+    <main className="pt-24 px-6 pb-16">
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">Contact</h1>
+        <p className="mb-4">
+          <a href="mailto:hello@sphnsx.net" className="underline font-medium">
+            hello@sphnsx.net
+          </a>
+        </p>
+        <p>
+          <a href="#" className="underline font-medium">
+            Instagram
+          </a>
+        </p>
+      </div>
+    </main>
+  </FullScreenDetail>
+);
 
 const NotFoundPage: React.FC = () => (
   <main className="min-h-screen flex flex-col items-center justify-center p-8 text-center">
@@ -151,7 +191,8 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<ShowcaseView data={data} />} />
           <Route path="/project/:id" element={<ProjectDetailsPage data={data} />} />
-          <Route path="/about" element={<AboutRedirect />} />
+          <Route path="/about" element={<AboutPage data={data} />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="/admin" element={<AdminWrapper data={data} onRefresh={refreshData} />} />
           <Route path="/a" element={<AdminWrapper data={data} onRefresh={refreshData} />} />
           <Route path="*" element={<NotFoundPage />} />
