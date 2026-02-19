@@ -132,7 +132,7 @@ const ShowcaseView: React.FC<{ data: PortfolioData }> = ({ data }) => {
         title="Contact"
         hoverColor={leftColors[1]}
         preview={
-          <div className="px-3 mt-4">
+          <div className="pl-5 pr-4 mt-4">
             <span className="font-mono text-xs text-neutral-500 uppercase tracking-wider">
               Get in touch
             </span>

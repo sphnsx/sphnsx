@@ -21,6 +21,14 @@ export const addProject = (project: Project) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 };
 
+export const updateProject = (id: string, project: Project) => {
+  const data = getPortfolioData();
+  const index = data.projects.findIndex(p => p.id === id);
+  if (index === -1) return;
+  data.projects[index] = { ...project, id };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+};
+
 export const deleteProject = (id: string) => {
   const data = getPortfolioData();
   data.projects = data.projects.filter(p => p.id !== id);

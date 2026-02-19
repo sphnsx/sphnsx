@@ -17,7 +17,7 @@ const FixedHomeButton: React.FC = () => (
 );
 
 const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="fixed inset-0 bg-white overflow-y-auto">
+  <div className="fixed inset-0 bg-white flex flex-col overflow-hidden">
     {children}
   </div>
 );
@@ -57,21 +57,26 @@ const ProjectDetailsPage: React.FC<{ data: PortfolioData }> = ({ data }) => {
 
   return (
     <FullScreenDetail>
-      <main className="pt-24 px-6 pb-16">
-        <div className="max-w-4xl mx-auto">
-          <p className="text-sm text-gray-500 mb-2">{project.year}</p>
-          <h1 className="text-3xl font-bold mb-6">{project.title}</h1>
-          <div className="mb-12">
-            {project.description
-              .split(/\n\n+/)
-              .map((p) => p.trim())
-              .filter(Boolean)
-              .map((para, i) => (
-                <p key={i} className="text-gray-700 mb-8 last:mb-0">{para}</p>
-              ))}
+      <main className="flex-1 min-h-0 flex">
+        <div className="w-2/5 min-w-0 overflow-y-auto pt-24 px-6 pb-16">
+          <div className="max-w-xl">
+            <p className="text-sm text-gray-500 mb-2">{project.year}</p>
+            <h1 className="text-3xl font-bold mb-6">{project.title}</h1>
+            <div>
+              {project.description
+                .split(/\n\n+/)
+                .map((p) => p.trim())
+                .filter(Boolean)
+                .map((para, i) => (
+                  <p key={i} className="text-gray-700 mb-8 last:mb-0">{para}</p>
+                ))}
+            </div>
           </div>
+        </div>
+        <div className="w-px shrink-0 bg-black" aria-hidden />
+        <div className="w-3/5 min-w-0 overflow-y-auto pt-24 px-6 pb-16">
           {project.gallery && project.gallery.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl">
               {project.gallery.map((img, index) => (
                 <div key={index}>
                   <ProtectedImage src={img} alt={`${project.title} ${index + 1}`} />
@@ -79,7 +84,7 @@ const ProjectDetailsPage: React.FC<{ data: PortfolioData }> = ({ data }) => {
               ))}
             </div>
           ) : (
-            <div className="py-16 text-center text-gray-500 border border-dashed border-gray-300">
+            <div className="h-full min-h-[200px] flex items-center justify-center text-gray-500 border border-dashed border-gray-300">
               No images in this project.
             </div>
           )}
@@ -91,18 +96,24 @@ const ProjectDetailsPage: React.FC<{ data: PortfolioData }> = ({ data }) => {
 
 const AboutPage: React.FC<{ data: PortfolioData }> = ({ data }) => (
   <FullScreenDetail>
-    <main className="pt-24 px-6 pb-16">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">About me</h1>
-        <div className="space-y-6">
-          {data.aboutMe
-            .split(/\n\n+/)
-            .map((p) => p.trim())
-            .filter(Boolean)
-            .map((para, i) => (
-              <p key={i} className="text-lg leading-relaxed">{para}</p>
-            ))}
+    <main className="flex-1 min-h-0 flex">
+      <div className="w-2/5 min-w-0 overflow-y-auto pt-24 px-6 pb-16">
+        <div className="max-w-xl">
+          <h1 className="text-3xl font-bold mb-8">About me</h1>
+          <div className="space-y-6">
+            {data.aboutMe
+              .split(/\n\n+/)
+              .map((p) => p.trim())
+              .filter(Boolean)
+              .map((para, i) => (
+                <p key={i} className="text-lg leading-relaxed">{para}</p>
+              ))}
+          </div>
         </div>
+      </div>
+      <div className="w-px shrink-0 bg-black" aria-hidden />
+      <div className="w-3/5 min-w-0 overflow-y-auto pt-24 px-6 pb-16 flex items-center justify-center text-gray-400">
+        <span className="text-sm">Images</span>
       </div>
     </main>
   </FullScreenDetail>
@@ -110,19 +121,25 @@ const AboutPage: React.FC<{ data: PortfolioData }> = ({ data }) => (
 
 const ContactPage: React.FC = () => (
   <FullScreenDetail>
-    <main className="pt-24 px-6 pb-16">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Contact</h1>
-        <p className="mb-4">
-          <a href="mailto:sphnsx@aol.com" className="underline font-medium">
-            sphnsx@aol.com
-          </a>
-        </p>
-        <p>
-          <a href="https://www.instagram.com/sphnsx/" target="_blank" rel="noopener noreferrer" className="underline font-medium">
-            Instagram
-          </a>
-        </p>
+    <main className="flex-1 min-h-0 flex">
+      <div className="w-2/5 min-w-0 overflow-y-auto pt-24 px-6 pb-16">
+        <div className="max-w-xl">
+          <h1 className="text-3xl font-bold mb-8">Contact</h1>
+          <p className="mb-4">
+            <a href="mailto:sphnsx@aol.com" className="underline font-medium">
+              sphnsx@aol.com
+            </a>
+          </p>
+          <p>
+            <a href="https://www.instagram.com/sphnsx/" target="_blank" rel="noopener noreferrer" className="underline font-medium">
+              Instagram
+            </a>
+          </p>
+        </div>
+      </div>
+      <div className="w-px shrink-0 bg-black" aria-hidden />
+      <div className="w-3/5 min-w-0 overflow-y-auto pt-24 px-6 pb-16 flex items-center justify-center text-gray-400">
+        <span className="text-sm">Images</span>
       </div>
     </main>
   </FullScreenDetail>

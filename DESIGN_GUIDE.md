@@ -40,3 +40,31 @@ Single source of truth for the SPHNSX site design. Add new rules as new sections
 - **Primary (UI/body):** **Inter** (sans-serif). Use for headings, body text, and general UI.
 - **Secondary (labels, captions, code-like):** **JetBrains Mono** (monospace). Use for labels, captions, and code-like emphasis.
 - Use these font family names site-wide. Update this guide whenever the fonts change.
+
+## 7. Fixed Home button
+
+- **Position:** Fixed top-left, above all content; remains visible on scroll.
+- **Colour:** One dedicated green only for this button (e.g. `#5EEAD4`). No other element uses this green.
+- **Style:** Filled block, sharp corners; shade/offset to top and left edges only. Mono, uppercase, tracking.
+- **No separate “Home” section** on the home page and no back buttons on detail pages — navigation home is this button only.
+
+## 8. Detail pages (About me, Contact, every project)
+
+- **Full-screen:** Detail view fills the viewport; no shared shell with the three-column home.
+- **Split layout:** A single vertical divider at **2/5** of the width.
+  - **Left (2/5):** Text only — page title, body copy, links (e.g. Contact: email, Instagram). For projects: year, title, description paragraphs.
+  - **Right (3/5):** Images only — project gallery, or about/contact images (or placeholder if none).
+- **Divider:** Vertical line (e.g. 1px black) between the two sides. Each side scrolls independently if content overflows.
+
+## 9. Section hover and palette
+
+- **No grey** for section backgrounds or section blocks; reserve grey only for neutral UI (e.g. placeholders, disabled).
+- **On section hover:** Only the **section title** gets a coloured shade (sharp corners, behind the title text). The section area itself does not fill with colour.
+- **Divider strip:** The horizontal divider between sections uses the same colour on hover (and while dragging), so the divider stays coloured for the whole drag.
+- **One colour per section:** Each section (About me, Contact, each project) is assigned one colour from a fixed **section palette** of six colours. Assignment is random at load and consistent for the session (e.g. shuffled once). Palette: pink, lilac, yellow, teal, blush, purple (exact hexes live in code; see `SECTION_PALETTE` in ShowcaseView).
+
+## 10. Spacing and alignment
+
+- **Left column content:** Align all text and links to the same left margin as the Home button (e.g. 20px / `pl-5`). Section title block: same left padding, with padding around the title for the hover shade.
+- **Vertical rhythm:** Blank row between section title and first line of text; blank row between paragraphs on detail pages (e.g. description split by `\n\n` with spacing between `<p>`s).
+- **Column tops:** Middle and right columns start at the top border. Left column has a top spacer so content begins below the fixed Home button; vertical dividers still run to the top of the layout.

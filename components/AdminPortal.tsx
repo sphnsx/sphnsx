@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PortfolioData, Project } from '../types';
-import { updateAboutMe, addProject, deleteProject } from '../services/storageService';
+import { updateAboutMe, addProject, updateProject, deleteProject } from '../services/storageService';
 
 interface AdminPortalProps {
   data: PortfolioData;
@@ -21,6 +21,8 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ data, onRefresh, onLogout }) 
     gallery: [],
     year: new Date().getFullYear().toString()
   });
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [isEditUploading, setIsEditUploading] = useState(false);
 
   const handleUpdateAbout = () => {
     updateAboutMe(aboutText);
@@ -73,6 +75,53 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ data, onRefresh, onLogout }) 
     setIsUploading(false);
   };
 
+  const handleStartEdit = (p: Project) => {
+    setEditingProject({ ...p });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProject(null);
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProject) return;
+    if (!editingProject.title?.trim()) {
+      alert('Please provide a project title.');
+      return;
+    }
+    if (editingProject.gallery.length === 0) {
+      alert('Please provide at least one image.');
+      return;
+    }
+    try {
+      updateProject(editingProject.id, editingProject);
+      setEditingProject(null);
+      onRefresh();
+      alert('Project updated.');
+    } catch (error) {
+      console.error(error);
+      alert('Failed to update project.');
+    }
+  };
+
+  const handleEditGalleryFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length || !editingProject) return;
+    setIsEditUploading(true);
+    const loadedImages: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(files[i]);
+      });
+      loadedImages.push(base64);
+    }
+    setEditingProject(prev => prev ? { ...prev, imageUrl: loadedImages[0], gallery: loadedImages } : null);
+    setIsEditUploading(false);
+  };
+
   const handleLogout = () => {
     onLogout();
     navigate('/');
@@ -118,6 +167,76 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ data, onRefresh, onLogout }) 
             </button>
           </section>
 
+          {editingProject ? (
+          <section>
+            <h2 className="text-lg font-bold mb-4">Edit project</h2>
+            <form onSubmit={handleSaveEdit} className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <input
+                    type="text"
+                    className="w-full p-3 border border-gray-300 rounded"
+                    value={editingProject.title}
+                    onChange={(e) => setEditingProject({ ...editingProject, title: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                  <input
+                    type="text"
+                    className="w-full p-3 border border-gray-300 rounded"
+                    value={editingProject.year}
+                    onChange={(e) => setEditingProject({ ...editingProject, year: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  className="w-full p-3 border border-gray-300 rounded h-32"
+                  value={editingProject.description}
+                  onChange={(e) => setEditingProject({ ...editingProject, description: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Images (select new files to replace)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-gray-900 file:text-white file:text-sm"
+                  onChange={handleEditGalleryFiles}
+                />
+              </div>
+              {editingProject.gallery.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {editingProject.gallery.map((img, i) => (
+                    <img key={i} src={img} alt="" className="h-20 w-auto rounded border border-gray-200" />
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={isEditUploading}
+                  className="px-6 py-3 bg-gray-900 text-white rounded font-medium disabled:opacity-50"
+                >
+                  {isEditUploading ? 'Processing…' : 'Save changes'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded font-medium hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </section>
+        ) : (
           <section>
             <h2 className="text-lg font-bold mb-4">New project</h2>
             <form onSubmit={handleAddProject} className="space-y-6">
@@ -177,6 +296,7 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ data, onRefresh, onLogout }) 
               </button>
             </form>
           </section>
+        )}
 
           <section>
             <h2 className="text-lg font-bold mb-4">Published projects</h2>
@@ -196,12 +316,20 @@ const AdminPortal: React.FC<AdminPortalProps> = ({ data, onRefresh, onLogout }) 
                       <p className="text-sm text-gray-500">{p.year} · {p.gallery.length} images</p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDelete(p.id)}
-                    className="text-sm text-red-600 hover:underline"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleStartEdit(p)}
+                      className="text-sm text-gray-700 hover:underline"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(p.id)}
+                      className="text-sm text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

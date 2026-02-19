@@ -25,8 +25,8 @@ const ModularSection: React.FC<ModularSectionProps> = ({
       onMouseLeave={() => setIsHovered(false)}
       className={`block w-full h-full text-left overflow-hidden bg-white relative ${className}`}
     >
-      <div className="absolute top-0 left-0 p-4 z-10">
-        <span className="relative inline-block pt-0 pb-1.5 px-3">
+      <div className="absolute top-0 left-0 pl-5 pt-4 pr-4 pb-4 z-10">
+        <span className="relative inline-block pt-0 pb-1.5 pl-0 pr-3">
           {hoverColor && isHovered && (
             <div
               className="absolute inset-0 rounded-none"

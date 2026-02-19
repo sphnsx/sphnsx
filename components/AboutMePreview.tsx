@@ -30,7 +30,7 @@ const AboutMePreview: React.FC<AboutMePreviewProps> = ({ text }) => {
   const showPlaceholder = !displayText;
 
   return (
-    <div ref={wrapperRef} className="h-full w-full overflow-hidden px-3 mt-4">
+    <div ref={wrapperRef} className="h-full w-full overflow-hidden pl-5 pr-4 mt-4">
       {showPlaceholder ? (
         <p className="text-sm text-neutral-400 leading-relaxed">Introduction…</p>
       ) : (
