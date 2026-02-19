@@ -4,20 +4,20 @@ import ShowcaseView from './components/ShowcaseView';
 import AdminPortal from './components/AdminPortal';
 import { PortfolioData } from './types';
 import { getPortfolioData } from './services/storageService';
-import { ADMIN_PASSWORD } from './constants';
+import { ADMIN_PASSWORD, HOME_BUTTON_GREEN } from './constants';
 
-const BackButton: React.FC = () => (
+const FixedHomeButton: React.FC = () => (
   <Link
     to="/"
-    className="fixed top-0 left-0 z-50 m-4 font-mono text-xs uppercase tracking-wider border border-black px-4 py-3 bg-white hover:bg-black hover:text-white transition-colors duration-200"
+    className="fixed top-0 left-0 z-[100] font-mono text-base uppercase tracking-wider text-black py-4 px-5 transition-opacity hover:opacity-90"
+    style={{ backgroundColor: HOME_BUTTON_GREEN }}
   >
-    ← Back
+    Home
   </Link>
 );
 
 const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="fixed inset-0 bg-white overflow-y-auto">
-    <BackButton />
     {children}
   </div>
 );
@@ -61,7 +61,15 @@ const ProjectDetailsPage: React.FC<{ data: PortfolioData }> = ({ data }) => {
         <div className="max-w-4xl mx-auto">
           <p className="text-sm text-gray-500 mb-2">{project.year}</p>
           <h1 className="text-3xl font-bold mb-6">{project.title}</h1>
-          <p className="text-gray-700 whitespace-pre-line mb-12">{project.description}</p>
+          <div className="mb-12">
+            {project.description
+              .split(/\n\n+/)
+              .map((p) => p.trim())
+              .filter(Boolean)
+              .map((para, i) => (
+                <p key={i} className="text-gray-700 mb-8 last:mb-0">{para}</p>
+              ))}
+          </div>
           {project.gallery && project.gallery.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
               {project.gallery.map((img, index) => (
@@ -86,7 +94,15 @@ const AboutPage: React.FC<{ data: PortfolioData }> = ({ data }) => (
     <main className="pt-24 px-6 pb-16">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">About me</h1>
-        <p className="text-lg leading-relaxed whitespace-pre-line">{data.aboutMe}</p>
+        <div className="space-y-6">
+          {data.aboutMe
+            .split(/\n\n+/)
+            .map((p) => p.trim())
+            .filter(Boolean)
+            .map((para, i) => (
+              <p key={i} className="text-lg leading-relaxed">{para}</p>
+            ))}
+        </div>
       </div>
     </main>
   </FullScreenDetail>
@@ -98,12 +114,12 @@ const ContactPage: React.FC = () => (
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Contact</h1>
         <p className="mb-4">
-          <a href="mailto:hello@sphnsx.net" className="underline font-medium">
-            hello@sphnsx.net
+          <a href="mailto:sphnsx@aol.com" className="underline font-medium">
+            sphnsx@aol.com
           </a>
         </p>
         <p>
-          <a href="#" className="underline font-medium">
+          <a href="https://www.instagram.com/sphnsx/" target="_blank" rel="noopener noreferrer" className="underline font-medium">
             Instagram
           </a>
         </p>
@@ -188,6 +204,7 @@ const App: React.FC = () => {
   return (
     <Router>
       <div className="min-h-screen bg-white text-black font-sans">
+        <FixedHomeButton />
         <Routes>
           <Route path="/" element={<ShowcaseView data={data} />} />
           <Route path="/project/:id" element={<ProjectDetailsPage data={data} />} />

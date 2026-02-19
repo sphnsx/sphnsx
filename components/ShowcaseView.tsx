@@ -2,9 +2,21 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ThreeColumnLayout from './ThreeColumnLayout';
 import ModularSection from './ModularSection';
+import AboutMePreview from './AboutMePreview';
 import { PortfolioData, Project } from '../types';
 
 const STORAGE_KEYS = { left: 'sphnsx_left_heights', middle: 'sphnsx_middle_heights', right: 'sphnsx_right_heights' };
+
+const SECTION_PALETTE = ['#FF0080', '#C8A2C8', '#F5DD7B', '#70D1D1', '#FFDDE1', '#6A0DAD'] as const;
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 function equalSplit(n: number): number[] {
   const pct = 100 / n;
@@ -33,10 +45,11 @@ function saveColumnHeights(column: 'left' | 'middle' | 'right', heights: number[
   } catch {}
 }
 
-const ProjectPreview: React.FC<{ project: Project }> = ({ project }) => (
+const ProjectPreview: React.FC<{ project: Project; hoverColor?: string }> = ({ project, hoverColor }) => (
   <ModularSection
     to={`/project/${project.id}`}
     title={project.title}
+    hoverColor={hoverColor}
     preview={
       project.imageUrl ? (
         <img
@@ -61,9 +74,20 @@ const ShowcaseView: React.FC<{ data: PortfolioData }> = ({ data }) => {
   const middleProjects = data.projects.slice(0, mid);
   const rightProjects = data.projects.slice(mid);
 
-  const leftLen = 3;
-  const middleLen = 1 + middleProjects.length;
-  const rightLen = rightProjects.length + 1;
+  const leftLen = 2;
+  const middleLen = middleProjects.length;
+  const rightLen = rightProjects.length;
+  const totalSections = leftLen + middleLen + rightLen;
+
+  const { leftColors, middleColors, rightColors } = useMemo(() => {
+    const shuffled = shuffle([...SECTION_PALETTE]);
+    const sectionColors = Array.from({ length: totalSections }, (_, i) => shuffled[i % 6]!);
+    return {
+      leftColors: sectionColors.slice(0, leftLen),
+      middleColors: sectionColors.slice(leftLen, leftLen + middleLen),
+      rightColors: sectionColors.slice(leftLen + middleLen, totalSections),
+    };
+  }, [totalSections, leftLen, middleLen, rightLen]);
 
   const saved = useMemo(
     () => loadHeights(leftLen, middleLen, rightLen),
@@ -95,69 +119,44 @@ const ShowcaseView: React.FC<{ data: PortfolioData }> = ({ data }) => {
 
   const leftRows = useMemo(
     () => [
-      <Link
-        key="home"
-        to="/"
-        className="block h-full flex items-start p-4 font-mono text-xs uppercase tracking-wider hover:bg-neutral-100 transition-colors"
-      >
-        Home
-      </Link>,
-      <Link
-        key="about"
-        to="/about"
-        className="block h-full flex items-start p-4 font-mono text-xs uppercase tracking-wider hover:bg-neutral-100 transition-colors"
-      >
-        About me
-      </Link>,
-      <Link
-        key="contact"
-        to="/contact"
-        className="block h-full flex items-start p-4 font-mono text-xs uppercase tracking-wider hover:bg-neutral-100 transition-colors"
-      >
-        Contact
-      </Link>,
-    ],
-    []
-  );
-
-  const middleRows = useMemo(
-    () => [
       <ModularSection
         key="about"
         to="/about"
         title="About me"
-        preview={
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="w-24 h-24 border-2 border-black bg-neutral-200 flex items-center justify-center font-mono text-2xl font-semibold shrink-0">
-              S
-            </div>
-          </div>
-        }
+        hoverColor={leftColors[0]}
+        preview={<AboutMePreview text={data.aboutMe} />}
       />,
-      ...middleProjects.map((project) => (
-        <ProjectPreview key={project.id} project={project} />
-      )),
-    ],
-    [data, middleProjects]
-  );
-
-  const rightRows = useMemo(
-    () => [
-      ...rightProjects.map((project) => (
-        <ProjectPreview key={project.id} project={project} />
-      )),
       <ModularSection
         key="contact"
         to="/contact"
         title="Contact"
+        hoverColor={leftColors[1]}
         preview={
-          <span className="font-mono text-xs text-neutral-500 uppercase tracking-wider">
-            Get in touch
-          </span>
+          <div className="px-3 mt-4">
+            <span className="font-mono text-xs text-neutral-500 uppercase tracking-wider">
+              Get in touch
+            </span>
+          </div>
         }
       />,
     ],
-    [data, rightProjects]
+    [data, leftColors]
+  );
+
+  const middleRows = useMemo(
+    () =>
+      middleProjects.map((project, i) => (
+        <ProjectPreview key={project.id} project={project} hoverColor={middleColors[i]} />
+      )),
+    [data, middleProjects, middleColors]
+  );
+
+  const rightRows = useMemo(
+    () =>
+      rightProjects.map((project, i) => (
+        <ProjectPreview key={project.id} project={project} hoverColor={rightColors[i]} />
+      )),
+    [data, rightProjects, rightColors]
   );
 
   return (
@@ -168,6 +167,9 @@ const ShowcaseView: React.FC<{ data: PortfolioData }> = ({ data }) => {
       leftHeights={leftHeights}
       middleHeights={middleHeights}
       rightHeights={rightHeights}
+      leftColors={leftColors}
+      middleColors={middleColors}
+      rightColors={rightColors}
       onLeftHeightsChange={onLeftHeightsChange}
       onMiddleHeightsChange={onMiddleHeightsChange}
       onRightHeightsChange={onRightHeightsChange}

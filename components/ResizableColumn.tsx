@@ -5,6 +5,7 @@ interface ResizableColumnProps {
   rows: React.ReactNode[];
   heights: number[];
   onHeightsChange: (heights: number[]) => void;
+  sectionColors?: string[];
   className?: string;
 }
 
@@ -12,6 +13,7 @@ const ResizableColumn: React.FC<ResizableColumnProps> = ({
   rows,
   heights,
   onHeightsChange,
+  sectionColors,
   className = '',
 }) => {
   return (
@@ -29,6 +31,7 @@ const ResizableColumn: React.FC<ResizableColumnProps> = ({
               index={i}
               heights={heights}
               onHeightsChange={onHeightsChange}
+              hoverColor={sectionColors?.[i]}
             />
           )}
         </React.Fragment>

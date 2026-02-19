@@ -8,14 +8,17 @@ interface DraggableDividerProps {
   index: number;
   heights: number[];
   onHeightsChange: (heights: number[]) => void;
+  hoverColor?: string;
 }
 
 const DraggableDivider: React.FC<DraggableDividerProps> = ({
   index,
   heights,
   onHeightsChange,
+  hoverColor,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const startYRef = useRef(0);
   const startHeightsRef = useRef<number[]>([0, 0]);
 
@@ -70,8 +73,14 @@ const DraggableDivider: React.FC<DraggableDividerProps> = ({
       role="separator"
       aria-orientation="horizontal"
       onMouseDown={handleMouseDown}
-      className="shrink-0 border-t border-black cursor-row-resize select-none flex items-center justify-center hover:bg-neutral-200 transition-colors"
-      style={{ height: HIT_HEIGHT_PX, minHeight: HIT_HEIGHT_PX }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="shrink-0 border-t border-black cursor-row-resize select-none flex items-center justify-center transition-colors"
+      style={{
+        height: HIT_HEIGHT_PX,
+        minHeight: HIT_HEIGHT_PX,
+        backgroundColor: (isHovered || isDragging) && hoverColor ? hoverColor : undefined,
+      }}
     />
   );
 };

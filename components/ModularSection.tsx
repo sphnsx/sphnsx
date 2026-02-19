@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 interface ModularSectionProps {
   title: string;
   preview: React.ReactNode;
   to: string;
+  hoverColor?: string;
   className?: string;
 }
 
@@ -12,17 +13,30 @@ const ModularSection: React.FC<ModularSectionProps> = ({
   title,
   preview,
   to,
+  hoverColor,
   className = '',
 }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
     <Link
       to={to}
-      className={`block w-full h-full text-left overflow-hidden bg-neutral-100 relative ${className}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`block w-full h-full text-left overflow-hidden bg-white relative ${className}`}
     >
-      <span className="absolute top-0 left-0 p-3 font-mono text-xs uppercase tracking-wider z-10">
-        {title}
-      </span>
-      <div className="absolute inset-0 pt-10">
+      <div className="absolute top-0 left-0 p-4 z-10">
+        <span className="relative inline-block pt-0 pb-1.5 px-3">
+          {hoverColor && isHovered && (
+            <div
+              className="absolute inset-0 rounded-none"
+              style={{ backgroundColor: hoverColor }}
+            />
+          )}
+          <span className="relative font-mono text-sm uppercase tracking-wider">{title}</span>
+        </span>
+      </div>
+      <div className="absolute inset-0 pt-16">
         {preview}
       </div>
     </Link>
