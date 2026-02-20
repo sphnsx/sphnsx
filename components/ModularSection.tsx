@@ -7,6 +7,8 @@ interface ModularSectionProps {
   to: string;
   hoverColor?: string;
   className?: string;
+  /** Set false when section is inside a draggable wrapper (e.g. admin reorder). */
+  draggable?: boolean;
 }
 
 const ModularSection: React.FC<ModularSectionProps> = ({
@@ -15,12 +17,14 @@ const ModularSection: React.FC<ModularSectionProps> = ({
   to,
   hoverColor,
   className = '',
+  draggable = true,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
     <Link
       to={to}
+      draggable={draggable}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={`block w-full h-full text-left overflow-hidden bg-white relative ${className}`}

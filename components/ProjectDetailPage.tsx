@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { updateProject, deleteProject } from '../services/storageService';
-import { compressImageDataUrl } from '../utils/imageCompress';
+import { compressImageDataUrl, getImageAspectRatio } from '../utils/imageCompress';
 import CoverCropZoom from './CoverCropZoom';
 import { PortfolioData, Project } from '../types';
 
@@ -61,7 +61,8 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
   const handleCoverCropComplete = useCallback(async (dataUrl: string) => {
     setCoverCropSrc(null);
     const compressed = await compressImageDataUrl(dataUrl);
-    setEditProject((p) => ({ ...p, imageUrl: compressed }));
+    const ratio = await getImageAspectRatio(compressed).catch(() => undefined);
+    setEditProject((p) => ({ ...p, imageUrl: compressed, coverAspectRatio: ratio }));
   }, []);
 
   const setCoverFromGallery = useCallback((index: number) => {
@@ -124,14 +125,22 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
     }
     try {
       setIsSaving(true);
-      const compressed = await Promise.all(editProject.gallery.map((url) => compressImageDataUrl(url)));
+      const galleryToCompress =
+        editProject.imageUrl && editProject.imageUrl !== editProject.gallery[0]
+          ? [editProject.imageUrl, ...editProject.gallery.slice(1)]
+          : editProject.gallery;
+      const compressed = await Promise.all(galleryToCompress.map((url) => compressImageDataUrl(url)));
       const toSave = { ...editProject, gallery: compressed, imageUrl: compressed[0] ?? editProject.imageUrl };
       updateProject(toSave.id, toSave);
       onRefresh();
       setIsEditing(false);
     } catch (err) {
       console.error(err);
-      alert('Failed to update project.');
+      if (err instanceof DOMException && err.name === 'QuotaExceededError') {
+        alert('Storage limit reached. Try removing some images or using smaller images.');
+      } else {
+        alert('Failed to update project.');
+      }
     } finally {
       setIsSaving(false);
     }
@@ -159,24 +168,6 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
       <main className="flex-1 min-h-0 flex">
         <div className="w-2/5 min-w-0 overflow-y-auto pt-24 px-6 pb-16">
           <div className="max-w-xl">
-            {isAdmin && !isEditing && (
-              <div className="flex gap-2 mb-6">
-                <button
-                  type="button"
-                  onClick={() => { setEditProject(initialProject); setIsEditing(true); }}
-                  className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-black bg-white text-black hover:bg-black hover:text-white transition-colors"
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-red-600 bg-white text-red-600 hover:bg-red-600 hover:text-white transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
-            )}
             {isEditing ? (
               <div className="space-y-4">
                 <div>
@@ -236,6 +227,24 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                       <p key={i} className="text-gray-700 mb-8 last:mb-0">{para}</p>
                     ))}
                 </div>
+                {isAdmin && (
+                  <div className="flex gap-2 mt-6">
+                    <button
+                      type="button"
+                      onClick={() => { setEditProject(initialProject); setIsEditing(true); }}
+                      className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-black bg-white text-black hover:bg-black hover:text-white transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-red-600 bg-white text-red-600 hover:bg-red-600 hover:text-white transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -259,6 +268,29 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                 </div>
               </div>
               <div>
+                <p className="font-mono text-xs uppercase tracking-wider text-black mb-2">Gallery layout</p>
+                <div className="flex gap-4 mb-2">
+                  <label className="flex items-center gap-2 font-mono text-sm cursor-pointer">
+                    <input
+                      type="radio"
+                      name="galleryColumns"
+                      checked={(editProject.galleryColumns ?? 1) === 1}
+                      onChange={() => setEditProject((p) => ({ ...p, galleryColumns: 1 }))}
+                      className="border border-black"
+                    />
+                    One column
+                  </label>
+                  <label className="flex items-center gap-2 font-mono text-sm cursor-pointer">
+                    <input
+                      type="radio"
+                      name="galleryColumns"
+                      checked={editProject.galleryColumns === 2}
+                      onChange={() => setEditProject((p) => ({ ...p, galleryColumns: 2 }))}
+                      className="border border-black"
+                    />
+                    Two columns
+                  </label>
+                </div>
                 <p className="font-mono text-xs uppercase tracking-wider text-black mb-2">Gallery</p>
                 <input
                   type="file"
@@ -300,7 +332,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
           ) : (
             <>
               {project.gallery && project.gallery.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl">
+                <div className={`grid gap-8 max-w-4xl ${project.galleryColumns === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
                   {project.gallery.map((img, index) => (
                     <div key={index}>
                       <ProtectedImage src={img} alt={`${project.title} ${index + 1}`} />

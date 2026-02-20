@@ -34,3 +34,13 @@ export const deleteProject = (id: string) => {
   data.projects = data.projects.filter(p => p.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 };
+
+/** Reorder projects to match the order of projectIds. Missing ids are appended. */
+export const reorderProjects = (projectIds: string[]) => {
+  const data = getPortfolioData();
+  const byId = new Map(data.projects.map(p => [p.id, p]));
+  const ordered = projectIds.map(id => byId.get(id)).filter((p): p is Project => p != null);
+  const rest = data.projects.filter(p => !projectIds.includes(p.id));
+  data.projects = [...ordered, ...rest];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+};

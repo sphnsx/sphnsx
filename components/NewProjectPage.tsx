@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { addProject } from '../services/storageService';
-import { compressImageDataUrl } from '../utils/imageCompress';
+import { compressImageDataUrl, getImageAspectRatio } from '../utils/imageCompress';
 import CoverCropZoom from './CoverCropZoom';
 import { PortfolioData, Project } from '../types';
 
@@ -82,6 +82,7 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
     try {
       const id = Date.now().toString();
       const cover = imageUrl || gallery[0] || '';
+      const coverAspectRatio = cover ? await getImageAspectRatio(cover).catch(() => undefined) : undefined;
       addProject({
         id,
         title: title.trim(),
@@ -89,6 +90,8 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
         description: description.trim(),
         imageUrl: cover,
         gallery,
+        galleryColumns: 1,
+        coverAspectRatio,
       });
       onRefresh();
       navigate(`/project/${id}`);

@@ -1,3 +1,13 @@
+/** Return aspect ratio (width/height) of an image from its data URL. */
+export function getImageAspectRatio(dataUrl: string): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img.naturalWidth / img.naturalHeight || 1);
+    img.onerror = () => reject(new Error('Image load failed'));
+    img.src = dataUrl;
+  });
+}
+
 /** Resize and compress a data URL to JPEG to reduce localStorage size. */
 export function compressImageDataUrl(
   dataUrl: string,

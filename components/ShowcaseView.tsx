@@ -1,10 +1,10 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import ThreeColumnLayout from './ThreeColumnLayout';
 import ModularSection from './ModularSection';
 import AboutMePreview from './AboutMePreview';
 import { PortfolioData, Project } from '../types';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
+import { reorderProjects } from '../services/storageService';
 
 const STORAGE_KEYS = { left: 'sphnsx_left_heights', middle: 'sphnsx_middle_heights', right: 'sphnsx_right_heights' };
 
@@ -22,6 +22,17 @@ function shuffle<T>(arr: T[]): T[] {
 function equalSplit(n: number): number[] {
   const pct = 100 / n;
   return Array(n).fill(0).map((_, i) => (i === n - 1 ? 100 - pct * (n - 1) : pct));
+}
+
+/** Build height percentages from cover aspect ratios (width/height). Taller images get more height. */
+function heightsFromAspectRatios(ratios: number[], addSection: boolean): number[] {
+  const weights = ratios.map((r) => 1 / (r || 1));
+  if (addSection) {
+    const avg = weights.length ? weights.reduce((a, b) => a + b, 0) / weights.length : 1;
+    weights.push(avg);
+  }
+  const sum = weights.reduce((a, b) => a + b, 0);
+  return weights.map((w) => (w / sum) * 100);
 }
 
 function loadHeights(leftLen: number, middleLen: number, rightLen: number) {
@@ -46,17 +57,18 @@ function saveColumnHeights(column: 'left' | 'middle' | 'right', heights: number[
   } catch {}
 }
 
-const ProjectPreview: React.FC<{ project: Project; hoverColor?: string }> = ({ project, hoverColor }) => (
+const ProjectPreview: React.FC<{ project: Project; hoverColor?: string; dragDisabled?: boolean }> = ({ project, hoverColor, dragDisabled }) => (
   <ModularSection
     to={`/project/${project.id}`}
     title={project.title}
     hoverColor={hoverColor}
+    draggable={!dragDisabled}
     preview={
       project.imageUrl ? (
         <img
           src={project.imageUrl}
           alt={project.title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           onContextMenu={(e) => e.preventDefault()}
           onDragStart={(e) => e.preventDefault()}
           style={{ pointerEvents: 'none' }}
@@ -70,15 +82,57 @@ const ProjectPreview: React.FC<{ project: Project; hoverColor?: string }> = ({ p
   />
 );
 
+const DraggableProjectRow: React.FC<{
+  projectId: string;
+  children: React.ReactNode;
+  onReorder: (draggedId: string, targetId: string) => void;
+}> = ({ projectId, children, onReorder }) => {
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('text/plain', projectId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const draggedId = e.dataTransfer.getData('text/plain');
+    if (draggedId && draggedId !== projectId) onReorder(draggedId, projectId);
+  };
+  return (
+    <div className="h-full w-full" draggable onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={handleDrop}>
+      {children}
+    </div>
+  );
+};
+
+const AddProjectSection: React.FC<{ hoverColor: string }> = ({ hoverColor }) => (
+  <ModularSection
+    key="add-project"
+    to="/project/new"
+    title="Add project"
+    hoverColor={hoverColor}
+    preview={
+      <div className="pl-5 pr-4 mt-4">
+        <span className="font-mono text-xs text-neutral-500 uppercase tracking-wider">
+          New project
+        </span>
+      </div>
+    }
+  />
+);
+
 const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = ({ data, onRefresh }) => {
   const { isAdmin } = useAdminAuth();
   const mid = Math.ceil(data.projects.length / 2);
   const middleProjects = data.projects.slice(0, mid);
   const rightProjects = data.projects.slice(mid);
 
-  const leftLen = isAdmin ? 3 : 2;
-  const middleLen = middleProjects.length;
-  const rightLen = rightProjects.length;
+  const addProjectInMiddle = isAdmin && middleProjects.length <= rightProjects.length;
+  const leftLen = 2;
+  const middleLen = middleProjects.length + (addProjectInMiddle ? 1 : 0);
+  const rightLen = rightProjects.length + (addProjectInMiddle ? 0 : 1);
   const totalSections = leftLen + middleLen + rightLen;
 
   const { leftColors, middleColors, rightColors } = useMemo(() => {
@@ -96,15 +150,41 @@ const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = 
     [leftLen, middleLen, rightLen]
   );
 
-  const [leftHeights, setLeftHeights] = useState<number[]>(
-    () => saved?.left ?? equalSplit(leftLen)
-  );
-  const [middleHeights, setMiddleHeights] = useState<number[]>(
-    () => saved?.middle ?? equalSplit(middleLen)
-  );
-  const [rightHeights, setRightHeights] = useState<number[]>(
-    () => saved?.right ?? equalSplit(rightLen)
-  );
+  const [leftHeights, setLeftHeights] = useState<number[]>(() => {
+    const s = loadHeights(leftLen, middleLen, rightLen);
+    return s?.left ?? equalSplit(leftLen);
+  });
+  const [middleHeights, setMiddleHeights] = useState<number[]>(() => {
+    const s = loadHeights(leftLen, middleLen, rightLen);
+    if (s?.middle) return s.middle;
+    return heightsFromAspectRatios(
+      middleProjects.map((p) => p.coverAspectRatio ?? 1),
+      addProjectInMiddle
+    );
+  });
+  const [rightHeights, setRightHeights] = useState<number[]>(() => {
+    const s = loadHeights(leftLen, middleLen, rightLen);
+    if (s?.right) return s.right;
+    return heightsFromAspectRatios(
+      rightProjects.map((p) => p.coverAspectRatio ?? 1),
+      !addProjectInMiddle && isAdmin
+    );
+  });
+
+  useEffect(() => {
+    if (leftHeights.length !== leftLen) {
+      const s = loadHeights(leftLen, middleLen, rightLen);
+      setLeftHeights(s?.left ?? equalSplit(leftLen));
+    }
+    if (middleHeights.length !== middleLen) {
+      const s = loadHeights(leftLen, middleLen, rightLen);
+      setMiddleHeights(s?.middle ?? heightsFromAspectRatios(middleProjects.map((p) => p.coverAspectRatio ?? 1), addProjectInMiddle));
+    }
+    if (rightHeights.length !== rightLen) {
+      const s = loadHeights(leftLen, middleLen, rightLen);
+      setRightHeights(s?.right ?? heightsFromAspectRatios(rightProjects.map((p) => p.coverAspectRatio ?? 1), !addProjectInMiddle && isAdmin));
+    }
+  }, [leftLen, middleLen, rightLen, middleProjects, rightProjects, addProjectInMiddle, isAdmin]);
 
   const onLeftHeightsChange = useCallback((h: number[]) => {
     setLeftHeights(h);
@@ -118,6 +198,23 @@ const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = 
     setRightHeights(h);
     saveColumnHeights('right', h);
   }, []);
+
+  const allProjectIds = useMemo(
+    () => middleProjects.map((p) => p.id).concat(rightProjects.map((p) => p.id)),
+    [middleProjects, rightProjects]
+  );
+
+  const handleReorder = useCallback(
+    (draggedId: string, targetId: string) => {
+      const newOrder = allProjectIds.filter((id) => id !== draggedId);
+      const idx = newOrder.indexOf(targetId);
+      if (idx === -1) return;
+      newOrder.splice(idx, 0, draggedId);
+      reorderProjects(newOrder);
+      onRefresh?.();
+    },
+    [allProjectIds, onRefresh]
+  );
 
   const leftRows = useMemo(
     () => [
@@ -141,41 +238,40 @@ const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = 
           </div>
         }
       />,
-      ...(isAdmin
-        ? [
-            <ModularSection
-              key="add-project"
-              to="/project/new"
-              title="Add project"
-              hoverColor={leftColors[2]}
-              preview={
-                <div className="pl-5 pr-4 mt-4">
-                  <span className="font-mono text-xs text-neutral-500 uppercase tracking-wider">
-                    New project
-                  </span>
-                </div>
-              }
-            />,
-          ]
-        : []),
     ],
-    [data, leftColors, isAdmin]
+    [data, leftColors]
   );
 
   const middleRows = useMemo(
-    () =>
-      middleProjects.map((project, i) => (
-        <ProjectPreview key={project.id} project={project} hoverColor={middleColors[i]} />
-      )),
-    [data, middleProjects, middleColors]
+    () => [
+      ...middleProjects.map((project, i) =>
+        isAdmin ? (
+          <DraggableProjectRow key={project.id} projectId={project.id} onReorder={handleReorder}>
+            <ProjectPreview project={project} hoverColor={middleColors[i]} dragDisabled />
+          </DraggableProjectRow>
+        ) : (
+          <ProjectPreview key={project.id} project={project} hoverColor={middleColors[i]} />
+        )
+      ),
+      ...(addProjectInMiddle ? [<AddProjectSection key="add-project" hoverColor={middleColors[middleProjects.length]} />] : []),
+    ],
+    [data, middleProjects, middleColors, addProjectInMiddle, isAdmin, handleReorder]
   );
 
   const rightRows = useMemo(
-    () =>
-      rightProjects.map((project, i) => (
-        <ProjectPreview key={project.id} project={project} hoverColor={rightColors[i]} />
-      )),
-    [data, rightProjects, rightColors]
+    () => [
+      ...rightProjects.map((project, i) =>
+        isAdmin ? (
+          <DraggableProjectRow key={project.id} projectId={project.id} onReorder={handleReorder}>
+            <ProjectPreview project={project} hoverColor={rightColors[i]} dragDisabled />
+          </DraggableProjectRow>
+        ) : (
+          <ProjectPreview key={project.id} project={project} hoverColor={rightColors[i]} />
+        )
+      ),
+      ...(!addProjectInMiddle && isAdmin ? [<AddProjectSection key="add-project" hoverColor={rightColors[rightProjects.length]} />] : []),
+    ],
+    [data, rightProjects, rightColors, addProjectInMiddle, isAdmin, handleReorder]
   );
 
   return (
