@@ -4,6 +4,7 @@ import ThreeColumnLayout from './ThreeColumnLayout';
 import ModularSection from './ModularSection';
 import AboutMePreview from './AboutMePreview';
 import { PortfolioData, Project } from '../types';
+import { useAdminAuth } from '../contexts/AdminAuthContext';
 
 const STORAGE_KEYS = { left: 'sphnsx_left_heights', middle: 'sphnsx_middle_heights', right: 'sphnsx_right_heights' };
 
@@ -69,12 +70,13 @@ const ProjectPreview: React.FC<{ project: Project; hoverColor?: string }> = ({ p
   />
 );
 
-const ShowcaseView: React.FC<{ data: PortfolioData }> = ({ data }) => {
+const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = ({ data, onRefresh }) => {
+  const { isAdmin } = useAdminAuth();
   const mid = Math.ceil(data.projects.length / 2);
   const middleProjects = data.projects.slice(0, mid);
   const rightProjects = data.projects.slice(mid);
 
-  const leftLen = 2;
+  const leftLen = isAdmin ? 3 : 2;
   const middleLen = middleProjects.length;
   const rightLen = rightProjects.length;
   const totalSections = leftLen + middleLen + rightLen;
@@ -139,8 +141,25 @@ const ShowcaseView: React.FC<{ data: PortfolioData }> = ({ data }) => {
           </div>
         }
       />,
+      ...(isAdmin
+        ? [
+            <ModularSection
+              key="add-project"
+              to="/project/new"
+              title="Add project"
+              hoverColor={leftColors[2]}
+              preview={
+                <div className="pl-5 pr-4 mt-4">
+                  <span className="font-mono text-xs text-neutral-500 uppercase tracking-wider">
+                    New project
+                  </span>
+                </div>
+              }
+            />,
+          ]
+        : []),
     ],
-    [data, leftColors]
+    [data, leftColors, isAdmin]
   );
 
   const middleRows = useMemo(

@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Link, useParams } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import ShowcaseView from './components/ShowcaseView';
-import AdminPortal from './components/AdminPortal';
+import AdminLoginPage from './components/AdminLoginPage';
+import DeploymentPage from './components/DeploymentPage';
+import NewProjectPage from './components/NewProjectPage';
+import ProjectDetailPage from './components/ProjectDetailPage';
 import { PortfolioData } from './types';
-import { getPortfolioData } from './services/storageService';
-import { ADMIN_PASSWORD, HOME_BUTTON_GREEN } from './constants';
+import { getPortfolioData, updateAboutMe } from './services/storageService';
+import { HOME_BUTTON_GREEN } from './constants';
+import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
 
 const FixedHomeButton: React.FC = () => (
   <Link
@@ -16,34 +20,42 @@ const FixedHomeButton: React.FC = () => (
   </Link>
 );
 
+const AdminBar: React.FC = () => {
+  const { isAdmin, logout } = useAdminAuth();
+  const navigate = useNavigate();
+  if (!isAdmin) return null;
+  return (
+    <div className="fixed top-0 left-0 z-[99] pl-32 pt-4 flex gap-2">
+      <Link
+        to="/project/new"
+        className="font-mono text-xs uppercase tracking-wider border border-black px-3 py-2 bg-white text-black hover:bg-black hover:text-white transition-colors"
+      >
+        Add project
+      </Link>
+      <Link
+        to="/admin/deployment"
+        className="font-mono text-xs uppercase tracking-wider border border-black px-3 py-2 bg-white text-black hover:bg-black hover:text-white transition-colors"
+      >
+        Domain setup
+      </Link>
+      <button
+        type="button"
+        onClick={() => { logout(); navigate('/'); }}
+        className="font-mono text-xs uppercase tracking-wider border border-black px-3 py-2 bg-white text-black hover:bg-black hover:text-white transition-colors"
+      >
+        Logout
+      </button>
+    </div>
+  );
+};
+
 const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="fixed inset-0 bg-white flex flex-col overflow-hidden">
     {children}
   </div>
 );
 
-const ProtectedImage: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
-  if (!src) return (
-    <div className="w-full aspect-[4/5] bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center">
-      <span className="text-xs text-gray-400">No image</span>
-    </div>
-  );
-  return (
-    <div className="relative w-full h-full overflow-hidden bg-gray-100">
-      <img
-        src={src}
-        alt={alt}
-        className={className ? `${className} w-full h-full object-contain` : 'w-full h-full object-contain'}
-        onContextMenu={(e) => e.preventDefault()}
-        onDragStart={(e) => e.preventDefault()}
-        style={{ pointerEvents: 'none' }}
-      />
-      <div className="absolute inset-0 z-10 bg-transparent" onContextMenu={(e) => e.preventDefault()} />
-    </div>
-  );
-};
-
-const ProjectDetailsPage: React.FC<{ data: PortfolioData }> = ({ data }) => {
+const ProjectDetailsPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ data, onRefresh }) => {
   const { id } = useParams<{ id: string }>();
   const project = data.projects.find(p => p.id === id);
 
@@ -55,69 +67,90 @@ const ProjectDetailsPage: React.FC<{ data: PortfolioData }> = ({ data }) => {
     </FullScreenDetail>
   );
 
+  return <ProjectDetailPage project={project} onRefresh={onRefresh} />;
+};
+
+const AboutPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ data, onRefresh }) => {
+  const { isAdmin } = useAdminAuth();
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [aboutText, setAboutText] = React.useState(data.aboutMe);
+
+  React.useEffect(() => {
+    setAboutText(data.aboutMe);
+  }, [data.aboutMe]);
+
+  const handleSave = () => {
+    updateAboutMe(aboutText);
+    onRefresh();
+    setIsEditing(false);
+  };
+
   return (
     <FullScreenDetail>
       <main className="flex-1 min-h-0 flex">
         <div className="w-2/5 min-w-0 overflow-y-auto pt-24 px-6 pb-16">
           <div className="max-w-xl">
-            <p className="text-sm text-gray-500 mb-2">{project.year}</p>
-            <h1 className="text-3xl font-bold mb-6">{project.title}</h1>
-            <div>
-              {project.description
-                .split(/\n\n+/)
-                .map((p) => p.trim())
-                .filter(Boolean)
-                .map((para, i) => (
-                  <p key={i} className="text-gray-700 mb-8 last:mb-0">{para}</p>
-                ))}
-            </div>
+            {isAdmin && (
+              <div className="mb-6">
+                {!isEditing ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(true)}
+                    className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-black bg-white text-black hover:bg-black hover:text-white transition-colors"
+                  >
+                    Edit biography
+                  </button>
+                ) : (
+                  <div className="space-y-4">
+                    <textarea
+                      className="w-full h-40 p-3 border border-black bg-transparent font-mono text-sm focus:outline-none"
+                      value={aboutText}
+                      onChange={(e) => setAboutText(e.target.value)}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleSave}
+                        className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-black bg-white text-black hover:bg-black hover:text-white transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setIsEditing(false); setAboutText(data.aboutMe); }}
+                        className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-black bg-white text-black hover:bg-black hover:text-white transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {!isEditing && (
+              <>
+                <h1 className="text-3xl font-bold mb-8">About me</h1>
+                <div className="space-y-6">
+                  {data.aboutMe
+                    .split(/\n\n+/)
+                    .map((p) => p.trim())
+                    .filter(Boolean)
+                    .map((para, i) => (
+                      <p key={i} className="text-lg leading-relaxed">{para}</p>
+                    ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
         <div className="w-px shrink-0 bg-black" aria-hidden />
-        <div className="w-3/5 min-w-0 overflow-y-auto pt-24 px-6 pb-16">
-          {project.gallery && project.gallery.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl">
-              {project.gallery.map((img, index) => (
-                <div key={index}>
-                  <ProtectedImage src={img} alt={`${project.title} ${index + 1}`} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="h-full min-h-[200px] flex items-center justify-center text-gray-500 border border-dashed border-gray-300">
-              No images in this project.
-            </div>
-          )}
+        <div className="w-3/5 min-w-0 overflow-y-auto pt-24 px-6 pb-16 flex items-center justify-center text-gray-400">
+          <span className="text-sm">Images</span>
         </div>
       </main>
     </FullScreenDetail>
   );
 };
-
-const AboutPage: React.FC<{ data: PortfolioData }> = ({ data }) => (
-  <FullScreenDetail>
-    <main className="flex-1 min-h-0 flex">
-      <div className="w-2/5 min-w-0 overflow-y-auto pt-24 px-6 pb-16">
-        <div className="max-w-xl">
-          <h1 className="text-3xl font-bold mb-8">About me</h1>
-          <div className="space-y-6">
-            {data.aboutMe
-              .split(/\n\n+/)
-              .map((p) => p.trim())
-              .filter(Boolean)
-              .map((para, i) => (
-                <p key={i} className="text-lg leading-relaxed">{para}</p>
-              ))}
-          </div>
-        </div>
-      </div>
-      <div className="w-px shrink-0 bg-black" aria-hidden />
-      <div className="w-3/5 min-w-0 overflow-y-auto pt-24 px-6 pb-16 flex items-center justify-center text-gray-400">
-        <span className="text-sm">Images</span>
-      </div>
-    </main>
-  </FullScreenDetail>
-);
 
 const ContactPage: React.FC = () => (
   <FullScreenDetail>
@@ -153,60 +186,28 @@ const NotFoundPage: React.FC = () => (
   </main>
 );
 
-const AdminWrapper: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ data, onRefresh }) => {
-  const AUTH_STORAGE_KEY = 'sphnsx_admin_authenticated';
-  const SESSION_DURATION = 24 * 60 * 60 * 1000;
-
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
-
+const HashPathSync: React.FC = () => {
+  const location = useLocation();
   useEffect(() => {
-    const authData = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (authData) {
-      try {
-        const { timestamp } = JSON.parse(authData);
-        if (Date.now() - timestamp < SESSION_DURATION) setIsAuthenticated(true);
-        else localStorage.removeItem(AUTH_STORAGE_KEY);
-      } catch {
-        localStorage.removeItem(AUTH_STORAGE_KEY);
-      }
+    const pathname = window.location.pathname;
+    const hash = window.location.hash;
+    // HashRouter only reads the hash. Visiting pathname without hash leaves hash empty, so sync pathname into hash.
+    const pathOnly = pathname === '/admin' || pathname === '/a' || pathname === '/project/new' || pathname === '/admin/deployment';
+    if (pathOnly && (!hash || hash === '#')) {
+      window.location.hash = pathname;
     }
-  }, []);
+  }, [location.pathname]);
+  return null;
+};
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      setIsAuthenticated(true);
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ timestamp: Date.now() }));
-    } else alert('Incorrect password.');
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    setIsAuthenticated(false);
-  };
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-6">
-        <form onSubmit={handleLogin} className="w-full max-w-sm border border-gray-300 p-8 rounded">
-          <h2 className="text-xl font-bold mb-6">Admin login</h2>
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full p-3 border border-gray-300 rounded mb-4"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button type="submit" className="w-full py-3 bg-gray-900 text-white rounded font-medium">
-            Log in
-          </button>
-        </form>
-      </div>
-    );
-  }
-
-  return <AdminPortal data={data} onRefresh={onRefresh} onLogout={handleLogout} />;
+const AdminDeploymentGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAdmin } = useAdminAuth();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!isAdmin) navigate('/admin');
+  }, [isAdmin, navigate]);
+  if (!isAdmin) return null;
+  return <>{children}</>;
 };
 
 const App: React.FC = () => {
@@ -220,18 +221,24 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="min-h-screen bg-white text-black font-sans">
-        <FixedHomeButton />
-        <Routes>
-          <Route path="/" element={<ShowcaseView data={data} />} />
-          <Route path="/project/:id" element={<ProjectDetailsPage data={data} />} />
-          <Route path="/about" element={<AboutPage data={data} />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/admin" element={<AdminWrapper data={data} onRefresh={refreshData} />} />
-          <Route path="/a" element={<AdminWrapper data={data} onRefresh={refreshData} />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </div>
+      <AdminAuthProvider>
+        <HashPathSync />
+        <div className="min-h-screen bg-white text-black font-sans">
+          <FixedHomeButton />
+          <AdminBar />
+          <Routes>
+            <Route path="/" element={<ShowcaseView data={data} onRefresh={refreshData} />} />
+            <Route path="/project/new" element={<NewProjectPage data={data} onRefresh={refreshData} />} />
+            <Route path="/project/:id" element={<ProjectDetailsPage data={data} onRefresh={refreshData} />} />
+            <Route path="/about" element={<AboutPage data={data} onRefresh={refreshData} />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/admin" element={<AdminLoginPage />} />
+            <Route path="/a" element={<AdminLoginPage />} />
+            <Route path="/admin/deployment" element={<AdminDeploymentGuard><DeploymentPage /></AdminDeploymentGuard>} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </div>
+      </AdminAuthProvider>
     </Router>
   );
 };
