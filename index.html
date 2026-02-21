@@ -9,12 +9,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+      // Spacing scale: 8px base → use 2, 4, 6, 8, 12 (8, 16, 24, 32, 48px)
       tailwind.config = {
         theme: {
           extend: {
             fontFamily: {
               sans: ['Inter', 'sans-serif'],
               mono: ['JetBrains Mono', 'monospace'],
+            },
+            spacing: {
+              pageTop: '48px',
+            },
+            colors: {
+              accent: '#66FFCC',
+              bgMain: '#FAFAFA',
+              bgSidebar: '#EBEBEB',
+              paletteBorder: '#333333',
+              textPrimary: '#1a1a1a',
+              textSecondary: '#737373',
+              destructive: '#b91c1c',
             },
           },
         },

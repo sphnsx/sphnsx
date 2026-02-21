@@ -1,7 +1,7 @@
 import React from 'react';
 import ResizableColumn from './ResizableColumn';
 
-const TOP_OFFSET_PX = 56; // space for fixed Home button
+const TOP_OFFSET_PX = 48; // space for fixed Home button (8px scale)
 
 interface ThreeColumnLayoutProps {
   leftRows: React.ReactNode[];
@@ -54,9 +54,9 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
   rightColors,
 }) => {
   return (
-    <div className="h-screen w-full flex overflow-hidden bg-white text-black">
+    <div className="h-screen w-full flex overflow-hidden bg-bgMain text-textPrimary">
       <ColumnWithOffset
-        className="w-[20%] min-w-[160px] border-r border-black"
+        className="w-[20%] min-w-[160px] bg-bgMain border-r border-paletteBorder"
         rows={leftRows}
         heights={leftHeights}
         onHeightsChange={onLeftHeightsChange}
@@ -64,7 +64,7 @@ const ThreeColumnLayout: React.FC<ThreeColumnLayoutProps> = ({
         topOffset={TOP_OFFSET_PX}
       />
       <ColumnWithOffset
-        className="w-[40%] border-r border-black"
+        className="w-[40%] border-r border-paletteBorder"
         rows={middleRows}
         heights={middleHeights}
         onHeightsChange={onMiddleHeightsChange}

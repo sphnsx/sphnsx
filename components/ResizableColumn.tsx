@@ -17,7 +17,7 @@ const ResizableColumn: React.FC<ResizableColumnProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`flex flex-col h-full overflow-hidden ${className}`}>
+    <div className={`flex flex-col gap-0 h-full overflow-hidden ${className}`}>
       {rows.map((row, i) => (
         <React.Fragment key={i}>
           <div

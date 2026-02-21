@@ -1,22 +1,22 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import ThreeColumnLayout from './ThreeColumnLayout';
 import ModularSection from './ModularSection';
 import AboutMePreview from './AboutMePreview';
 import { PortfolioData, Project } from '../types';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { reorderProjects } from '../services/storageService';
+import { PALETTE } from '../constants';
+import { useIsMobile } from '../hooks/useMediaQuery';
 
 const STORAGE_KEYS = { left: 'sphnsx_left_heights', middle: 'sphnsx_middle_heights', right: 'sphnsx_right_heights' };
 
-const SECTION_PALETTE = ['#FF0080', '#C8A2C8', '#F5DD7B', '#70D1D1', '#FFDDE1', '#6A0DAD'] as const;
+const SECTION_HOVER_ACCENT = PALETTE.accent;
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+/** Parse project year for sort; non-numeric or empty returns -1 so it sorts last. */
+function numericYear(p: Project): number {
+  const n = parseInt(p.year.trim(), 10);
+  return Number.isNaN(n) ? -1 : n;
 }
 
 function equalSplit(n: number): number[] {
@@ -74,7 +74,7 @@ const ProjectPreview: React.FC<{ project: Project; hoverColor?: string; dragDisa
           style={{ pointerEvents: 'none' }}
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center font-mono text-xs text-neutral-400 uppercase tracking-wider">
+        <div className="w-full h-full flex items-center justify-center font-mono text-xs text-textSecondary uppercase tracking-wider">
           No image
         </div>
       )
@@ -114,8 +114,8 @@ const AddProjectSection: React.FC<{ hoverColor: string }> = ({ hoverColor }) => 
     title="Add project"
     hoverColor={hoverColor}
     preview={
-      <div className="pl-5 pr-4 mt-4">
-        <span className="font-mono text-xs text-neutral-500 uppercase tracking-wider">
+      <div className="pl-6 pr-4 mt-4">
+        <span className="font-mono text-xs text-textSecondary uppercase tracking-wider">
           New project
         </span>
       </div>
@@ -123,7 +123,73 @@ const AddProjectSection: React.FC<{ hoverColor: string }> = ({ hoverColor }) => 
   />
 );
 
+/** Simple mobile row: no absolute layout, so content is always in flow and visible. */
+const MobileProjectRow: React.FC<{ project: Project }> = ({ project }) => {
+  const path = `/project/${project.id}`;
+  const goToProject = () => {
+    // HashRouter's navigate() does not update location in this context (logs: H1/H2 fire, H3 never).
+    // Set hash and reload so the app loads with the correct route and shows the detail page.
+    const hash = path ? `#${path}` : '#/';
+    window.location.hash = hash;
+    window.location.reload();
+  };
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    goToProject();
+  };
+  return (
+    <div
+      role="link"
+      tabIndex={0}
+      className="block py-4 px-4 border-b border-paletteBorder bg-bgMain hover:opacity-90 transition-opacity cursor-pointer"
+      onClick={handleClick}
+      onTouchEnd={(e) => {
+        e.preventDefault();
+        goToProject();
+      }}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToProject(); } }}
+    >
+      <p className="font-mono text-xs uppercase tracking-wider text-textSecondary">{project.year}</p>
+      <h3 className="font-mono text-lg uppercase tracking-wider text-textPrimary mt-1">{project.title}</h3>
+      {project.imageUrl ? (
+        <img
+          src={project.imageUrl}
+          alt=""
+          className="mt-3 w-full max-h-48 object-contain bg-bgMain"
+          onContextMenu={(e) => e.preventDefault()}
+        />
+      ) : (
+        <div className="mt-3 py-8 text-center font-mono text-xs text-textSecondary uppercase">No image</div>
+      )}
+    </div>
+  );
+};
+
+const MobileHomeLayout: React.FC<{
+  data: PortfolioData;
+  projectsByYear: Project[];
+}> = ({ projectsByYear }) => {
+  return (
+    <div className="min-h-screen h-screen w-full flex flex-col overflow-hidden bg-bgMain text-textPrimary">
+      <div
+        className="overflow-y-auto pt-12 pb-8 bg-bgMain"
+        style={{ position: 'fixed', top: '3rem', left: 0, right: 0, bottom: 0, zIndex: 1 }}
+      >
+        <div className="flex flex-col">
+          {projectsByYear.map((project) => (
+            <div key={project.id}>
+              <MobileProjectRow project={project} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = ({ data, onRefresh }) => {
+  const isMobile = useIsMobile();
   const { isAdmin } = useAdminAuth();
   const mid = Math.ceil(data.projects.length / 2);
   const middleProjects = data.projects.slice(0, mid);
@@ -135,15 +201,14 @@ const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = 
   const rightLen = rightProjects.length + (addProjectInMiddle ? 0 : 1);
   const totalSections = leftLen + middleLen + rightLen;
 
-  const { leftColors, middleColors, rightColors } = useMemo(() => {
-    const shuffled = shuffle([...SECTION_PALETTE]);
-    const sectionColors = Array.from({ length: totalSections }, (_, i) => shuffled[i % 6]!);
-    return {
-      leftColors: sectionColors.slice(0, leftLen),
-      middleColors: sectionColors.slice(leftLen, leftLen + middleLen),
-      rightColors: sectionColors.slice(leftLen + middleLen, totalSections),
-    };
-  }, [totalSections, leftLen, middleLen, rightLen]);
+  const { leftColors, middleColors, rightColors } = useMemo(
+    () => ({
+      leftColors: Array.from({ length: leftLen }, () => SECTION_HOVER_ACCENT),
+      middleColors: Array.from({ length: middleLen }, () => SECTION_HOVER_ACCENT),
+      rightColors: Array.from({ length: rightLen }, () => SECTION_HOVER_ACCENT),
+    }),
+    [leftLen, middleLen, rightLen]
+  );
 
   const saved = useMemo(
     () => loadHeights(leftLen, middleLen, rightLen),
@@ -231,8 +296,8 @@ const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = 
         title="Contact"
         hoverColor={leftColors[1]}
         preview={
-          <div className="pl-5 pr-4 mt-4">
-            <span className="font-mono text-xs text-neutral-500 uppercase tracking-wider">
+          <div className="pl-6 pr-4 mt-4">
+            <span className="font-mono text-xs text-textSecondary uppercase tracking-wider">
               Get in touch
             </span>
           </div>
@@ -273,6 +338,15 @@ const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = 
     ],
     [data, rightProjects, rightColors, addProjectInMiddle, isAdmin, handleReorder]
   );
+
+  const projectsByYear = useMemo(
+    () => [...data.projects].sort((a, b) => numericYear(b) - numericYear(a)),
+    [data.projects]
+  );
+
+  if (isMobile) {
+    return <MobileHomeLayout data={data} projectsByYear={projectsByYear} />;
+  }
 
   return (
     <ThreeColumnLayout

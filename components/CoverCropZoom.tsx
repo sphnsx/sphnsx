@@ -35,7 +35,7 @@ const CoverCropZoom: React.FC<CoverCropZoomProps> = ({ imageSrc, onComplete, onC
   }, [imageSrc, croppedAreaPixels, onComplete]);
 
   return (
-    <div className="fixed inset-0 z-[200] bg-white flex flex-col">
+    <div className="fixed inset-0 z-[200] bg-bgMain flex flex-col">
       <div className="relative flex-1 min-h-0 w-full">
         <Cropper
           image={imageSrc}
@@ -47,8 +47,8 @@ const CoverCropZoom: React.FC<CoverCropZoomProps> = ({ imageSrc, onComplete, onC
           onCropComplete={onCropComplete}
         />
       </div>
-      <div className="flex gap-3 p-4 border-t border-black">
-        <label className="font-mono text-xs uppercase tracking-wider text-black">
+      <div className="flex gap-4 p-4 border-t border-paletteBorder">
+        <label className="font-mono text-xs uppercase tracking-wider text-textPrimary">
           Zoom
           <input
             type="range"
@@ -64,7 +64,7 @@ const CoverCropZoom: React.FC<CoverCropZoomProps> = ({ imageSrc, onComplete, onC
           <button
             type="button"
             onClick={onCancel}
-            className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-black bg-white text-black hover:bg-black hover:text-white transition-colors"
+            className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
           >
             Cancel
           </button>
@@ -72,7 +72,7 @@ const CoverCropZoom: React.FC<CoverCropZoomProps> = ({ imageSrc, onComplete, onC
             type="button"
             onClick={handleConfirm}
             disabled={!croppedAreaPixels || isConfirming}
-            className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-black bg-white text-black hover:bg-black hover:text-white disabled:opacity-50 transition-colors"
+            className="font-mono text-sm uppercase tracking-wider px-4 py-2 bg-accent text-white hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
           >
             {isConfirming ? 'Processing…' : 'Confirm'}
           </button>

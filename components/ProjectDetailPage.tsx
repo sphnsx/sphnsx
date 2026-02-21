@@ -4,22 +4,24 @@ import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { updateProject, deleteProject } from '../services/storageService';
 import { compressImageDataUrl, getImageAspectRatio } from '../utils/imageCompress';
 import CoverCropZoom from './CoverCropZoom';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { PortfolioData, Project } from '../types';
 
 const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="fixed inset-0 bg-white flex flex-col overflow-hidden">
+  <div className="fixed inset-0 bg-bgMain flex flex-col overflow-hidden">
     {children}
   </div>
 );
 
-const ProtectedImage: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
+const ProtectedImage: React.FC<{ src: string; alt: string; className?: string; useWhiteBackground?: boolean }> = ({ src, alt, className, useWhiteBackground }) => {
+  const bgClass = useWhiteBackground ? 'bg-bgMain' : 'bg-bgSidebar';
   if (!src) return (
-    <div className="w-full aspect-[4/5] bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center">
-      <span className="text-xs text-gray-400">No image</span>
+    <div className={`w-full aspect-[4/5] border border-dashed border-paletteBorder flex items-center justify-center ${bgClass}`}>
+      <span className="text-xs text-textSecondary">No image</span>
     </div>
   );
   return (
-    <div className="relative w-full h-full overflow-hidden bg-gray-100">
+    <div className={`relative w-full h-full overflow-hidden ${bgClass}`}>
       <img
         src={src}
         alt={alt}
@@ -39,8 +41,10 @@ interface ProjectDetailPageProps {
 }
 
 const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialProject, onRefresh }) => {
+  const isMobile = useIsMobile();
   const { isAdmin } = useAdminAuth();
   const navigate = useNavigate();
+  const showAdminActions = isAdmin && !isMobile;
   const [isEditing, setIsEditing] = useState(false);
   const [editProject, setEditProject] = useState<Project>(initialProject);
   const [isSaving, setIsSaving] = useState(false);
@@ -163,35 +167,33 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
     );
   }
 
-  return (
-    <FullScreenDetail>
-      <main className="flex-1 min-h-0 flex">
-        <div className="w-2/5 min-w-0 overflow-y-auto pt-24 px-6 pb-16">
-          <div className="max-w-xl">
-            {isEditing ? (
+  const textBlock = (
+    <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-6 px-6 pb-12' : 'w-2/5 min-w-0 overflow-y-auto pt-pageTop px-6 pb-12'}>
+      <div className="max-w-xl">
+        {!isMobile && isEditing ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block font-mono text-xs uppercase tracking-wider text-black mb-1">Title</label>
+                  <label className="block font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Title</label>
                   <input
                     type="text"
-                    className="w-full p-3 border border-black bg-transparent font-mono text-sm focus:outline-none"
+                    className="w-full p-3 border border-paletteBorder bg-transparent font-mono text-sm focus:outline-none"
                     value={editProject.title}
                     onChange={(e) => setEditProject((p) => ({ ...p, title: e.target.value }))}
                   />
                 </div>
                 <div>
-                  <label className="block font-mono text-xs uppercase tracking-wider text-black mb-1">Year</label>
+                  <label className="block font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Year</label>
                   <input
                     type="text"
-                    className="w-full p-3 border border-black bg-transparent font-mono text-sm focus:outline-none"
+                    className="w-full p-3 border border-paletteBorder bg-transparent font-mono text-sm focus:outline-none"
                     value={editProject.year}
                     onChange={(e) => setEditProject((p) => ({ ...p, year: e.target.value }))}
                   />
                 </div>
                 <div>
-                  <label className="block font-mono text-xs uppercase tracking-wider text-black mb-1">Description</label>
+                  <label className="block font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Description</label>
                   <textarea
-                    className="w-full p-3 border border-black bg-transparent font-mono text-sm focus:outline-none h-32"
+                    className="w-full p-3 border border-paletteBorder bg-transparent font-mono text-sm focus:outline-none h-32"
                     value={editProject.description}
                     onChange={(e) => setEditProject((p) => ({ ...p, description: e.target.value }))}
                   />
@@ -201,14 +203,14 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                     type="button"
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-black bg-white text-black hover:bg-black hover:text-white disabled:opacity-50 transition-colors"
+                    className="font-mono text-sm uppercase tracking-wider px-4 py-2 bg-accent text-white hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
                   >
                     {isSaving ? 'Saving…' : 'Save'}
                   </button>
                   <button
                     type="button"
                     onClick={() => { setIsEditing(false); setEditProject(initialProject); }}
-                    className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-black bg-white text-black hover:bg-black hover:text-white transition-colors"
+                    className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
                   >
                     Cancel
                   </button>
@@ -216,7 +218,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
               </div>
             ) : (
               <>
-                <p className="text-sm text-gray-500 mb-2">{project.year}</p>
+                <p className="font-mono text-xs uppercase tracking-wider text-textSecondary mb-2">{project.year}</p>
                 <h1 className="text-3xl font-bold mb-6">{project.title}</h1>
                 <div>
                   {project.description
@@ -224,22 +226,22 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                     .map((p) => p.trim())
                     .filter(Boolean)
                     .map((para, i) => (
-                      <p key={i} className="text-gray-700 mb-8 last:mb-0">{para}</p>
+                      <p key={i} className="text-base leading-relaxed text-textPrimary mb-8 last:mb-0">{para}</p>
                     ))}
                 </div>
-                {isAdmin && (
+                {showAdminActions && (
                   <div className="flex gap-2 mt-6">
                     <button
                       type="button"
                       onClick={() => { setEditProject(initialProject); setIsEditing(true); }}
-                      className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-black bg-white text-black hover:bg-black hover:text-white transition-colors"
+                      className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
                     >
                       Edit
                     </button>
                     <button
                       type="button"
                       onClick={handleDelete}
-                      className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-red-600 bg-white text-red-600 hover:bg-red-600 hover:text-white transition-colors"
+                      className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-destructive bg-bgMain text-destructive hover:bg-destructive hover:text-white transition-colors duration-150 rounded-sm"
                     >
                       Delete
                     </button>
@@ -247,28 +249,30 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                 )}
               </>
             )}
-          </div>
-        </div>
-        <div className="w-px shrink-0 bg-black" aria-hidden />
-        <div className="w-3/5 min-w-0 overflow-y-auto pt-24 px-6 pb-16">
-          {isEditing ? (
+      </div>
+    </div>
+  );
+
+  const galleryBlock = (
+    <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-6 px-6 pb-6' : 'w-3/5 min-w-0 overflow-y-auto pt-6 px-6 pb-12'}>
+          {!isMobile && isEditing ? (
             <div className="space-y-4">
               <div>
-                <p className="font-mono text-xs uppercase tracking-wider text-black mb-2">Cover</p>
+                <p className="font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Cover</p>
                 {project.imageUrl ? (
-                  <img src={project.imageUrl} alt="Cover" className="max-h-64 w-auto border border-black" />
+                  <img src={project.imageUrl} alt="Cover" className="max-h-64 w-auto border border-paletteBorder" />
                 ) : (
-                  <div className="max-h-64 h-64 border border-black flex items-center justify-center font-mono text-xs text-neutral-400">No cover</div>
+                  <div className="max-h-64 h-64 border border-paletteBorder flex items-center justify-center font-mono text-xs text-textSecondary">No cover</div>
                 )}
                 <div className="mt-2 flex gap-2">
-                  <label className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-black bg-white text-black hover:bg-black hover:text-white transition-colors cursor-pointer">
+                  <label className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 cursor-pointer rounded-sm">
                     Change cover
                     <input type="file" accept="image/*" className="hidden" onChange={handleCoverFile} />
                   </label>
                 </div>
               </div>
               <div>
-                <p className="font-mono text-xs uppercase tracking-wider text-black mb-2">Gallery layout</p>
+                <p className="font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Gallery layout</p>
                 <div className="flex gap-4 mb-2">
                   <label className="flex items-center gap-2 font-mono text-sm cursor-pointer">
                     <input
@@ -276,7 +280,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                       name="galleryColumns"
                       checked={(editProject.galleryColumns ?? 1) === 1}
                       onChange={() => setEditProject((p) => ({ ...p, galleryColumns: 1 }))}
-                      className="border border-black"
+                      className="border border-paletteBorder"
                     />
                     One column
                   </label>
@@ -286,40 +290,40 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                       name="galleryColumns"
                       checked={editProject.galleryColumns === 2}
                       onChange={() => setEditProject((p) => ({ ...p, galleryColumns: 2 }))}
-                      className="border border-black"
+                      className="border border-paletteBorder"
                     />
                     Two columns
                   </label>
                 </div>
-                <p className="font-mono text-xs uppercase tracking-wider text-black mb-2">Gallery</p>
+                <p className="font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Gallery</p>
                 <input
                   type="file"
                   accept="image/*"
                   multiple
-                  className="block w-full text-sm font-mono file:mr-4 file:py-2 file:px-4 file:border file:border-black file:bg-white file:font-mono file:text-xs file:uppercase file:tracking-wider file:text-black file:hover:bg-black file:hover:text-white file:transition-colors mb-2"
+                  className="block w-full text-sm font-mono file:mr-4 file:py-2 file:px-4 file:border file:border-paletteBorder file:bg-bgMain file:font-mono file:text-xs file:uppercase file:tracking-wider file:text-textPrimary file:hover:bg-neutral-800 file:hover:text-white file:transition-colors file:duration-150 file:rounded-sm mb-2"
                   onChange={handleEditGalleryFiles}
                 />
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-4">
                   {project.gallery.map((img, i) => (
                     <div key={i} className="relative group">
-                      <img src={img} alt="" className="h-20 w-auto border border-black" />
-                      <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <img src={img} alt="" className="h-20 w-auto border border-paletteBorder" />
+                      <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                         <button
                           type="button"
                           onClick={() => handleRemoveImage(i)}
                           disabled={project.gallery.length <= 1}
-                          className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-red-600 bg-white text-red-600 hover:bg-red-600 hover:text-white disabled:opacity-50 transition-colors"
+                          className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-destructive bg-bgMain text-destructive hover:bg-destructive hover:text-white disabled:opacity-50 transition-colors duration-150 rounded-sm"
                         >
                           Remove
                         </button>
                         <button
                           type="button"
                           onClick={() => setCoverFromGallery(i)}
-                          className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-black bg-white text-black hover:bg-black hover:text-white transition-colors"
+                          className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
                         >
                           Set as cover
                         </button>
-                        <label className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-black bg-white text-black hover:bg-black hover:text-white cursor-pointer transition-colors">
+                        <label className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white cursor-pointer transition-colors duration-150 rounded-sm">
                           Replace
                           <input type="file" accept="image/*" className="hidden" onChange={(e) => handleReplaceImage(i, e)} />
                         </label>
@@ -332,21 +336,38 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
           ) : (
             <>
               {project.gallery && project.gallery.length > 0 ? (
-                <div className={`grid gap-8 max-w-4xl ${project.galleryColumns === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+                <div className={`grid gap-0 max-w-4xl ${project.galleryColumns === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
                   {project.gallery.map((img, index) => (
                     <div key={index}>
-                      <ProtectedImage src={img} alt={`${project.title} ${index + 1}`} />
+                      <ProtectedImage src={img} alt={`${project.title} ${index + 1}`} useWhiteBackground={isMobile} />
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="h-full min-h-[200px] flex items-center justify-center text-gray-500 border border-dashed border-gray-300">
+                <div className="h-full min-h-[200px] flex items-center justify-center text-textSecondary border border-dashed border-paletteBorder">
                   No images in this project.
                 </div>
               )}
             </>
           )}
-        </div>
+    </div>
+  );
+
+  return (
+    <FullScreenDetail>
+      <main className={`flex-1 min-h-0 flex overflow-hidden ${isMobile ? 'flex-col pt-12' : ''}`}>
+        {isMobile ? (
+          <>
+            {galleryBlock}
+            {textBlock}
+          </>
+        ) : (
+          <>
+            {textBlock}
+            <div className="w-px shrink-0 bg-paletteBorder" aria-hidden />
+            {galleryBlock}
+          </>
+        )}
       </main>
     </FullScreenDetail>
   );

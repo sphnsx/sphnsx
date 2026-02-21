@@ -75,7 +75,7 @@ const DraggableDivider: React.FC<DraggableDividerProps> = ({
       onMouseDown={handleMouseDown}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="shrink-0 border-t border-black cursor-row-resize select-none flex items-center justify-center transition-colors"
+      className="shrink-0 border-t border-paletteBorder cursor-row-resize select-none flex items-center justify-center transition-colors"
       style={{
         height: HIT_HEIGHT_PX,
         minHeight: HIT_HEIGHT_PX,

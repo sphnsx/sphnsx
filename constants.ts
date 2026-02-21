@@ -1,7 +1,21 @@
 import { PortfolioData } from './types';
 
-/** Green used only for the fixed Home button (top-left). */
-export const HOME_BUTTON_GREEN = '#5EEAD4';
+/** Single source of truth for UI colours (Wigmore Hall / PhMuseum inspired). */
+export const PALETTE = {
+  accent: '#66FFCC',
+  backgroundMain: '#FAFAFA',
+  backgroundSidebar: '#EBEBEB',
+  border: '#333333',
+  textPrimary: '#1a1a1a',
+  textSecondary: '#737373',
+  destructive: '#b91c1c',
+} as const;
+
+/** Viewport width below this (px) is treated as phone for layout. */
+export const MOBILE_BREAKPOINT_PX = 768;
+
+/** @deprecated Use PALETTE.accent */
+export const HOME_BUTTON_GREEN = PALETTE.accent;
 
 export const INITIAL_DATA: PortfolioData = {
   aboutMe: "Silvia (b 1999) is a London-based fine art photographer whose work interrogates the fluid boundaries between the tangible and the perceived. A graduate of Central Saint Martins, she has pivoted from the structural rigour of fashion towards a more ephemeral exploration of the 'shifted concept' — capturing the weight of a glance within a fleeting moment.\n\nHer practice is deeply rooted in travel and the quiet observation of nature and still life. By isolating objects from their traditional contexts, Silvia creates unreal spaces where philosophical enquiry and visual subtlety converge. For her, the camera is not a tool for documentation, but a medium for leaping between states of being.",

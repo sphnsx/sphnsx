@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 
 interface ModularSectionProps {
   title: string;
@@ -20,16 +19,17 @@ const ModularSection: React.FC<ModularSectionProps> = ({
   draggable = true,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const hashHref = `#${to.startsWith('/') ? to : `/${to}`}`;
 
   return (
-    <Link
-      to={to}
+    <a
+      href={hashHref}
       draggable={draggable}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={`block w-full h-full text-left overflow-hidden bg-white relative ${className}`}
+      className={`block w-full h-full text-left overflow-hidden bg-bgMain relative group ${className}`}
     >
-      <div className="absolute top-0 left-0 pl-5 pt-4 pr-4 pb-4 z-10">
+      <div className="absolute top-0 left-0 pl-6 pt-4 pr-4 pb-4 z-10">
         <span className="relative inline-block pt-0 pb-1.5 pl-0 pr-3">
           {hoverColor && isHovered && (
             <div
@@ -37,13 +37,13 @@ const ModularSection: React.FC<ModularSectionProps> = ({
               style={{ backgroundColor: hoverColor }}
             />
           )}
-          <span className="relative font-mono text-sm uppercase tracking-wider">{title}</span>
+          <span className="relative font-mono text-sm uppercase tracking-wider group-hover:underline underline-offset-2">{title}</span>
         </span>
       </div>
       <div className="absolute inset-0 pt-16">
         {preview}
       </div>
-    </Link>
+    </a>
   );
 };
 

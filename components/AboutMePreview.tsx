@@ -30,12 +30,12 @@ const AboutMePreview: React.FC<AboutMePreviewProps> = ({ text }) => {
   const showPlaceholder = !displayText;
 
   return (
-    <div ref={wrapperRef} className="h-full w-full overflow-hidden pl-5 pr-4 mt-4">
+    <div ref={wrapperRef} className="h-full w-full overflow-hidden pl-6 pr-4 mt-4">
       {showPlaceholder ? (
-        <p className="text-sm text-neutral-400 leading-relaxed">Introduction…</p>
+        <p className="text-sm text-textSecondary leading-relaxed">Introduction…</p>
       ) : (
         <p
-          className="text-sm leading-relaxed text-neutral-700"
+          className="text-base leading-relaxed text-textPrimary"
           style={{
             display: '-webkit-box',
             WebkitBoxOrient: 'vertical',
