@@ -74,9 +74,7 @@ const ProjectPreview: React.FC<{ project: Project; hoverColor?: string; dragDisa
           style={{ pointerEvents: 'none' }}
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center font-mono text-xs text-textSecondary uppercase tracking-wider">
-          No image
-        </div>
+        <div className="w-full h-full bg-bgSidebar" aria-hidden />
       )
     }
   />
@@ -159,9 +157,7 @@ const MobileProjectRow: React.FC<{ project: Project }> = ({ project }) => {
           className="mt-3 w-full max-h-48 object-contain bg-bgMain"
           onContextMenu={(e) => e.preventDefault()}
         />
-      ) : (
-        <div className="mt-3 py-8 text-center font-mono text-xs text-textSecondary uppercase">No image</div>
-      )}
+      ) : null}
     </div>
   );
 };
@@ -345,9 +341,57 @@ const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = 
   );
 
   if (isMobile) {
+    // #region agent log
+    try {
+      fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '9bdf88' },
+        body: JSON.stringify({
+          sessionId: '9bdf88',
+          location: 'ShowcaseView.tsx:mobile',
+          message: 'mobile layout render',
+          data: { isMobile: true, dataProjectsLength: data.projects.length, projectsByYearLength: projectsByYear.length },
+          timestamp: Date.now(),
+          hypothesisId: 'S3',
+        }),
+      }).catch(() => {});
+    } catch (_) {}
+    // #endregion
     return <MobileHomeLayout data={data} projectsByYear={projectsByYear} />;
   }
 
+  // #region agent log
+  try {
+    fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '9bdf88' },
+      body: JSON.stringify({
+        sessionId: '9bdf88',
+        location: 'ShowcaseView.tsx:desktop',
+        message: 'desktop layout render',
+        data: { isMobile: false, dataProjectsLength: data.projects.length, mid: Math.ceil(data.projects.length / 2), middleLen: middleProjects.length, rightLen: rightProjects.length },
+        timestamp: Date.now(),
+        hypothesisId: 'S4',
+      }),
+    }).catch(() => {});
+  } catch (_) {}
+  // #endregion
+  // #region agent log
+  try {
+    fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '9bdf88' },
+      body: JSON.stringify({
+        sessionId: '9bdf88',
+        location: 'ShowcaseView.tsx:beforeLayout',
+        message: 'heights passed to layout',
+        data: { middleHeights, rightHeights, middleLen: middleProjects.length },
+        timestamp: Date.now(),
+        hypothesisId: 'S5',
+      }),
+    }).catch(() => {});
+  } catch (_) {}
+  // #endregion
   return (
     <ThreeColumnLayout
       leftRows={leftRows}

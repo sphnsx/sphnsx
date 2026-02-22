@@ -7,7 +7,7 @@ import DeploymentPage from './components/DeploymentPage';
 import NewProjectPage from './components/NewProjectPage';
 import ProjectDetailPage from './components/ProjectDetailPage';
 import { PortfolioData } from './types';
-import { getPortfolioData, updateAboutMe } from './services/storageService';
+import { getPortfolioData, updateAboutMe, STORAGE_KEY } from './services/storageService';
 import { PALETTE } from './constants';
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
 import { useIsMobile } from './hooks/useMediaQuery';
@@ -199,15 +199,34 @@ const NotFoundPage: React.FC = () => (
   </main>
 );
 
+/** Base path where the SPA is served (e.g. /a). No trailing slash. */
+const getBasePath = (): string => {
+  const b = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) || '/';
+  return b.replace(/\/$/, '') || '';
+};
+
 const HashPathSync: React.FC = () => {
   const location = useLocation();
   useEffect(() => {
     const pathname = window.location.pathname;
     const hash = window.location.hash;
-    // HashRouter only reads the hash. Visiting pathname without hash leaves hash empty, so sync pathname into hash.
-    const pathOnly = pathname === '/admin' || pathname === '/a' || pathname === '/project/new' || pathname === '/admin/deployment';
-    if (pathOnly && (!hash || hash === '#')) {
-      window.location.hash = pathname;
+    if (hash && hash !== '#') return; // Already have a route in hash
+    const base = getBasePath();
+    // Pathname → route. Entry points: /a or /a/ → home (#/); /admin → #/admin; /a/admin → #/admin.
+    const route =
+      pathname === base || pathname === base + '/'
+        ? '/'
+        : pathname.startsWith(base + '/')
+          ? pathname.slice(base.length) || '/'
+          : pathname.startsWith('/')
+            ? pathname
+            : '/' + pathname;
+    const newHash = '#' + (route.startsWith('/') ? route : '/' + route);
+    window.location.hash = newHash;
+    // Normalize URL to base + hash so we don't get /a#/a or /admin#/admin (double path).
+    const pathPart = base ? base + newHash : '/' + newHash;
+    if (window.location.pathname + window.location.hash !== pathPart) {
+      window.history.replaceState(undefined, '', window.location.origin + pathPart);
     }
   }, [location.pathname]);
   return null;
@@ -247,6 +266,40 @@ const App: React.FC = () => {
   useEffect(() => {
     refreshData();
   }, []);
+
+  // #region agent log
+  useEffect(() => {
+    try {
+      const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+      const d = getPortfolioData();
+      fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '9bdf88' },
+        body: JSON.stringify({
+          sessionId: '9bdf88',
+          location: 'App.tsx:load',
+          message: 'portfolio data on load',
+          data: {
+            storageNull: raw === null,
+            storageLength: raw ? raw.length : 0,
+            projectsLength: d.projects.length,
+            projectIds: d.projects.map((p) => p.id),
+          },
+          timestamp: Date.now(),
+          hypothesisId: 'S1',
+        }),
+      }).catch(() => {});
+    } catch (e) {
+      try {
+        fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '9bdf88' },
+          body: JSON.stringify({ sessionId: '9bdf88', location: 'App.tsx:load', message: 'portfolio load error', data: { err: String(e) }, timestamp: Date.now(), hypothesisId: 'S1' }),
+        }).catch(() => {});
+      } catch (_) {}
+    }
+  }, []);
+  // #endregion
 
   return (
     <Router>

@@ -16,9 +16,7 @@ const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children })
 const ProtectedImage: React.FC<{ src: string; alt: string; className?: string; useWhiteBackground?: boolean }> = ({ src, alt, className, useWhiteBackground }) => {
   const bgClass = useWhiteBackground ? 'bg-bgMain' : 'bg-bgSidebar';
   if (!src) return (
-    <div className={`w-full aspect-[4/5] border border-dashed border-paletteBorder flex items-center justify-center ${bgClass}`}>
-      <span className="text-xs text-textSecondary">No image</span>
-    </div>
+    <div className={`w-full aspect-[4/5] border border-dashed border-paletteBorder ${bgClass}`} aria-hidden />
   );
   return (
     <div className={`relative w-full h-full overflow-hidden ${bgClass}`}>
@@ -343,11 +341,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="h-full min-h-[200px] flex items-center justify-center text-textSecondary border border-dashed border-paletteBorder">
-                  No images in this project.
-                </div>
-              )}
+              ) : null}
             </>
           )}
     </div>

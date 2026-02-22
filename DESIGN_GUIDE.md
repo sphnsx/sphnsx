@@ -68,3 +68,28 @@ Single source of truth for the SPHNSX site design. Add new rules as new sections
 - **Left column content:** Align all text and links to the same left margin as the Home button (e.g. 20px / `pl-5`). Section title block: same left padding, with padding around the title for the hover shade.
 - **Vertical rhythm:** Blank row between section title and first line of text; blank row between paragraphs on detail pages (e.g. description split by `\n\n` with spacing between `<p>`s).
 - **Column tops:** Middle and right columns start at the top border. Left column has a top spacer so content begins below the fixed Home button; vertical dividers still run to the top of the layout.
+
+---
+
+## 11. Phone viewport (mobile-only rules)
+
+- **Breakpoint:** Viewport width &lt; 768px is treated as phone. Value in `constants.ts` as `MOBILE_BREAKPOINT_PX`; layout branches on `useIsMobile()` from `hooks/useMediaQuery.ts`.
+- **Ignore column ratios on phone:** Do not use the 1/5 | 2/5 | 2/5 home layout or the 2/5 | 3/5 detail layout. Use only horizontally divided sections (single column, stacked blocks).
+- **Home (phone):** One fixed top bar (hamburger + Home); left-column content (About me, Contact) is folded into a drawer opened by the hamburger. Main area is a single vertical list of project sections only, in **year order new to old** (by `project.year`, non-numeric/empty last). No “Add project”; no draggable reorder. Tapping a project navigates to its detail (hash + reload on phone for reliability).
+- **Detail (phone):** Single column: **pictures/gallery first** (full width), **text below** (year, title, description). No 2/5–3/5 split; no Edit/Delete. About and Contact: same idea — one column, text then image area; no “Images” placeholder when there are no images.
+- **Backgrounds on phone:** Use white (`bgMain`) for main and section backgrounds; no grey (`bgSidebar`) for project rows or detail image areas on phone.
+- **Admin on phone:** Do not show AdminBar, Add project, Edit/Delete, or Edit biography when `useIsMobile()` is true. Admin routes can redirect to home on phone.
+
+## 12. Mobile header (green bar + drawer)
+
+- **When:** Only when viewport is phone; rendered by App, not inside ShowcaseView, so it appears on every route (home, about, contact, project detail).
+- **Bar:** Single green block (same accent as Fixed Home: `PALETTE.accent` from `constants.ts`). Contains hamburger (three lines, left) + “Home” link (right). Compact: **max width ~1/3 of viewport** (`max-w-[33.333vw]`), `w-auto` so it can be narrower.
+- **Alignment:** Bar left padding (`pl-4`) so the hamburger aligns with main content (pictures, text). Hamburger button is icon-width only (`w-6`); no extra space between icon and “Home”.
+- **Equal gaps:** The gap between the hamburger and “Home” equals the gap between “Home” and the right edge of the green block. Achieved by giving the Home link equal horizontal padding (e.g. `px-4`) and no separate right spacer; bar has no right padding so the link’s padding defines the right gap.
+- **Drawer:** Hamburger toggles a slide-over panel with “About me” and “Contact” links (same destinations as desktop). Close on link click or tap outside. No ResizableColumn or draggable dividers in the drawer.
+- **Fixed Home button:** When `useIsMobile()` is true, do not render the desktop Fixed Home button; the mobile header is the only top bar.
+
+## 13. Palette and tokens
+
+- **Colours:** Single source in `constants.ts` — `PALETTE.accent` (green for Home/mobile bar), `PALETTE.backgroundMain`, `PALETTE.backgroundSidebar`, `PALETTE.border`, `PALETTE.textPrimary`, `PALETTE.textSecondary`, `PALETTE.destructive`. Use these tokens; do not hardcode hex for UI.
+- **Section hover palette:** Section title hover uses a separate section palette (e.g. in ShowcaseView); grey is reserved for neutral UI only, not section blocks.

@@ -2,7 +2,7 @@
 import { PortfolioData, Project } from '../types';
 import { INITIAL_DATA } from '../constants';
 
-const STORAGE_KEY = 'silvia_jiang_portfolio_v1';
+export const STORAGE_KEY = 'silvia_jiang_portfolio_v1';
 
 export const getPortfolioData = (): PortfolioData => {
   const data = localStorage.getItem(STORAGE_KEY);
