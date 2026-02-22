@@ -72,7 +72,7 @@ const CoverCropZoom: React.FC<CoverCropZoomProps> = ({ imageSrc, onComplete, onC
             type="button"
             onClick={handleConfirm}
             disabled={!croppedAreaPixels || isConfirming}
-            className="font-mono text-sm uppercase tracking-wider px-4 py-2 bg-accent text-white hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
+            className="font-mono text-sm uppercase tracking-wider px-4 py-2 bg-accent text-textPrimary hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
           >
             {isConfirming ? 'Processing…' : 'Confirm'}
           </button>

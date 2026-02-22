@@ -74,7 +74,7 @@ const ProjectPreview: React.FC<{ project: Project; hoverColor?: string; dragDisa
           style={{ pointerEvents: 'none' }}
         />
       ) : (
-        <div className="w-full h-full bg-bgSidebar" aria-hidden />
+        <div className="w-full h-full bg-bgMain" aria-hidden />
       )
     }
   />
@@ -266,12 +266,12 @@ const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = 
   );
 
   const handleReorder = useCallback(
-    (draggedId: string, targetId: string) => {
+    async (draggedId: string, targetId: string) => {
       const newOrder = allProjectIds.filter((id) => id !== draggedId);
       const idx = newOrder.indexOf(targetId);
       if (idx === -1) return;
       newOrder.splice(idx, 0, draggedId);
-      reorderProjects(newOrder);
+      await reorderProjects(newOrder);
       onRefresh?.();
     },
     [allProjectIds, onRefresh]

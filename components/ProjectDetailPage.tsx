@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { updateProject, deleteProject } from '../services/storageService';
 import { compressImageDataUrl, getImageAspectRatio } from '../utils/imageCompress';
-import CoverCropZoom from './CoverCropZoom';
 import { useIsMobile } from '../hooks/useMediaQuery';
+import RichTextEditor from './RichTextEditor';
+import SafeHtml from './SafeHtml';
 import { PortfolioData, Project } from '../types';
 
 const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -13,8 +14,8 @@ const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children })
   </div>
 );
 
-const ProtectedImage: React.FC<{ src: string; alt: string; className?: string; useWhiteBackground?: boolean }> = ({ src, alt, className, useWhiteBackground }) => {
-  const bgClass = useWhiteBackground ? 'bg-bgMain' : 'bg-bgSidebar';
+const ProtectedImage: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
+  const bgClass = 'bg-bgMain';
   if (!src) return (
     <div className={`w-full aspect-[4/5] border border-dashed border-paletteBorder ${bgClass}`} aria-hidden />
   );
@@ -46,22 +47,19 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
   const [isEditing, setIsEditing] = useState(false);
   const [editProject, setEditProject] = useState<Project>(initialProject);
   const [isSaving, setIsSaving] = useState(false);
-  const [coverCropSrc, setCoverCropSrc] = useState<string | null>(null);
   const [isEditUploading, setIsEditUploading] = useState(false);
 
   const project = isEditing ? editProject : initialProject;
 
-  const handleCoverFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
-    const reader = new FileReader();
-    reader.onloadend = () => setCoverCropSrc(reader.result as string);
-    reader.readAsDataURL(file);
-  }, []);
-
-  const handleCoverCropComplete = useCallback(async (dataUrl: string) => {
-    setCoverCropSrc(null);
+    const dataUrl = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(file);
+    });
     const compressed = await compressImageDataUrl(dataUrl);
     const ratio = await getImageAspectRatio(compressed).catch(() => undefined);
     setEditProject((p) => ({ ...p, imageUrl: compressed, coverAspectRatio: ratio }));
@@ -69,7 +67,12 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
 
   const setCoverFromGallery = useCallback((index: number) => {
     const img = editProject.gallery[index];
-    if (img) setCoverCropSrc(img);
+    if (!img) return;
+    getImageAspectRatio(img).then((ratio) => {
+      setEditProject((p) => ({ ...p, imageUrl: img, coverAspectRatio: ratio }));
+    }).catch(() => {
+      setEditProject((p) => ({ ...p, imageUrl: img }));
+    });
   }, [editProject.gallery]);
 
   const handleEditGalleryFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,13 +136,13 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
           : editProject.gallery;
       const compressed = await Promise.all(galleryToCompress.map((url) => compressImageDataUrl(url)));
       const toSave = { ...editProject, gallery: compressed, imageUrl: compressed[0] ?? editProject.imageUrl };
-      updateProject(toSave.id, toSave);
+      await updateProject(toSave.id, toSave);
       onRefresh();
       setIsEditing(false);
     } catch (err) {
       console.error(err);
       if (err instanceof DOMException && err.name === 'QuotaExceededError') {
-        alert('Storage limit reached. Try removing some images or using smaller images.');
+        alert('Storage limit reached (browser limit). Try fewer images, smaller file sizes, or remove images from other projects.');
       } else {
         alert('Failed to update project.');
       }
@@ -148,22 +151,12 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!confirm('Delete this project?')) return;
-    deleteProject(initialProject.id);
+    await deleteProject(initialProject.id);
     onRefresh();
     navigate('/');
   };
-
-  if (coverCropSrc) {
-    return (
-      <CoverCropZoom
-        imageSrc={coverCropSrc}
-        onComplete={handleCoverCropComplete}
-        onCancel={() => setCoverCropSrc(null)}
-      />
-    );
-  }
 
   const textBlock = (
     <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-6 px-6 pb-12' : 'w-2/5 min-w-0 overflow-y-auto pt-pageTop px-6 pb-12'}>
@@ -190,10 +183,11 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                 </div>
                 <div>
                   <label className="block font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Description</label>
-                  <textarea
-                    className="w-full p-3 border border-paletteBorder bg-transparent font-mono text-sm focus:outline-none h-32"
+                  <RichTextEditor
                     value={editProject.description}
-                    onChange={(e) => setEditProject((p) => ({ ...p, description: e.target.value }))}
+                    onChange={(html) => setEditProject((p) => ({ ...p, description: html }))}
+                    placeholder="Project description…"
+                    minHeight="10rem"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -201,7 +195,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                     type="button"
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="font-mono text-sm uppercase tracking-wider px-4 py-2 bg-accent text-white hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
+                    className="font-mono text-sm uppercase tracking-wider px-4 py-2 bg-accent text-textPrimary hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
                   >
                     {isSaving ? 'Saving…' : 'Save'}
                   </button>
@@ -218,14 +212,8 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
               <>
                 <p className="font-mono text-xs uppercase tracking-wider text-textSecondary mb-2">{project.year}</p>
                 <h1 className="text-3xl font-bold mb-6">{project.title}</h1>
-                <div>
-                  {project.description
-                    .split(/\n\n+/)
-                    .map((p) => p.trim())
-                    .filter(Boolean)
-                    .map((para, i) => (
-                      <p key={i} className="text-base leading-relaxed text-textPrimary mb-8 last:mb-0">{para}</p>
-                    ))}
+                <div className="text-base leading-relaxed text-textPrimary [&_p]:mb-8 [&_p:last-child]:mb-0">
+                  <SafeHtml html={project.description} />
                 </div>
                 {showAdminActions && (
                   <div className="flex gap-2 mt-6">
@@ -337,7 +325,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                 <div className={`grid gap-0 max-w-4xl ${project.galleryColumns === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
                   {project.gallery.map((img, index) => (
                     <div key={index}>
-                      <ProtectedImage src={img} alt={`${project.title} ${index + 1}`} useWhiteBackground={isMobile} />
+                      <ProtectedImage src={img} alt={`${project.title} ${index + 1}`} />
                     </div>
                   ))}
                 </div>

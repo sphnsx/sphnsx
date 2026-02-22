@@ -4,43 +4,111 @@ import { INITIAL_DATA } from '../constants';
 
 export const STORAGE_KEY = 'silvia_jiang_portfolio_v1';
 
+const DB_NAME = 'sphnsx_portfolio';
+const STORE_NAME = 'portfolio';
+const DATA_KEY = 'data';
+
+let cache: PortfolioData | null = null;
+
+function openDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => resolve(req.result);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'key' });
+      }
+    };
+  });
+}
+
+/** Sync get for initial render; returns cache or INITIAL_DATA. After load from IndexedDB, cache is set. */
 export const getPortfolioData = (): PortfolioData => {
-  const data = localStorage.getItem(STORAGE_KEY);
-  return data ? JSON.parse(data) : INITIAL_DATA;
+  return cache ?? INITIAL_DATA;
 };
 
-export const updateAboutMe = (text: string) => {
-  const data = getPortfolioData();
+/** Load from IndexedDB (migrate from localStorage once), update cache, return. */
+export async function getPortfolioDataAsync(): Promise<PortfolioData> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.get(DATA_KEY);
+    req.onerror = () => { db.close(); reject(req.error); };
+    req.onsuccess = () => {
+      db.close();
+      const row = req.result as { key: string; value: string } | undefined;
+      if (row?.value) {
+        try {
+          const data = JSON.parse(row.value) as PortfolioData;
+          cache = data;
+          resolve(data);
+          return;
+        } catch (_) {}
+      }
+      // Migrate from localStorage
+      const local = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+      if (local) {
+        try {
+          const data = JSON.parse(local) as PortfolioData;
+          cache = data;
+          writePortfolioData(data).then(() => resolve(data)).catch(() => resolve(data));
+          return;
+        } catch (_) {}
+      }
+      cache = INITIAL_DATA;
+      resolve(INITIAL_DATA);
+    };
+  });
+}
+
+function writePortfolioData(data: PortfolioData): Promise<void> {
+  cache = data;
+  return openDB().then((db) => {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.put({ key: DATA_KEY, value: JSON.stringify(data) });
+      req.onerror = () => { db.close(); reject(req.error); };
+      req.onsuccess = () => { db.close(); resolve(); };
+    });
+  });
+}
+
+export async function updateAboutMe(text: string): Promise<void> {
+  const data = await getPortfolioDataAsync();
   data.aboutMe = text;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-};
+  await writePortfolioData(data);
+}
 
-export const addProject = (project: Project) => {
-  const data = getPortfolioData();
+export async function addProject(project: Project): Promise<void> {
+  const data = await getPortfolioDataAsync();
   data.projects.unshift(project);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-};
+  await writePortfolioData(data);
+}
 
-export const updateProject = (id: string, project: Project) => {
-  const data = getPortfolioData();
+export async function updateProject(id: string, project: Project): Promise<void> {
+  const data = await getPortfolioDataAsync();
   const index = data.projects.findIndex(p => p.id === id);
   if (index === -1) return;
   data.projects[index] = { ...project, id };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-};
+  await writePortfolioData(data);
+}
 
-export const deleteProject = (id: string) => {
-  const data = getPortfolioData();
+export async function deleteProject(id: string): Promise<void> {
+  const data = await getPortfolioDataAsync();
   data.projects = data.projects.filter(p => p.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-};
+  await writePortfolioData(data);
+}
 
 /** Reorder projects to match the order of projectIds. Missing ids are appended. */
-export const reorderProjects = (projectIds: string[]) => {
-  const data = getPortfolioData();
+export async function reorderProjects(projectIds: string[]): Promise<void> {
+  const data = await getPortfolioDataAsync();
   const byId = new Map(data.projects.map(p => [p.id, p]));
   const ordered = projectIds.map(id => byId.get(id)).filter((p): p is Project => p != null);
   const rest = data.projects.filter(p => !projectIds.includes(p.id));
   data.projects = [...ordered, ...rest];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-};
+  await writePortfolioData(data);
+}

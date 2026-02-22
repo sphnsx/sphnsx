@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { addProject } from '../services/storageService';
 import { compressImageDataUrl, getImageAspectRatio } from '../utils/imageCompress';
-import CoverCropZoom from './CoverCropZoom';
+import RichTextEditor from './RichTextEditor';
 import { PortfolioData, Project } from '../types';
 
 interface NewProjectPageProps {
@@ -20,23 +20,19 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
   const [imageUrl, setImageUrl] = useState('');
   const [gallery, setGallery] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [coverCropSrc, setCoverCropSrc] = useState<string | null>(null);
-
   React.useEffect(() => {
     if (!isAdmin) navigate('/');
   }, [isAdmin, navigate]);
 
-  const handleCoverFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
-    const reader = new FileReader();
-    reader.onloadend = () => setCoverCropSrc(reader.result as string);
-    reader.readAsDataURL(file);
-  }, []);
-
-  const handleCoverCropComplete = useCallback(async (dataUrl: string) => {
-    setCoverCropSrc(null);
+    const dataUrl = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(file);
+    });
     const compressed = await compressImageDataUrl(dataUrl);
     setImageUrl(compressed);
   }, []);
@@ -66,7 +62,8 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
   };
 
   const setCoverFromGallery = (index: number) => {
-    setCoverCropSrc(gallery[index] ?? null);
+    const img = gallery[index];
+    if (img) setImageUrl(img);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,11 +80,11 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
       const id = Date.now().toString();
       const cover = imageUrl || gallery[0] || '';
       const coverAspectRatio = cover ? await getImageAspectRatio(cover).catch(() => undefined) : undefined;
-      addProject({
+      await addProject({
         id,
         title: title.trim(),
         year: year.trim(),
-        description: description.trim(),
+        description: description.trim() || '',
         imageUrl: cover,
         gallery,
         galleryColumns: 1,
@@ -97,21 +94,15 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
       navigate(`/project/${id}`);
     } catch (err) {
       console.error(err);
-      alert('Failed to create project.');
+      if (err instanceof DOMException && err.name === 'QuotaExceededError') {
+        alert('Storage limit reached (browser limit). Try fewer images, smaller file sizes, or remove images from other projects.');
+      } else {
+        alert('Failed to create project.');
+      }
     }
   };
 
   if (!isAdmin) return null;
-
-  if (coverCropSrc) {
-    return (
-      <CoverCropZoom
-        imageSrc={coverCropSrc}
-        onComplete={handleCoverCropComplete}
-        onCancel={() => setCoverCropSrc(null)}
-      />
-    );
-  }
 
   return (
     <div className="fixed inset-0 bg-bgMain flex flex-col overflow-hidden">
@@ -142,10 +133,11 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
               </div>
               <div>
                 <label className="block font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Description</label>
-                <textarea
-                  className="w-full p-3 border border-paletteBorder bg-transparent font-mono text-sm placeholder:text-textSecondary text-textPrimary focus:outline-none h-32"
+                <RichTextEditor
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={setDescription}
+                  placeholder="Project description…"
+                  minHeight="10rem"
                 />
               </div>
               <div>
@@ -160,7 +152,7 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
               <button
                 type="submit"
                 disabled={isUploading}
-                className="font-mono text-sm uppercase tracking-wider px-6 py-3 bg-accent text-white hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
+                className="font-mono text-sm uppercase tracking-wider px-6 py-3 bg-accent text-textPrimary hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
               >
                 {isUploading ? 'Processing…' : 'Create project'}
               </button>

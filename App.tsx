@@ -7,10 +7,12 @@ import DeploymentPage from './components/DeploymentPage';
 import NewProjectPage from './components/NewProjectPage';
 import ProjectDetailPage from './components/ProjectDetailPage';
 import { PortfolioData } from './types';
-import { getPortfolioData, updateAboutMe, STORAGE_KEY } from './services/storageService';
+import { getPortfolioData, getPortfolioDataAsync, updateAboutMe, STORAGE_KEY } from './services/storageService';
 import { PALETTE } from './constants';
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
 import { useIsMobile } from './hooks/useMediaQuery';
+import RichTextEditor from './components/RichTextEditor';
+import SafeHtml from './components/SafeHtml';
 
 const FixedHomeButton: React.FC = () => {
   const isMobile = useIsMobile();
@@ -32,7 +34,7 @@ const AdminBar: React.FC = () => {
   const navigate = useNavigate();
   if (isMobile || !isAdmin) return null;
   return (
-    <div className="fixed top-0 left-0 z-[99] pl-12 pt-4 flex gap-2">
+    <div className="fixed bottom-0 left-0 z-[99] pl-6 pb-6 flex gap-2">
       <Link
         to="/project/new"
         className="font-mono text-xs uppercase tracking-wider border border-paletteBorder px-3 py-2 bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
@@ -87,8 +89,8 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ d
     setAboutText(data.aboutMe);
   }, [data.aboutMe]);
 
-  const handleSave = () => {
-    updateAboutMe(aboutText);
+  const handleSave = async () => {
+    await updateAboutMe(aboutText);
     onRefresh();
     setIsEditing(false);
   };
@@ -112,16 +114,17 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ d
                   </button>
                 ) : (
                   <div className="space-y-4">
-                    <textarea
-                      className="w-full h-40 p-3 border border-paletteBorder bg-transparent font-mono text-sm focus:outline-none text-textPrimary"
+                    <RichTextEditor
                       value={aboutText}
-                      onChange={(e) => setAboutText(e.target.value)}
+                      onChange={setAboutText}
+                      placeholder="About me…"
+                      minHeight="14rem"
                     />
                     <div className="flex gap-2">
                       <button
                         type="button"
                         onClick={handleSave}
-                        className="font-mono text-sm uppercase tracking-wider px-4 py-2 bg-accent text-white hover:opacity-90 transition-opacity duration-150 rounded-sm"
+                        className="font-mono text-sm uppercase tracking-wider px-4 py-2 bg-accent text-textPrimary hover:opacity-90 transition-opacity duration-150 rounded-sm"
                       >
                         Save
                       </button>
@@ -140,14 +143,8 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ d
             {!isEditing && (
               <>
                 <h1 className="text-3xl font-bold mb-8 text-textPrimary">About me</h1>
-                <div className="space-y-6">
-                  {data.aboutMe
-                    .split(/\n\n+/)
-                    .map((p) => p.trim())
-                    .filter(Boolean)
-                    .map((para, i) => (
-                      <p key={i} className="text-base leading-relaxed text-textPrimary">{para}</p>
-                    ))}
+                <div className="space-y-6 text-base leading-relaxed text-textPrimary">
+                  <SafeHtml html={data.aboutMe} />
                 </div>
               </>
             )}
@@ -223,8 +220,8 @@ const HashPathSync: React.FC = () => {
             : '/' + pathname;
     const newHash = '#' + (route.startsWith('/') ? route : '/' + route);
     window.location.hash = newHash;
-    // Normalize URL to base + hash so we don't get /a#/a or /admin#/admin (double path).
-    const pathPart = base ? base + newHash : '/' + newHash;
+    // Normalize URL: admin routes always use root path /#/admin so sphnsx.com/admin and /a become /#/admin.
+    const pathPart = (route === '/admin' || route.startsWith('/admin/')) ? '/' + newHash : (base ? base + newHash : '/' + newHash);
     if (window.location.pathname + window.location.hash !== pathPart) {
       window.history.replaceState(undefined, '', window.location.origin + pathPart);
     }
@@ -261,10 +258,10 @@ const App: React.FC = () => {
   const isMobile = useIsMobile();
   const [data, setData] = useState<PortfolioData>(getPortfolioData());
 
-  const refreshData = () => setData(getPortfolioData());
+  const refreshData = () => getPortfolioDataAsync().then(setData);
 
   useEffect(() => {
-    refreshData();
+    getPortfolioDataAsync().then(setData);
   }, []);
 
   // #region agent log

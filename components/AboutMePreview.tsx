@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import SafeHtml from './SafeHtml';
 
 const LINE_HEIGHT_PX = 24; // ~1.5rem
 
@@ -26,15 +27,16 @@ const AboutMePreview: React.FC<AboutMePreviewProps> = ({ text }) => {
     return () => observer.disconnect();
   }, []);
 
-  const displayText = text?.trim() || '';
-  const showPlaceholder = !displayText;
+  const hasContent = text?.trim() || '';
+  const showPlaceholder = !hasContent;
 
   return (
     <div ref={wrapperRef} className="h-full w-full overflow-hidden pl-6 pr-4 mt-4">
       {showPlaceholder ? (
         <p className="text-sm text-textSecondary leading-relaxed">Introduction…</p>
       ) : (
-        <p
+        <SafeHtml
+          html={text}
           className="text-base leading-relaxed text-textPrimary"
           style={{
             display: '-webkit-box',
@@ -42,9 +44,7 @@ const AboutMePreview: React.FC<AboutMePreviewProps> = ({ text }) => {
             WebkitLineClamp: lineClamp,
             overflow: 'hidden',
           }}
-        >
-          {displayText}
-        </p>
+        />
       )}
     </div>
   );
