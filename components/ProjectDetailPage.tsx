@@ -88,7 +88,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
       });
       loaded.push(await compressImageDataUrl(base64));
     }
-    setEditProject((p) => ({ ...p, imageUrl: loaded[0] ?? p.imageUrl, gallery: loaded }));
+    setEditProject((p) => ({ ...p, gallery: [...p.gallery, ...loaded], imageUrl: p.imageUrl || loaded[0] }));
     setIsEditUploading(false);
   };
 
@@ -130,12 +130,9 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
     }
     try {
       setIsSaving(true);
-      const galleryToCompress =
-        editProject.imageUrl && editProject.imageUrl !== editProject.gallery[0]
-          ? [editProject.imageUrl, ...editProject.gallery.slice(1)]
-          : editProject.gallery;
-      const compressed = await Promise.all(galleryToCompress.map((url) => compressImageDataUrl(url)));
-      const toSave = { ...editProject, gallery: compressed, imageUrl: compressed[0] ?? editProject.imageUrl };
+      const compressed = await Promise.all(editProject.gallery.map((url) => compressImageDataUrl(url)));
+      const coverIndex = editProject.gallery.findIndex((u) => u === editProject.imageUrl);
+      const toSave = { ...editProject, gallery: compressed, imageUrl: coverIndex >= 0 ? compressed[coverIndex] : compressed[0] };
       await updateProject(toSave.id, toSave);
       onRefresh();
       setIsEditing(false);
@@ -291,17 +288,9 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                 />
                 <div className="flex flex-wrap gap-4">
                   {project.gallery.map((img, i) => (
-                    <div key={i} className="relative group">
+                    <div key={i} className="flex flex-col">
                       <img src={img} alt="" className="h-20 w-auto border border-paletteBorder" />
-                      <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(i)}
-                          disabled={project.gallery.length <= 1}
-                          className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-destructive bg-bgMain text-destructive hover:bg-destructive hover:text-white disabled:opacity-50 transition-colors duration-150 rounded-sm"
-                        >
-                          Remove
-                        </button>
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
                         <button
                           type="button"
                           onClick={() => setCoverFromGallery(i)}
@@ -313,6 +302,14 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                           Replace
                           <input type="file" accept="image/*" className="hidden" onChange={(e) => handleReplaceImage(i, e)} />
                         </label>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(i)}
+                          disabled={project.gallery.length <= 1}
+                          className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-destructive bg-bgMain text-destructive hover:bg-destructive hover:text-white disabled:opacity-50 transition-colors duration-150 rounded-sm"
+                        >
+                          Remove
+                        </button>
                       </div>
                     </div>
                   ))}

@@ -100,7 +100,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ d
   return (
     <FullScreenDetail>
       <main className={`flex-1 min-h-0 flex overflow-hidden ${isMobile ? 'flex-col' : ''}`}>
-        <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-pageTop px-6 pb-12' : 'w-2/5 min-w-0 overflow-y-auto pt-pageTop px-6 pb-12'}>
+        <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-pageTop px-6 pb-12' : `w-2/5 min-w-0 overflow-y-auto pt-pageTop px-6 ${isAdmin ? 'pb-24' : 'pb-12'}`}>
           <div className="max-w-xl">
             {showEditBiography && (
               <div className="mb-6">

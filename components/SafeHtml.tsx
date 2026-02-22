@@ -25,7 +25,7 @@ const SafeHtml: React.FC<SafeHtmlProps> = ({ html, className, style }) => {
   if (!cleaned) return null;
   return (
     <div
-      className={className}
+      className={`${className ?? ''} [&_p]:min-h-[1.5em]`}
       style={style}
       dangerouslySetInnerHTML={{ __html: cleaned }}
     />
