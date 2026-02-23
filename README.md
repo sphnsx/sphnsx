@@ -9,7 +9,7 @@ A portfolio website for a London-based fine art photographer. Projects are shown
 - **React 19** + **TypeScript** + **Vite**
 - **Tailwind CSS** for layout and styling
 - **React Router** (hash-based routing)
-- **IndexedDB** and **localStorage** for persisting portfolio data
+- **IndexedDB**, **localStorage**, **sessionStorage**, and optional **remote JSON** for persisting portfolio data
 - **TipTap** for rich-text biography editing; **react-easy-crop** for cover crop/zoom
 
 ## Run locally
@@ -28,6 +28,12 @@ npm run build
 ```
 
 Output is in `docs/` for deployment (e.g. GitHub Pages).
+
+**So viewers always see your latest content (including after hard refresh):** set a published portfolio URL when building, and put that file on your site:
+
+1. In Admin → Deployment, click **Download portfolio.json** and add the file to `docs/` (next to `index.html`).
+2. Run **`npm run build:production`** (or `VITE_PORTFOLIO_URL=https://yoursite.com/portfolio.json npm run build` for a different URL).
+3. Deploy. The app will load portfolio data from that URL first, then fall back to local storage.
 
 ## Project structure
 
