@@ -40,18 +40,6 @@ export const getPortfolioData = (): PortfolioData => {
   return INITIAL_DATA;
 };
 
-// #region agent log
-function debugLog(msg: string, data: Record<string, unknown>, hypothesisId: string) {
-  try {
-    fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '9bdf88' },
-      body: JSON.stringify({ sessionId: '9bdf88', location: 'storageService.ts', message: msg, data, timestamp: Date.now(), hypothesisId }),
-    }).catch(() => {});
-  } catch (_) {}
-}
-// #endregion
-
 /** Load: prefer localStorage (so edits persist after refresh when IDB is cleared), then IDB, then initial. */
 export async function getPortfolioDataAsync(): Promise<PortfolioData> {
   // Prefer localStorage first so we use the same store we write to (Safari may clear IDB on refresh).
@@ -61,9 +49,6 @@ export async function getPortfolioDataAsync(): Promise<PortfolioData> {
       const data = JSON.parse(local) as PortfolioData;
       if (data && Array.isArray(data.projects)) {
         cache = data;
-        // #region agent log
-        debugLog('loadSource=localStorage', { projectIds: data.projects.map((p) => p.id), firstTitle: data.projects[0]?.title }, 'P1');
-        // #endregion
         writePortfolioData(data).catch(() => {}); // keep IDB in sync
         return data;
       }
@@ -82,17 +67,11 @@ export async function getPortfolioDataAsync(): Promise<PortfolioData> {
         try {
           const data = JSON.parse(row.value) as PortfolioData;
           cache = data;
-          // #region agent log
-          debugLog('loadSource=idb', { projectIds: data.projects.map((p) => p.id), firstTitle: data.projects[0]?.title }, 'P1');
-          // #endregion
           resolve(data);
           return;
         } catch (_) {}
       }
       cache = INITIAL_DATA;
-      // #region agent log
-      debugLog('loadSource=initial', { projectIds: INITIAL_DATA.projects.map((p) => p.id) }, 'P1');
-      // #endregion
       resolve(INITIAL_DATA);
     };
   });
@@ -108,19 +87,16 @@ function writePortfolioData(data: PortfolioData): Promise<void> {
       req.onerror = () => { db.close(); reject(req.error); };
       req.onsuccess = () => {
         db.close();
-        // #region agent log
-        let localOk = false;
-        let localErr: string | null = null;
         try {
           if (typeof localStorage !== 'undefined') {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            localOk = true;
           }
         } catch (e) {
-          localErr = String(e);
+          // QuotaExceededError or Safari blocking; IDB may still have data
+          if (typeof console !== 'undefined' && console.warn) {
+            console.warn('Portfolio localStorage write failed (storage may be full or restricted):', e);
+          }
         }
-        debugLog('writePortfolioData done', { idbOk: true, localOk, localErr, projectsLength: data.projects.length, firstTitle: data.projects[0]?.title }, 'P2');
-        // #endregion
         resolve();
       };
     });
