@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import './index.css';
 import App from './App';
 
 // Admin entry: typing sphnsx.com/admin or sphnsx.com/a must show admin login. Set hash before React mounts.
