@@ -24,9 +24,20 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
-/** Sync get for initial render; returns cache or INITIAL_DATA. After load from IndexedDB, cache is set. */
+/** Sync get for initial render. Uses cache, else tries localStorage (so refresh shows saved data before async runs), else INITIAL_DATA. */
 export const getPortfolioData = (): PortfolioData => {
-  return cache ?? INITIAL_DATA;
+  if (cache !== null) return cache;
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+    if (raw) {
+      const data = JSON.parse(raw) as PortfolioData;
+      if (data && Array.isArray(data.projects)) {
+        cache = data;
+        return cache;
+      }
+    }
+  } catch (_) {}
+  return INITIAL_DATA;
 };
 
 // #region agent log
