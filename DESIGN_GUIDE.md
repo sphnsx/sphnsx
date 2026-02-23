@@ -93,3 +93,15 @@ Single source of truth for the SPHNSX site design. Add new rules as new sections
 
 - **Colours:** Single source in `constants.ts` — `PALETTE.accent` (green for Home/mobile bar), `PALETTE.backgroundMain`, `PALETTE.backgroundSidebar`, `PALETTE.border`, `PALETTE.textPrimary`, `PALETTE.textSecondary`, `PALETTE.destructive`. Use these tokens; do not hardcode hex for UI.
 - **Section hover palette:** Section title hover uses a separate section palette (e.g. in ShowcaseView); grey is reserved for neutral UI only, not section blocks.
+
+## 14. Project covers on showcase (home)
+
+- **Original aspect ratio:** Every project cover on the home showcase is shown in its **original aspect ratio**. Row heights are derived from each project’s cover aspect ratio (width/height) so no cover is forced into a wrong shape (e.g. square). Each project must store `coverAspectRatio` when the cover is set or changed; existing projects without it should be backfilled so all rows look correct.
+
+## 15. Project forms (New and Edit)
+
+- **Parity:** New Project and Edit Project use the **same** options and layout. Do not offer fewer controls or a different structure in one mode.
+- **Split layout:** Left panel = text only: Title, Year, Description, plus primary action (Create project / Save) and Cancel when editing. Right panel = media only: Cover, Gallery layout, Gallery.
+- **Cover on the right:** The cover image and its control (“Change cover”) live on the **right** panel only. No cover file input on the left.
+- **Gallery layout:** One, Two, or Three columns — same radio group in both New and Edit; choice is per project and persisted.
+- **Gallery per-image actions:** For each gallery thumbnail, show a row of actions below the image (not hover-only): **Set as cover**, **Replace** (file input), **Remove**. Same order and style in New and Edit. Replace is required so users can change a single image without re-uploading the whole gallery.
