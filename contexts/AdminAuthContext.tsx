@@ -49,22 +49,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         clearAuthData();
       }
     }
-    // #region agent log
-    try {
-      fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '9bdf88' },
-        body: JSON.stringify({
-          sessionId: '9bdf88',
-          location: 'AdminAuthContext.tsx:init',
-          message: 'auth storage on load',
-          data: { authKeyPresent: !!authData, hasLocalStorage: typeof localStorage !== 'undefined', hasSessionStorage: typeof sessionStorage !== 'undefined' },
-          timestamp: Date.now(),
-          hypothesisId: 'S2',
-        }),
-      }).catch(() => {});
-    } catch (_) {}
-    // #endregion
   }, []);
 
   const login = useCallback((password: string) => {

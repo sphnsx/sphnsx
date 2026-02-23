@@ -16,25 +16,6 @@ const ResizableColumn: React.FC<ResizableColumnProps> = ({
   sectionColors,
   className = '',
 }) => {
-  // #region agent log
-  if (rows.length >= 1) {
-    const firstFlex = heights[0] ?? 100 / rows.length;
-    try {
-      fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '9bdf88' },
-        body: JSON.stringify({
-          sessionId: '9bdf88',
-          location: 'ResizableColumn.tsx:render',
-          message: 'column first row flex',
-          data: { rowsLength: rows.length, heights0: heights[0], firstFlexPct: firstFlex },
-          timestamp: Date.now(),
-          hypothesisId: 'S6',
-        }),
-      }).catch(() => {});
-    } catch (_) {}
-  }
-  // #endregion
   return (
     <div className={`flex flex-col gap-0 h-full overflow-hidden ${className}`}>
       {rows.map((row, i) => {

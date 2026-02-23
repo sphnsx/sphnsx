@@ -7,7 +7,7 @@ import DeploymentPage from './components/DeploymentPage';
 import NewProjectPage from './components/NewProjectPage';
 import ProjectDetailPage from './components/ProjectDetailPage';
 import { PortfolioData } from './types';
-import { getPortfolioData, getPortfolioDataAsync, updateAboutMe, STORAGE_KEY } from './services/storageService';
+import { getPortfolioData, getPortfolioDataAsync, updateAboutMe } from './services/storageService';
 import { PALETTE } from './constants';
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
 import { useIsMobile } from './hooks/useMediaQuery';
@@ -263,40 +263,6 @@ const App: React.FC = () => {
   useEffect(() => {
     getPortfolioDataAsync().then(setData);
   }, []);
-
-  // #region agent log
-  useEffect(() => {
-    try {
-      const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-      const d = getPortfolioData();
-      fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '9bdf88' },
-        body: JSON.stringify({
-          sessionId: '9bdf88',
-          location: 'App.tsx:load',
-          message: 'portfolio data on load',
-          data: {
-            storageNull: raw === null,
-            storageLength: raw ? raw.length : 0,
-            projectsLength: d.projects.length,
-            projectIds: d.projects.map((p) => p.id),
-          },
-          timestamp: Date.now(),
-          hypothesisId: 'S1',
-        }),
-      }).catch(() => {});
-    } catch (e) {
-      try {
-        fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '9bdf88' },
-          body: JSON.stringify({ sessionId: '9bdf88', location: 'App.tsx:load', message: 'portfolio load error', data: { err: String(e) }, timestamp: Date.now(), hypothesisId: 'S1' }),
-        }).catch(() => {});
-      } catch (_) {}
-    }
-  }, []);
-  // #endregion
 
   return (
     <Router>
