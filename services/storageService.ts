@@ -1,6 +1,7 @@
 
 import { PortfolioData, Project } from '../types';
 import { INITIAL_DATA } from '../constants';
+import { isSupabaseConfigured, getPortfolioFromSupabase, publishPortfolioToSupabase } from './supabase';
 
 export const STORAGE_KEY = 'silvia_jiang_portfolio_v1';
 
@@ -24,10 +25,17 @@ async function fetchFromRemote(): Promise<PortfolioData | null> {
   if (!REMOTE_PORTFOLIO_URL || typeof fetch === 'undefined') return null;
   try {
     const res = await fetch(REMOTE_PORTFOLIO_URL, { cache: 'no-store' });
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '1d77cc' }, body: JSON.stringify({ sessionId: '1d77cc', location: 'storageService.ts:fetchFromRemote', message: 'remote response', data: { ok: res.ok, status: res.status }, timestamp: Date.now(), hypothesisId: 'H2' }) }).catch(() => {});
+    // #endregion
     if (!res.ok) return null;
     const data = (await res.json()) as PortfolioData;
     if (data && Array.isArray(data.projects)) return data;
-  } catch (_) {}
+  } catch (e) {
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '1d77cc' }, body: JSON.stringify({ sessionId: '1d77cc', location: 'storageService.ts:fetchFromRemote', message: 'remote fetch error', data: { err: String((e as Error)?.message) }, timestamp: Date.now(), hypothesisId: 'H2' }) }).catch(() => {});
+    // #endregion
+  }
   return null;
 }
 
@@ -123,10 +131,24 @@ export const getPortfolioData = (): PortfolioData => {
   return INITIAL_DATA;
 };
 
-/** Load: remote URL first (when configured, for viewers after hard refresh), then IDB, localStorage, sessionStorage, cookie, initial. */
+/** Load: Supabase first (when configured, auto-publish), then remote URL, then IDB, localStorage, sessionStorage, cookie, initial. */
 export async function getPortfolioDataAsync(): Promise<PortfolioData> {
+  // #region agent log
+  fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '1d77cc' }, body: JSON.stringify({ sessionId: '1d77cc', location: 'storageService.ts:getPortfolioDataAsync', message: 'async load config', data: { remoteConfigured: !!REMOTE_PORTFOLIO_URL }, timestamp: Date.now(), hypothesisId: 'H1' }) }).catch(() => {});
+  // #endregion
+  if (isSupabaseConfigured()) {
+    const fromSupabase = await getPortfolioFromSupabase();
+    if (fromSupabase) {
+      cache = fromSupabase;
+      writePortfolioData(fromSupabase).catch(() => {});
+      return fromSupabase;
+    }
+  }
   if (REMOTE_PORTFOLIO_URL) {
     const fromRemote = await fetchFromRemote();
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '1d77cc' }, body: JSON.stringify({ sessionId: '1d77cc', location: 'storageService.ts:getPortfolioDataAsync', message: 'remote result', data: { hasData: !!fromRemote, projectsCount: fromRemote?.projects?.length }, timestamp: Date.now(), hypothesisId: 'H2' }) }).catch(() => {});
+    // #endregion
     if (fromRemote) {
       cache = fromRemote;
       writePortfolioData(fromRemote).catch(() => {}); // seed local storage for offline / fast subsequent loads
@@ -169,6 +191,9 @@ export async function getPortfolioDataAsync(): Promise<PortfolioData> {
     writePortfolioData(fromCookie).catch(() => {});
     return fromCookie;
   }
+  // #region agent log
+  fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '1d77cc' }, body: JSON.stringify({ sessionId: '1d77cc', location: 'storageService.ts:getPortfolioDataAsync', message: 'fallback to INITIAL_DATA', data: {}, timestamp: Date.now(), hypothesisId: 'H5' }) }).catch(() => {});
+  // #endregion
   cache = INITIAL_DATA;
   return INITIAL_DATA;
 }
@@ -201,6 +226,7 @@ function writePortfolioData(data: PortfolioData): Promise<void> {
           if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         } catch (_) {}
         writeCookie(data);
+        if (isSupabaseConfigured()) publishPortfolioToSupabase(data).catch(() => {});
         resolve();
       };
     });

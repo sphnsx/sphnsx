@@ -29,11 +29,15 @@ npm run build
 
 Output is in `docs/` for deployment (e.g. GitHub Pages).
 
-**So viewers always see your latest content (including after hard refresh):** set a published portfolio URL when building, and put that file on your site:
+**Automatic live publish (recommended):** use Supabase so every save in Admin updates the live site—no download or file steps.
 
-1. In Admin → Deployment, click **Download portfolio.json** and add the file to `docs/` (next to `index.html`).
-2. Run **`npm run build:production`** (or `VITE_PORTFOLIO_URL=https://yoursite.com/portfolio.json npm run build` for a different URL).
-3. Deploy. The app will load portfolio data from that URL first, then fall back to local storage.
+1. Create a free project at [supabase.com](https://supabase.com). In Dashboard → SQL Editor, run the contents of **`supabase-setup.sql`** in this repo.
+2. In Supabase: Settings → API copy **Project URL** and **anon public** key. Add to `.env` and `.env.production`:  
+   `VITE_SUPABASE_URL=https://xxx.supabase.co` and `VITE_SUPABASE_ANON_KEY=your_anon_key`.
+3. In Supabase: Authentication → Users → Add a user (email + password). Use that email/password to **Sign in to enable live publish** on Admin → Deployment.
+4. Build and deploy as usual. Viewers load from Supabase; when you save in Admin you’re signed in, so every save publishes automatically.
+
+**Optional manual publish:** if you don’t use Supabase, you can still use a static `portfolio.json` and `VITE_PORTFOLIO_URL` (see `.env.production`); then you download the file and add it to `docs/` when you want to publish.
 
 ## Project structure
 
