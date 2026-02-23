@@ -1,3 +1,8 @@
+# Env (secrets stay local; CI uses repo secrets)
+.env
+.env.local
+.env.*.local
+
 # Logs
 logs
 *.log

@@ -39,6 +39,10 @@ Output is in `docs/` for deployment (e.g. GitHub Pages).
 
 **Optional manual publish:** if you don’t use Supabase, you can still use a static `portfolio.json` and `VITE_PORTFOLIO_URL` (see `.env.production`); then you download the file and add it to `docs/` when you want to publish.
 
+## Deploy (GitHub Actions)
+
+Push to `main` runs the workflow in `.github/workflows/deploy.yml`: it builds with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from the repo’s **Settings → Secrets and variables → Actions**, then deploys to GitHub Pages. In the repo **Settings → Pages**, set **Source** to **GitHub Actions** so the workflow deploys the site.
+
 ## Project structure
 
 - `App.tsx` — Router, admin bar, route definitions
