@@ -29,6 +29,18 @@ export const getPortfolioData = (): PortfolioData => {
   return cache ?? INITIAL_DATA;
 };
 
+// #region agent log
+function debugLog(msg: string, data: Record<string, unknown>, hypothesisId: string) {
+  try {
+    fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '9bdf88' },
+      body: JSON.stringify({ sessionId: '9bdf88', location: 'storageService.ts', message: msg, data, timestamp: Date.now(), hypothesisId }),
+    }).catch(() => {});
+  } catch (_) {}
+}
+// #endregion
+
 /** Load from IndexedDB (migrate from localStorage once), update cache, return. */
 export async function getPortfolioDataAsync(): Promise<PortfolioData> {
   const db = await openDB();
@@ -44,6 +56,9 @@ export async function getPortfolioDataAsync(): Promise<PortfolioData> {
         try {
           const data = JSON.parse(row.value) as PortfolioData;
           cache = data;
+          // #region agent log
+          debugLog('loadSource=idb', { projectIds: data.projects.map((p) => p.id), firstTitle: data.projects[0]?.title }, 'P1');
+          // #endregion
           resolve(data);
           return;
         } catch (_) {}
@@ -54,11 +69,17 @@ export async function getPortfolioDataAsync(): Promise<PortfolioData> {
         try {
           const data = JSON.parse(local) as PortfolioData;
           cache = data;
+          // #region agent log
+          debugLog('loadSource=localStorage', { projectIds: data.projects.map((p) => p.id), firstTitle: data.projects[0]?.title }, 'P1');
+          // #endregion
           writePortfolioData(data).then(() => resolve(data)).catch(() => resolve(data));
           return;
         } catch (_) {}
       }
       cache = INITIAL_DATA;
+      // #region agent log
+      debugLog('loadSource=initial', { projectIds: INITIAL_DATA.projects.map((p) => p.id) }, 'P1');
+      // #endregion
       resolve(INITIAL_DATA);
     };
   });
@@ -74,9 +95,19 @@ function writePortfolioData(data: PortfolioData): Promise<void> {
       req.onerror = () => { db.close(); reject(req.error); };
       req.onsuccess = () => {
         db.close();
+        // #region agent log
+        let localOk = false;
+        let localErr: string | null = null;
         try {
-          if (typeof localStorage !== 'undefined') localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        } catch (_) {}
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            localOk = true;
+          }
+        } catch (e) {
+          localErr = String(e);
+        }
+        debugLog('writePortfolioData done', { idbOk: true, localOk, localErr, projectsLength: data.projects.length, firstTitle: data.projects[0]?.title }, 'P2');
+        // #endregion
         resolve();
       };
     });
