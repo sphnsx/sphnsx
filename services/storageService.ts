@@ -41,8 +41,23 @@ function debugLog(msg: string, data: Record<string, unknown>, hypothesisId: stri
 }
 // #endregion
 
-/** Load from IndexedDB (migrate from localStorage once), update cache, return. */
+/** Load: prefer localStorage (so edits persist after refresh when IDB is cleared), then IDB, then initial. */
 export async function getPortfolioDataAsync(): Promise<PortfolioData> {
+  // Prefer localStorage first so we use the same store we write to (Safari may clear IDB on refresh).
+  const local = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+  if (local) {
+    try {
+      const data = JSON.parse(local) as PortfolioData;
+      if (data && Array.isArray(data.projects)) {
+        cache = data;
+        // #region agent log
+        debugLog('loadSource=localStorage', { projectIds: data.projects.map((p) => p.id), firstTitle: data.projects[0]?.title }, 'P1');
+        // #endregion
+        writePortfolioData(data).catch(() => {}); // keep IDB in sync
+        return data;
+      }
+    } catch (_) {}
+  }
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readonly');
@@ -60,19 +75,6 @@ export async function getPortfolioDataAsync(): Promise<PortfolioData> {
           debugLog('loadSource=idb', { projectIds: data.projects.map((p) => p.id), firstTitle: data.projects[0]?.title }, 'P1');
           // #endregion
           resolve(data);
-          return;
-        } catch (_) {}
-      }
-      // Migrate from localStorage
-      const local = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-      if (local) {
-        try {
-          const data = JSON.parse(local) as PortfolioData;
-          cache = data;
-          // #region agent log
-          debugLog('loadSource=localStorage', { projectIds: data.projects.map((p) => p.id), firstTitle: data.projects[0]?.title }, 'P1');
-          // #endregion
-          writePortfolioData(data).then(() => resolve(data)).catch(() => resolve(data));
           return;
         } catch (_) {}
       }
