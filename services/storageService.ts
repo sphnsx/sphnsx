@@ -72,7 +72,13 @@ function writePortfolioData(data: PortfolioData): Promise<void> {
       const store = tx.objectStore(STORE_NAME);
       const req = store.put({ key: DATA_KEY, value: JSON.stringify(data) });
       req.onerror = () => { db.close(); reject(req.error); };
-      req.onsuccess = () => { db.close(); resolve(); };
+      req.onsuccess = () => {
+        db.close();
+        try {
+          if (typeof localStorage !== 'undefined') localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch (_) {}
+        resolve();
+      };
     });
   });
 }
