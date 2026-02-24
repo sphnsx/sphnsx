@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { PALETTE } from '../constants';
-import { WaveDivider } from './MobileDividers';
 
 const HamburgerIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
   <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="square" aria-hidden>
@@ -61,7 +60,6 @@ const MobileHeader: React.FC = () => {
             >
               About me
             </Link>
-            <WaveDivider height={6} className="my-1 -mx-4 w-[calc(100%+2rem)]" />
             <Link
               to="/contact"
               className="font-mono text-sm uppercase tracking-wider py-3 text-textPrimary hover:underline block"

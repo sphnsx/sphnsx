@@ -117,7 +117,7 @@ Single source of truth for the SPHNSX site design. Add new rules as new sections
 
 ## 17. Mobile zigzag / wave dividers
 
-- **Where:** Phone-only, between stacked content blocks (e.g. sections on the mobile home or detail views), rendered via `MobileSectionDivider` (`type: 'zigzag' | 'wave'`).
+- **Where:** Phone-only, **only between adjacent projects on the mobile home project list**. Do not use in the drawer, detail pages, or admin views. Rendered via `MobileSectionDivider` (`type: 'zigzag' | 'wave'`).
 - **Full-bleed width:** Dividers span the full viewport width (`w-screen`, SVG `preserveAspectRatio="none"`), so both edges touch the screen sides on mobile.
 - **Thickness:** Divider height is a slim strip (default ~8px); can be adjusted via the `height` prop but should stay visually light and unobtrusive.
-- **Role:** Purely decorative linear separators; they do not carry meaning or interaction states and should not be reused as buttons or controls.
+- **Role:** Purely decorative linear separators between projects; they do not carry meaning or interaction states and should not be reused as buttons or controls.
