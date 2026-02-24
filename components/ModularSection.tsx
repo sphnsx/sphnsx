@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 interface ModularSectionProps {
   title: string;
@@ -19,11 +20,11 @@ const ModularSection: React.FC<ModularSectionProps> = ({
   draggable = true,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const hashHref = `#${to.startsWith('/') ? to : `/${to}`}`;
+  const normalizedTo = to.startsWith('/') ? to : `/${to}`;
 
   return (
-    <a
-      href={hashHref}
+    <Link
+      to={normalizedTo}
       draggable={draggable}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -43,7 +44,7 @@ const ModularSection: React.FC<ModularSectionProps> = ({
       <div className="absolute inset-0 pt-16">
         {preview}
       </div>
-    </a>
+    </Link>
   );
 };
 
