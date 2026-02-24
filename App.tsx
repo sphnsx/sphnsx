@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -408,24 +408,34 @@ const AdminDeploymentGuard: React.FC<{ children: React.ReactNode }> = ({ childre
   return <>{children}</>;
 };
 
-/** Keep React Router location in sync with the real URL path, in case legacy hash flows or other links change window.location without React noticing. */
+/** Keep React Router location in sync with the real URL path when the browser URL changes but the router state did not update (e.g. after programmatic navigate). */
 const PathSync: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  useEffect(() => {
+  const syncFromBrowser = useCallback(() => {
     if (typeof window === 'undefined') return;
     const { pathname, search, hash } = window.location;
     const browserPath = pathname || '/';
     const routerPath = location.pathname || '/';
-
     if (browserPath !== routerPath) {
       navigate(browserPath + search + hash, { replace: true });
     }
   }, [location.pathname, navigate]);
 
+  useEffect(() => {
+    syncFromBrowser();
+  }, [syncFromBrowser]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const id = setInterval(syncFromBrowser, 150);
+    return () => clearInterval(id);
+  }, [syncFromBrowser]);
+
   return null;
 };
+
 
 const LoadingScreen: React.FC = () => (
   <div className="min-h-screen bg-bgMain text-textPrimary font-sans flex items-center justify-center">
@@ -437,6 +447,15 @@ const App: React.FC = () => {
   const isMobile = useIsMobile();
   const waitForRemote = isAuthoritativeRemoteConfigured();
   const [data, setData] = useState<PortfolioData | null>(waitForRemote ? null : getPortfolioData());
+  const [routerKey, setRouterKey] = useState(() => (typeof window !== 'undefined' ? window.location.pathname || '/' : '/'));
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const id = setInterval(() => {
+      const p = window.location.pathname || '/';
+      setRouterKey((prev) => (prev !== p ? p : prev));
+    }, 100);
+    return () => clearInterval(id);
+  }, []);
 
   const refreshData = (updatedData?: PortfolioData) => {
     if (updatedData != null) {
@@ -454,7 +473,7 @@ const App: React.FC = () => {
     const basePath = getBasePath();
     const routerBasename = basePath && basePath !== '/' ? basePath : undefined;
     return (
-      <Router basename={routerBasename}>
+      <Router key={routerKey} basename={routerBasename}>
         <AdminAuthProvider>
           <LoadingScreen />
         </AdminAuthProvider>
@@ -468,7 +487,7 @@ const App: React.FC = () => {
   const routerBasename = basePath && basePath !== '/' ? basePath : undefined;
 
   return (
-    <Router basename={routerBasename}>
+    <Router key={routerKey} basename={routerBasename}>
       <AdminAuthProvider>
         <PathSync />
         <AdminRouteMobileRedirect />
