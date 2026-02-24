@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -412,14 +412,27 @@ const AdminDeploymentGuard: React.FC<{ children: React.ReactNode }> = ({ childre
 const PathSync: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const routerPathRef = useRef(location.pathname || '/');
+  routerPathRef.current = location.pathname || '/';
+  const replaceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const syncFromBrowser = useCallback(() => {
     if (typeof window === 'undefined') return;
     const { pathname, search, hash } = window.location;
     const browserPath = pathname || '/';
-    const routerPath = location.pathname || '/';
+    const routerPath = routerPathRef.current;
     if (browserPath !== routerPath) {
+      if (replaceTimeoutRef.current) {
+        clearTimeout(replaceTimeoutRef.current);
+        replaceTimeoutRef.current = null;
+      }
       navigate(browserPath + search + hash, { replace: true });
+      replaceTimeoutRef.current = window.setTimeout(() => {
+        replaceTimeoutRef.current = null;
+        if (window.location.pathname !== routerPathRef.current) {
+          window.location.replace(window.location.pathname + window.location.search + window.location.hash);
+        }
+      }, 400);
     }
   }, [location.pathname, navigate]);
 
@@ -430,7 +443,12 @@ const PathSync: React.FC = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const id = setInterval(syncFromBrowser, 150);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      if (replaceTimeoutRef.current) {
+        clearTimeout(replaceTimeoutRef.current);
+      }
+    };
   }, [syncFromBrowser]);
 
   return null;
