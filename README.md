@@ -41,7 +41,9 @@ Output is in `docs/` for deployment (e.g. GitHub Pages).
 
 ## Deploy (GitHub Actions)
 
-Push to `main` runs the workflow in `.github/workflows/deploy.yml`: it builds with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from the repo’s **Settings → Secrets and variables → Actions**, then deploys to GitHub Pages. In the repo **Settings → Pages**, set **Source** to **GitHub Actions** so the workflow deploys the site.
+Push to `main` runs the workflow in `.github/workflows/deploy.yml`: it builds with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from the repo’s **Settings → Secrets and variables → Actions**, then deploys to GitHub Pages. In the repo **Settings → Pages**, set **Source** to **GitHub Actions** so the workflow deploys the site. If the **Live publish** (Supabase sign-in) section is missing on the live domain, add those two secrets in **Settings → Secrets and variables → Actions** (same values as in `.env`), then re-run the workflow or push to `main` to rebuild.
+
+**If the live site is on Cloudflare Pages** (e.g. custom domain points to Cloudflare): Cloudflare runs its own build and does **not** use GitHub Actions secrets. Add the same env vars in **Cloudflare Dashboard → Workers & Pages → your project (sphnsx) → Settings → Environment variables**: create **Production** (and optionally Preview) variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` with the same values as in `.env`. Then trigger a new deployment (Deployments → … on latest → Retry deployment, or push a commit) so the build runs with the vars. Until then, the **Live publish** section will not appear on the Cloudflare-served site.
 
 ## Project structure
 

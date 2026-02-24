@@ -259,10 +259,11 @@ export async function updateContactMethods(methods: ContactMethod[]): Promise<Po
   return data;
 }
 
-export async function addProject(project: Project): Promise<void> {
+export async function addProject(project: Project): Promise<PortfolioData> {
   const data = await getPortfolioDataAsync();
   data.projects.unshift(project);
   await writePortfolioData(data);
+  return data;
 }
 
 export async function updateProject(id: string, project: Project): Promise<void> {

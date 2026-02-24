@@ -308,7 +308,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                 <div className="flex flex-wrap gap-4">
                   {project.gallery.map((img, i) => (
                     <div key={i} className="flex flex-col">
-                      <img src={img} alt="" className="h-20 w-auto border border-paletteBorder" />
+                      <img src={img} alt="" className="max-h-24 w-auto object-contain border border-paletteBorder" />
                       <div className="flex flex-wrap items-center gap-2 mt-1">
                         <button
                           type="button"

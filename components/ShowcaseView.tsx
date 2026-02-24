@@ -121,6 +121,77 @@ const AddProjectSection: React.FC<{ hoverColor: string }> = ({ hoverColor }) => 
   />
 );
 
+const DIVIDER_HEIGHT = 8;
+const DIVIDER_STROKE = PALETTE.border;
+
+// Zig-zag: strictly periodic — integer segment index, fixed step 12.5, only y in {0, 4, 8}.
+const ZIGZAG_NUM_SEGMENTS = 8;
+const ZIGZAG_STEP = 100 / ZIGZAG_NUM_SEGMENTS; // 12.5
+const ZIGZAG_TOP = 0;
+const ZIGZAG_MID = 4;
+const ZIGZAG_BOTTOM = 8;
+const zigzagPoints = (() => {
+  const pts: string[] = [];
+  for (let i = 0; i <= ZIGZAG_NUM_SEGMENTS; i++) {
+    const x = Math.round(i * ZIGZAG_STEP * 10) / 10; // avoid float drift
+    const y = i % 2 === 0 ? ZIGZAG_MID : (i % 4 === 1 ? ZIGZAG_TOP : ZIGZAG_BOTTOM);
+    pts.push(`${x},${y}`);
+  }
+  return pts.join(' ');
+})();
+
+// Wave: strictly periodic — same cubic Bezier half-period repeated (κ ≈ 0.37 for half-sine).
+const WAVE_HALF_PERIOD = 25;
+const WAVE_K = 0.37;
+const CP1_X = Math.round(WAVE_HALF_PERIOD * WAVE_K * 100) / 100;
+const CP2_X = Math.round(WAVE_HALF_PERIOD * (1 - WAVE_K) * 100) / 100;
+const wavePath = (() => {
+  const parts: string[] = [`M 0 4`];
+  for (let p = 0; p < 4; p++) {
+    const x0 = p * WAVE_HALF_PERIOD;
+    const x1 = (p + 1) * WAVE_HALF_PERIOD;
+    const up = p % 2 === 0;
+    const cp1y = up ? 0 : 8;
+    const cp2y = up ? 8 : 0;
+    parts.push(`C ${x0 + CP1_X} ${cp1y} ${x0 + CP2_X} ${cp2y} ${x1} 4`);
+  }
+  return parts.join(' ');
+})();
+
+/** Mobile-only section divider: zig-zag or wave. Strictly periodic, crisp rendering. */
+const MobileSectionDivider: React.FC<{ type: 'zigzag' | 'wave' }> = ({ type }) => (
+  <div className="w-full bg-bgMain" style={{ height: DIVIDER_HEIGHT }} aria-hidden>
+    <svg
+      width="100%"
+      height={DIVIDER_HEIGHT}
+      viewBox="0 0 100 8"
+      preserveAspectRatio="none"
+      className="block"
+      shapeRendering={type === 'zigzag' ? 'crispEdges' : 'geometricPrecision'}
+    >
+      {type === 'zigzag' ? (
+        <polyline
+          points={zigzagPoints}
+          fill="none"
+          stroke={DIVIDER_STROKE}
+          strokeWidth="1"
+          vectorEffect="non-scaling-stroke"
+          shapeRendering="crispEdges"
+        />
+      ) : (
+        <path
+          d={wavePath}
+          fill="none"
+          stroke={DIVIDER_STROKE}
+          strokeWidth="1"
+          vectorEffect="non-scaling-stroke"
+          shapeRendering="geometricPrecision"
+        />
+      )}
+    </svg>
+  </div>
+);
+
 /** Simple mobile row: no absolute layout, so content is always in flow and visible. */
 const MobileProjectRow: React.FC<{ project: Project }> = ({ project }) => {
   const path = `/project/${project.id}`;
@@ -140,7 +211,7 @@ const MobileProjectRow: React.FC<{ project: Project }> = ({ project }) => {
     <div
       role="link"
       tabIndex={0}
-      className="block py-4 px-4 border-b border-paletteBorder bg-bgMain hover:opacity-90 transition-opacity cursor-pointer"
+      className="block py-4 px-4 bg-bgMain hover:opacity-90 transition-opacity cursor-pointer"
       onClick={handleClick}
       onTouchEnd={(e) => {
         e.preventDefault();
@@ -173,10 +244,13 @@ const MobileHomeLayout: React.FC<{
         style={{ position: 'fixed', top: '3rem', left: 0, right: 0, bottom: 0, zIndex: 1 }}
       >
         <div className="flex flex-col">
-          {projectsByYear.map((project) => (
-            <div key={project.id}>
+          {projectsByYear.map((project, i) => (
+            <React.Fragment key={project.id}>
               <MobileProjectRow project={project} />
-            </div>
+              {i < projectsByYear.length - 1 && (
+                <MobileSectionDivider type={i % 2 === 0 ? 'zigzag' : 'wave'} />
+              )}
+            </React.Fragment>
           ))}
         </div>
       </div>

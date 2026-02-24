@@ -337,14 +337,19 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
               <div className="space-y-4">
                 {displayMethods.map((m, i) => (
                   <p key={i}>
-                    <a
-                      href={m.value.includes('@') ? `mailto:${m.value}` : m.value}
-                      target={m.value.includes('@') ? undefined : '_blank'}
-                      rel={m.value.includes('@') ? undefined : 'noopener noreferrer'}
-                      className="underline font-medium transition-colors duration-150 hover:opacity-80"
+                    <span
+                      className="inline-block border border-paletteBorder px-3 py-2"
+                      style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%)' }}
                     >
-                      {m.label || m.value}
-                    </a>
+                      <a
+                        href={m.value.includes('@') ? `mailto:${m.value}` : m.value}
+                        target={m.value.includes('@') ? undefined : '_blank'}
+                        rel={m.value.includes('@') ? undefined : 'noopener noreferrer'}
+                        className="underline font-medium transition-colors duration-150 hover:opacity-80"
+                      >
+                        {m.label || m.value}
+                      </a>
+                    </span>
                   </p>
                 ))}
               </div>

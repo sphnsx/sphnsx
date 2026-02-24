@@ -9,7 +9,7 @@ import { PortfolioData, Project } from '../types';
 
 interface NewProjectPageProps {
   data: PortfolioData;
-  onRefresh: () => void | Promise<void>;
+  onRefresh: (updatedData?: PortfolioData) => void;
 }
 
 const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
@@ -123,7 +123,7 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
       const id = Date.now().toString();
       const cover = imageUrl || gallery[0] || '';
       const ratio = coverAspectRatio ?? (cover ? await getImageAspectRatio(cover).catch(() => undefined) : undefined);
-      await addProject({
+      const updatedData = await addProject({
         id,
         title: title.trim(),
         year: year.trim(),
@@ -133,7 +133,7 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
         galleryColumns,
         coverAspectRatio: ratio,
       });
-      await onRefresh();
+      onRefresh(updatedData);
       navigate(`/project/${id}`);
     } catch (err) {
       console.error(err);
@@ -262,7 +262,7 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
                 <div className="flex flex-wrap gap-4">
                   {gallery.map((img, i) => (
                     <div key={i} className="flex flex-col">
-                      <img src={img} alt="" className="h-20 w-auto border border-paletteBorder" />
+                      <img src={img} alt="" className="max-h-24 w-auto object-contain border border-paletteBorder" />
                       <div className="flex flex-wrap items-center gap-2 mt-1">
                         <button
                           type="button"

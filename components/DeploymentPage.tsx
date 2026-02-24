@@ -18,6 +18,11 @@ const DeploymentPage: React.FC = () => {
   const [supabaseLoading, setSupabaseLoading] = useState(false);
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
 
+  // Scroll to top when mounting so "Live publish" (Supabase login) is visible; navigation does not reset scroll.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
     getSupabaseUser().then(setSupabaseUser);
