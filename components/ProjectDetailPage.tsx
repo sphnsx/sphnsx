@@ -164,7 +164,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
   };
 
   const textBlock = (
-    <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-6 px-6 pb-12' : 'w-2/5 min-w-0 overflow-y-auto pt-pageTop px-6 pb-12'}>
+    <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-6 px-6 pb-12' : `w-2/5 min-w-0 overflow-y-auto pt-pageTop px-6 ${showAdminActions ? 'pb-24' : 'pb-12'}`}>
       <div className="max-w-xl">
         {!isMobile && isEditing ? (
               <div className="space-y-4">
@@ -286,6 +286,16 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                     />
                     Two columns
                   </label>
+                  <label className="flex items-center gap-2 font-mono text-sm cursor-pointer">
+                    <input
+                      type="radio"
+                      name="galleryColumns"
+                      checked={editProject.galleryColumns === 3}
+                      onChange={() => setEditProject((p) => ({ ...p, galleryColumns: 3 }))}
+                      className="border border-paletteBorder"
+                    />
+                    Three columns
+                  </label>
                 </div>
                 <p className="font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Gallery</p>
                 <input
@@ -328,7 +338,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
           ) : (
             <>
               {project.gallery && project.gallery.length > 0 ? (
-                <div className={`grid gap-0 max-w-4xl ${project.galleryColumns === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+                <div className={`grid gap-0 max-w-4xl ${project.galleryColumns === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : project.galleryColumns === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
                   {project.gallery.map((img, index) => (
                     <div key={index}>
                       <ProtectedImage src={img} alt={`${project.title} ${index + 1}`} />

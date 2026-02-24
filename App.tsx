@@ -7,13 +7,14 @@ import AdminLoginPage from './components/AdminLoginPage';
 import DeploymentPage from './components/DeploymentPage';
 import NewProjectPage from './components/NewProjectPage';
 import ProjectDetailPage from './components/ProjectDetailPage';
-import { PortfolioData } from './types';
-import { getPortfolioData, getPortfolioDataAsync, updateAboutMe } from './services/storageService';
+import { PortfolioData, ContactMethod } from './types';
+import { getPortfolioData, getPortfolioDataAsync, updateAboutMe, updateAboutImage, updateContactMethods } from './services/storageService';
 import { PALETTE } from './constants';
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
 import { useIsMobile } from './hooks/useMediaQuery';
 import RichTextEditor from './components/RichTextEditor';
 import SafeHtml from './components/SafeHtml';
+import { compressImageDataUrl } from './utils/imageCompress';
 
 const FixedHomeButton: React.FC = () => {
   const isMobile = useIsMobile();
@@ -152,32 +153,202 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ d
           </div>
         </div>
         {!isMobile && <div className="w-px shrink-0 bg-paletteBorder" aria-hidden />}
-        <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-6 px-6 pb-12 flex items-center justify-center text-textSecondary' : 'w-3/5 min-w-0 overflow-y-auto pt-pageTop px-6 pb-12 flex items-center justify-center text-textSecondary'}>
-          {null}
+        <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-6 px-6 pb-12 flex items-center justify-center text-textSecondary' : `w-3/5 min-w-0 overflow-y-auto pt-pageTop px-6 ${isAdmin ? 'pb-24' : 'pb-12'} flex items-center justify-center text-textSecondary`}>
+          <AboutRightColumn data={data} onRefresh={onRefresh} />
         </div>
       </main>
     </FullScreenDetail>
   );
 };
 
-const ContactPage: React.FC = () => {
+const AboutRightColumn: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: PortfolioData) => void }> = ({ data, onRefresh }) => {
+  const { isAdmin } = useAdminAuth();
   const isMobile = useIsMobile();
+  const [isUploading, setIsUploading] = React.useState(false);
+
+  const handleFile = React.useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setIsUploading(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      const compressed = await compressImageDataUrl(dataUrl);
+      const updatedData = await updateAboutImage(compressed);
+      onRefresh(updatedData);
+    } finally {
+      setIsUploading(false);
+    }
+  }, [onRefresh]);
+
+  const handleRemove = React.useCallback(async () => {
+    const updatedData = await updateAboutImage('');
+    onRefresh(updatedData);
+  }, [onRefresh]);
+
+  if (isMobile) return null;
+  const hasImage = Boolean(data.aboutImage);
+
+  return (
+    <div className="w-full max-w-lg flex flex-col items-center">
+      {hasImage && (
+        <img src={data.aboutImage} alt="" className="max-h-[70vh] w-auto object-contain border border-paletteBorder" />
+      )}
+      {isAdmin && (
+        <div className="mt-4 flex gap-2">
+          <label className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white cursor-pointer transition-colors duration-150 rounded-sm">
+            {hasImage ? 'Change photo' : 'Choose file'}
+            <input type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={isUploading} />
+          </label>
+          {hasImage && (
+            <button
+              type="button"
+              onClick={handleRemove}
+              disabled={isUploading}
+              className="font-mono text-xs uppercase tracking-wider px-3 py-2 bg-destructive text-white hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/** Derive contact methods from data: use contactMethods if present, else migrate from legacy contact. */
+function getContactMethods(data: PortfolioData): ContactMethod[] {
+  if (data.contactMethods?.length) return data.contactMethods;
+  if (data.contact) {
+    const list: ContactMethod[] = [{ label: 'Email', value: data.contact.email }];
+    if (data.contact.instagramUrl) list.push({ label: 'Instagram', value: data.contact.instagramUrl });
+    return list;
+  }
+  return [
+    { label: 'Email', value: 'sphnsx@aol.com' },
+    { label: 'Instagram', value: 'https://www.instagram.com/sphnsx/' },
+  ];
+}
+
+const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: PortfolioData) => void }> = ({ data, onRefresh }) => {
+  const isMobile = useIsMobile();
+  const { isAdmin } = useAdminAuth();
+  const [isEditing, setIsEditing] = React.useState(false);
+  const methods = getContactMethods(data);
+  const [editMethods, setEditMethods] = React.useState<ContactMethod[]>(methods);
+
+  React.useEffect(() => {
+    setEditMethods(getContactMethods(data));
+  }, [data.contactMethods, data.contact]);
+
+  const handleSave = async () => {
+    const trimmed = editMethods.map((m) => ({ label: m.label.trim(), value: m.value.trim() })).filter((m) => m.label || m.value);
+    const updatedData = await updateContactMethods(trimmed);
+    onRefresh(updatedData);
+    setIsEditing(false);
+  };
+
+  const addMethod = () => setEditMethods((prev) => [...prev, { label: '', value: '' }]);
+  const removeMethod = (index: number) => setEditMethods((prev) => prev.filter((_, i) => i !== index));
+  const updateMethod = (index: number, field: 'label' | 'value', value: string) => {
+    setEditMethods((prev) => prev.map((m, i) => (i === index ? { ...m, [field]: value } : m)));
+  };
+
+  const showEditContact = isAdmin && !isMobile;
+  const displayMethods = getContactMethods(data);
+
   return (
     <FullScreenDetail>
       <main className={`flex-1 min-h-0 flex overflow-hidden ${isMobile ? 'flex-col' : ''}`}>
-        <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-pageTop px-6 pb-12' : 'w-2/5 min-w-0 overflow-y-auto pt-pageTop px-6 pb-12'}>
+        <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-pageTop px-6 pb-12' : `w-2/5 min-w-0 overflow-y-auto pt-pageTop px-6 ${isAdmin ? 'pb-24' : 'pb-12'}`}>
           <div className="max-w-xl">
             <h1 className="text-3xl font-bold mb-8 text-textPrimary">Contact</h1>
-            <p className="mb-4">
-              <a href="mailto:sphnsx@aol.com" className="underline font-medium transition-colors duration-150 hover:opacity-80">
-                sphnsx@aol.com
-              </a>
-            </p>
-            <p>
-              <a href="https://www.instagram.com/sphnsx/" target="_blank" rel="noopener noreferrer" className="underline font-medium transition-colors duration-150 hover:opacity-80">
-                Instagram
-              </a>
-            </p>
+            {showEditContact && (
+              <div className="mb-6">
+                {!isEditing ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(true)}
+                    className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
+                  >
+                    Edit contact
+                  </button>
+                ) : (
+                  <div className="space-y-4">
+                    {editMethods.map((m, i) => (
+                      <div key={i} className="flex flex-col gap-2 p-3 border border-paletteBorder rounded-sm">
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="text"
+                            className="flex-1 p-2 border border-paletteBorder bg-transparent font-mono text-sm text-textPrimary focus:outline-none"
+                            value={m.label}
+                            onChange={(e) => updateMethod(i, 'label', e.target.value)}
+                            placeholder="Label (e.g. Email, Instagram)"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeMethod(i)}
+                            className="font-mono text-xs uppercase tracking-wider px-2 py-1 bg-destructive text-white hover:opacity-90 rounded-sm"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          className="w-full p-2 border border-paletteBorder bg-transparent font-mono text-sm text-textPrimary focus:outline-none"
+                          value={m.value}
+                          onChange={(e) => updateMethod(i, 'value', e.target.value)}
+                          placeholder="URL or email address"
+                        />
+                      </div>
+                    ))}
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={addMethod}
+                        className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
+                      >
+                        Add method
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSave}
+                        className="font-mono text-sm uppercase tracking-wider px-4 py-2 bg-accent text-textPrimary hover:opacity-90 transition-opacity duration-150 rounded-sm"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setIsEditing(false); setEditMethods(getContactMethods(data)); }}
+                        className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {!isEditing && (
+              <div className="space-y-4">
+                {displayMethods.map((m, i) => (
+                  <p key={i}>
+                    <a
+                      href={m.value.includes('@') ? `mailto:${m.value}` : m.value}
+                      target={m.value.includes('@') ? undefined : '_blank'}
+                      rel={m.value.includes('@') ? undefined : 'noopener noreferrer'}
+                      className="underline font-medium transition-colors duration-150 hover:opacity-80"
+                    >
+                      {m.label || m.value}
+                    </a>
+                  </p>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         {!isMobile && <div className="w-px shrink-0 bg-paletteBorder" aria-hidden />}
@@ -259,7 +430,10 @@ const App: React.FC = () => {
   const isMobile = useIsMobile();
   const [data, setData] = useState<PortfolioData>(getPortfolioData());
 
-  const refreshData = () => getPortfolioDataAsync().then(setData);
+  const refreshData = (updatedData?: PortfolioData) => {
+    if (updatedData != null) setData(updatedData);
+    else getPortfolioDataAsync().then(setData);
+  };
 
   useEffect(() => {
     getPortfolioDataAsync().then(setData);
@@ -280,7 +454,7 @@ const App: React.FC = () => {
             <Route path="/project/new" element={<NewProjectPage data={data} onRefresh={refreshData} />} />
             <Route path="/project/:id" element={<ProjectDetailsPage data={data} onRefresh={refreshData} />} />
             <Route path="/about" element={<AboutPage data={data} onRefresh={refreshData} />} />
-            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/contact" element={<ContactPage data={data} onRefresh={refreshData} />} />
             <Route path="/admin" element={<AdminLoginPage />} />
             <Route path="/a" element={<AdminLoginPage />} />
             <Route path="/admin/deployment" element={<AdminDeploymentGuard><DeploymentPage /></AdminDeploymentGuard>} />

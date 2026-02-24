@@ -1,5 +1,5 @@
 
-import { PortfolioData, Project } from '../types';
+import { PortfolioData, Project, ContactMethod } from '../types';
 import { INITIAL_DATA } from '../constants';
 import { isSupabaseConfigured, getPortfolioFromSupabase, publishPortfolioToSupabase } from './supabase';
 
@@ -237,6 +237,26 @@ export async function updateAboutMe(text: string): Promise<void> {
   const data = await getPortfolioDataAsync();
   data.aboutMe = text;
   await writePortfolioData(data);
+}
+
+export async function updateAboutImage(imageDataUrl: string): Promise<PortfolioData> {
+  const data = await getPortfolioDataAsync();
+  data.aboutImage = imageDataUrl;
+  await writePortfolioData(data);
+  return data;
+}
+
+export async function updateContact(contact: PortfolioData['contact']): Promise<void> {
+  const data = await getPortfolioDataAsync();
+  data.contact = contact;
+  await writePortfolioData(data);
+}
+
+export async function updateContactMethods(methods: ContactMethod[]): Promise<PortfolioData> {
+  const data = await getPortfolioDataAsync();
+  data.contactMethods = methods;
+  await writePortfolioData(data);
+  return data;
 }
 
 export async function addProject(project: Project): Promise<void> {

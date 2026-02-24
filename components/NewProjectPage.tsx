@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { addProject } from '../services/storageService';
 import { compressImageDataUrl, getImageAspectRatio } from '../utils/imageCompress';
 import RichTextEditor from './RichTextEditor';
@@ -13,14 +14,18 @@ interface NewProjectPageProps {
 
 const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
   const { isAdmin } = useAdminAuth();
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [coverAspectRatio, setCoverAspectRatio] = useState<number | undefined>(undefined);
   const [gallery, setGallery] = useState<string[]>([]);
+  const [galleryColumns, setGalleryColumns] = useState<1 | 2 | 3>(1);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
   React.useEffect(() => {
     if (!isAdmin) navigate('/');
   }, [isAdmin, navigate]);
@@ -35,7 +40,9 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
       reader.readAsDataURL(file);
     });
     const compressed = await compressImageDataUrl(dataUrl);
+    const ratio = await getImageAspectRatio(compressed).catch(() => undefined);
     setImageUrl(compressed);
+    setCoverAspectRatio(ratio);
   }, []);
 
   const handleGalleryFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,20 +59,54 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
       loaded.push(await compressImageDataUrl(base64));
     }
     setGallery((prev) => (prev.length ? [...prev, ...loaded] : loaded));
-    if (!imageUrl && loaded[0]) setImageUrl(loaded[0]);
+    if (!imageUrl && loaded[0]) {
+      setImageUrl(loaded[0]);
+      const ratio = await getImageAspectRatio(loaded[0]).catch(() => undefined);
+      setCoverAspectRatio(ratio);
+    }
     setIsUploading(false);
   };
 
   const removeGalleryImage = (index: number) => {
     const next = gallery.filter((_, i) => i !== index);
     setGallery(next);
-    if (imageUrl && gallery[index] === imageUrl) setImageUrl(next[0] ?? '');
+    if (imageUrl && gallery[index] === imageUrl) {
+      setImageUrl(next[0] ?? '');
+      if (next[0]) getImageAspectRatio(next[0]).then(setCoverAspectRatio).catch(() => setCoverAspectRatio(undefined));
+      else setCoverAspectRatio(undefined);
+    }
   };
 
-  const setCoverFromGallery = (index: number) => {
+  const setCoverFromGallery = useCallback((index: number) => {
     const img = gallery[index];
-    if (img) setImageUrl(img);
-  };
+    if (!img) return;
+    setImageUrl(img);
+    getImageAspectRatio(img).then(setCoverAspectRatio).catch(() => setCoverAspectRatio(undefined));
+  }, [gallery]);
+
+  const handleReplaceImage = useCallback(async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setIsUploading(true);
+    const base64 = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(file);
+    });
+    const compressed = await compressImageDataUrl(base64);
+    setGallery((prev) => {
+      const next = [...prev];
+      next[index] = compressed;
+      return next;
+    });
+    if (imageUrl && gallery[index] === imageUrl) {
+      setImageUrl(compressed);
+      const ratio = await getImageAspectRatio(compressed).catch(() => undefined);
+      setCoverAspectRatio(ratio);
+    }
+    setIsUploading(false);
+  }, [gallery, imageUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +122,7 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
       setIsSaving(true);
       const id = Date.now().toString();
       const cover = imageUrl || gallery[0] || '';
-      const coverAspectRatio = cover ? await getImageAspectRatio(cover).catch(() => undefined) : undefined;
+      const ratio = coverAspectRatio ?? (cover ? await getImageAspectRatio(cover).catch(() => undefined) : undefined);
       await addProject({
         id,
         title: title.trim(),
@@ -89,8 +130,8 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
         description: description.trim() || '',
         imageUrl: cover,
         gallery,
-        galleryColumns: 1,
-        coverAspectRatio,
+        galleryColumns,
+        coverAspectRatio: ratio,
       });
       await onRefresh();
       navigate(`/project/${id}`);
@@ -108,10 +149,12 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
 
   if (!isAdmin) return null;
 
+  const bottomPadding = isAdmin && !isMobile ? 'pb-24' : 'pb-12';
+
   return (
     <div className="fixed inset-0 bg-bgMain flex flex-col overflow-hidden">
       <main className="flex-1 min-h-0 flex">
-        <div className="w-2/5 min-w-0 overflow-y-auto pt-pageTop pl-6 pr-6 pb-12">
+        <div className={`w-2/5 min-w-0 overflow-y-auto pt-pageTop pl-6 pr-6 ${bottomPadding}`}>
           <div className="max-w-xl">
             <h1 className="font-mono text-sm uppercase tracking-wider text-textPrimary mb-6">New project</h1>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -144,15 +187,6 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
                   minHeight="10rem"
                 />
               </div>
-              <div>
-                <label className="block font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Cover</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="block w-full text-sm font-mono file:mr-4 file:py-2 file:px-4 file:border file:border-paletteBorder file:bg-bgMain file:font-mono file:text-xs file:uppercase file:tracking-wider file:text-textPrimary file:hover:bg-neutral-800 file:hover:text-white file:transition-colors file:duration-150 file:rounded-sm"
-                  onChange={handleCoverFile}
-                />
-              </div>
               <div className="flex gap-2">
                 <button
                   type="submit"
@@ -166,49 +200,95 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
           </div>
         </div>
         <div className="w-px shrink-0 bg-paletteBorder" aria-hidden />
-        <div className="w-3/5 min-w-0 overflow-y-auto pt-pageTop px-6 pb-12">
+        <div className={`w-3/5 min-w-0 overflow-y-auto pt-pageTop px-6 ${bottomPadding}`}>
           <div className="space-y-4">
-            {imageUrl && (
-              <div>
-                <p className="font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Cover preview</p>
-                <img src={imageUrl} alt="Cover" className="max-h-64 w-auto border border-paletteBorder" />
-              </div>
-            )}
             <div>
-              <label className="block font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Gallery</label>
+              <p className="font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Cover</p>
+              {imageUrl ? (
+                <img src={imageUrl} alt="Cover" className="max-h-64 w-auto border border-paletteBorder" />
+              ) : (
+                <div className="max-h-64 h-64 border border-paletteBorder flex items-center justify-center font-mono text-xs text-textSecondary">No cover</div>
+              )}
+              <div className="mt-2 flex gap-2">
+                <label className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 cursor-pointer rounded-sm">
+                  Change cover
+                  <input type="file" accept="image/*" className="hidden" onChange={handleCoverFile} />
+                </label>
+              </div>
+            </div>
+            <div>
+              <p className="font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Gallery layout</p>
+              <div className="flex gap-4 mb-2">
+                <label className="flex items-center gap-2 font-mono text-sm cursor-pointer">
+                  <input
+                    type="radio"
+                    name="galleryColumnsNew"
+                    checked={galleryColumns === 1}
+                    onChange={() => setGalleryColumns(1)}
+                    className="border border-paletteBorder"
+                  />
+                  One column
+                </label>
+                <label className="flex items-center gap-2 font-mono text-sm cursor-pointer">
+                  <input
+                    type="radio"
+                    name="galleryColumnsNew"
+                    checked={galleryColumns === 2}
+                    onChange={() => setGalleryColumns(2)}
+                    className="border border-paletteBorder"
+                  />
+                  Two columns
+                </label>
+                <label className="flex items-center gap-2 font-mono text-sm cursor-pointer">
+                  <input
+                    type="radio"
+                    name="galleryColumnsNew"
+                    checked={galleryColumns === 3}
+                    onChange={() => setGalleryColumns(3)}
+                    className="border border-paletteBorder"
+                  />
+                  Three columns
+                </label>
+              </div>
+              <p className="font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Gallery</p>
               <input
                 type="file"
                 accept="image/*"
                 multiple
-                className="block w-full text-sm font-mono file:mr-4 file:py-2 file:px-4 file:border file:border-paletteBorder file:bg-bgMain file:font-mono file:text-xs file:uppercase file:tracking-wider file:text-textPrimary file:hover:bg-neutral-800 file:hover:text-white file:transition-colors file:duration-150 file:rounded-sm"
+                className="block w-full text-sm font-mono file:mr-4 file:py-2 file:px-4 file:border file:border-paletteBorder file:bg-bgMain file:font-mono file:text-xs file:uppercase file:tracking-wider file:text-textPrimary file:hover:bg-neutral-800 file:hover:text-white file:transition-colors file:duration-150 file:rounded-sm mb-2"
                 onChange={handleGalleryFiles}
               />
-            </div>
-            {gallery.length > 0 && (
-              <div className="flex flex-wrap gap-4">
-                {gallery.map((img, i) => (
-                  <div key={i} className="relative group">
-                    <img src={img} alt="" className="h-20 w-auto border border-paletteBorder" />
-                    <div className="absolute inset-0 flex items-center justify-center gap-1 bg-neutral-800/50 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                      <button
-                        type="button"
-                        onClick={() => removeGalleryImage(i)}
-                        className="font-mono text-xs uppercase tracking-wider px-2 py-1 bg-destructive text-white hover:opacity-90 transition-opacity duration-150 rounded-sm"
-                      >
-                        Remove
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setCoverFromGallery(i)}
-                        className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
-                      >
-                        Set as cover
-                      </button>
+              {gallery.length > 0 && (
+                <div className="flex flex-wrap gap-4">
+                  {gallery.map((img, i) => (
+                    <div key={i} className="flex flex-col">
+                      <img src={img} alt="" className="h-20 w-auto border border-paletteBorder" />
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        <button
+                          type="button"
+                          onClick={() => setCoverFromGallery(i)}
+                          className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
+                        >
+                          Set as cover
+                        </button>
+                        <label className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white cursor-pointer transition-colors duration-150 rounded-sm">
+                          Replace
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleReplaceImage(i, e)} />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => removeGalleryImage(i)}
+                          disabled={gallery.length <= 1}
+                          className="font-mono text-xs uppercase tracking-wider px-2 py-1 bg-destructive text-white hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>

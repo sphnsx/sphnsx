@@ -1,4 +1,4 @@
-import { PortfolioData } from './types';
+import { PortfolioData, ContactMethod } from './types';
 
 /** Single source of truth for UI colours (Wigmore Hall / PhMuseum inspired). */
 export const PALETTE = {
@@ -19,6 +19,11 @@ export const HOME_BUTTON_GREEN = PALETTE.accent;
 
 export const INITIAL_DATA: PortfolioData = {
   aboutMe: "Silvia (b 1999) is a London-based fine art photographer whose work interrogates the fluid boundaries between the tangible and the perceived. A graduate of Central Saint Martins, she has pivoted from the structural rigour of fashion towards a more ephemeral exploration of the 'shifted concept' — capturing the weight of a glance within a fleeting moment.\n\nHer practice is deeply rooted in travel and the quiet observation of nature and still life. By isolating objects from their traditional contexts, Silvia creates unreal spaces where philosophical enquiry and visual subtlety converge. For her, the camera is not a tool for documentation, but a medium for leaping between states of being.",
+  aboutImage: '',
+  contactMethods: [
+    { label: 'Email', value: 'sphnsx@aol.com' },
+    { label: 'Instagram', value: 'https://www.instagram.com/sphnsx/' },
+  ],
   projects: [
     {
       id: 'twice',
