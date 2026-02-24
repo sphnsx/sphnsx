@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface ModularSectionProps {
   title: string;
@@ -20,8 +20,11 @@ const ModularSection: React.FC<ModularSectionProps> = ({
   draggable = true,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const navigate = useNavigate();
   const normalizedTo = to.startsWith('/') ? to : `/${to}`;
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate(normalizedTo);
     // #region agent log
     fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', {
       method: 'POST',
@@ -31,7 +34,7 @@ const ModularSection: React.FC<ModularSectionProps> = ({
       },
       body: JSON.stringify({
         sessionId: 'bc9388',
-        runId: 'pre-fix-1',
+        runId: 'post-fix',
         hypothesisId: 'H1-H2',
         location: 'components/ModularSection.tsx:27',
         message: 'ModularSection click',
