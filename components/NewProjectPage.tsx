@@ -8,7 +8,7 @@ import { PortfolioData, Project } from '../types';
 
 interface NewProjectPageProps {
   data: PortfolioData;
-  onRefresh: () => void;
+  onRefresh: () => void | Promise<void>;
 }
 
 const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
@@ -90,7 +90,7 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
         galleryColumns: 1,
         coverAspectRatio,
       });
-      onRefresh();
+      await Promise.resolve(onRefresh());
       navigate(`/project/${id}`);
     } catch (err) {
       console.error(err);
@@ -149,13 +149,22 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
                   onChange={handleCoverFile}
                 />
               </div>
-              <button
-                type="submit"
-                disabled={isUploading}
-                className="font-mono text-sm uppercase tracking-wider px-6 py-3 bg-accent text-textPrimary hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
-              >
-                {isUploading ? 'Processing…' : 'Create project'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={isUploading}
+                  className="font-mono text-sm uppercase tracking-wider px-4 py-2 bg-accent text-textPrimary hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
+                >
+                  {isUploading ? 'Processing…' : 'Create project'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/')}
+                  className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
+                >
+                  Cancel
+                </button>
+              </div>
             </form>
           </div>
         </div>

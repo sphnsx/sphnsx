@@ -150,9 +150,15 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
 
   const handleDelete = async () => {
     if (!confirm('Delete this project?')) return;
-    await deleteProject(initialProject.id);
-    onRefresh();
-    navigate('/');
+    try {
+      await deleteProject(initialProject.id);
+      alert('Project deleted successfully.');
+      onRefresh();
+      navigate('/');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete project.');
+    }
   };
 
   const textBlock = (
