@@ -13,6 +13,27 @@ import App from './App';
       const newPath = hash.slice(1); // "/about", "/project/123", etc.
       const newUrl = `${origin}${newPath}${search}`;
       if (window.location.href !== newUrl) {
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Debug-Session-Id': 'bc9388',
+          },
+          body: JSON.stringify({
+            sessionId: 'bc9388',
+            runId: 'pre-fix-1',
+            hypothesisId: 'H1',
+            location: 'index.tsx:17',
+            message: 'normalizeHashToPath rewriting URL',
+            data: {
+              hash,
+              newUrl,
+            },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion agent log
         window.history.replaceState(undefined, '', newUrl);
         // Notify BrowserRouter that the URL changed.
         window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }));

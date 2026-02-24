@@ -21,11 +21,36 @@ const ModularSection: React.FC<ModularSectionProps> = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const normalizedTo = to.startsWith('/') ? to : `/${to}`;
+  const handleClick = () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Debug-Session-Id': 'bc9388',
+      },
+      body: JSON.stringify({
+        sessionId: 'bc9388',
+        runId: 'pre-fix-1',
+        hypothesisId: 'H1-H2',
+        location: 'components/ModularSection.tsx:27',
+        message: 'ModularSection click',
+        data: {
+          to,
+          normalizedTo,
+          hrefBefore: typeof window !== 'undefined' ? window.location.href : null,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion agent log
+  };
 
   return (
     <Link
       to={normalizedTo}
       draggable={draggable}
+      onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={`block w-full h-full text-left overflow-hidden bg-bgMain relative group ${className}`}
