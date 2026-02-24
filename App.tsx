@@ -377,7 +377,7 @@ const NotFoundPage: React.FC = () => (
   </main>
 );
 
-/** Base path where the SPA is served (e.g. /a). No trailing slash. Empty string for root. */
+/** Base path where the SPA is served (e.g. /a). No trailing slash. Empty string or "/" for root. */
 const getBasePath = (): string => {
   const b = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) || '/';
   return b.replace(/\/$/, '') || '';
@@ -432,8 +432,10 @@ const App: React.FC = () => {
   }, []);
 
   if (waitForRemote && data === null) {
+    const basePath = getBasePath();
+    const routerBasename = basePath && basePath !== '/' ? basePath : undefined;
     return (
-      <Router basename={getBasePath() || '/'}>
+      <Router basename={routerBasename}>
         <AdminAuthProvider>
           <LoadingScreen />
         </AdminAuthProvider>
@@ -443,8 +445,11 @@ const App: React.FC = () => {
 
   const portfolioData = data ?? getPortfolioData();
 
+  const basePath = getBasePath();
+  const routerBasename = basePath && basePath !== '/' ? basePath : undefined;
+
   return (
-    <Router basename={getBasePath() || '/'}>
+    <Router basename={routerBasename}>
       <AdminAuthProvider>
         <AdminRouteMobileRedirect />
         <div className="min-h-screen bg-bgMain text-textPrimary font-sans">
