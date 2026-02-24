@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { flushSync } from 'react-dom';
-import { HashRouter as Router, Routes, Route, Link, useParams, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import ShowcaseView from './components/ShowcaseView';
 import MobileHeader from './components/MobileHeader';
@@ -9,7 +9,7 @@ import DeploymentPage from './components/DeploymentPage';
 import NewProjectPage from './components/NewProjectPage';
 import ProjectDetailPage from './components/ProjectDetailPage';
 import { PortfolioData, ContactMethod } from './types';
-import { getPortfolioData, getPortfolioDataAsync, updateAboutMe, updateAboutImage, updateContactMethods } from './services/storageService';
+import { getPortfolioData, getPortfolioDataAsync, isAuthoritativeRemoteConfigured, updateAboutMe, updateAboutImage, updateContactMethods } from './services/storageService';
 import { PALETTE } from './constants';
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
 import { useIsMobile } from './hooks/useMediaQuery';
@@ -377,37 +377,10 @@ const NotFoundPage: React.FC = () => (
   </main>
 );
 
-/** Base path where the SPA is served (e.g. /a). No trailing slash. */
+/** Base path where the SPA is served (e.g. /a). No trailing slash. Empty string for root. */
 const getBasePath = (): string => {
   const b = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) || '/';
   return b.replace(/\/$/, '') || '';
-};
-
-const HashPathSync: React.FC = () => {
-  const location = useLocation();
-  useEffect(() => {
-    const pathname = window.location.pathname;
-    const hash = window.location.hash;
-    if (hash && hash !== '#') return; // Already have a route in hash
-    const base = getBasePath();
-    // Pathname → route. Entry points: /a or /a/ → home (#/); /admin → #/admin; /a/admin → #/admin.
-    const route =
-      pathname === base || pathname === base + '/'
-        ? '/'
-        : pathname.startsWith(base + '/')
-          ? pathname.slice(base.length) || '/'
-          : pathname.startsWith('/')
-            ? pathname
-            : '/' + pathname;
-    const newHash = '#' + (route.startsWith('/') ? route : '/' + route);
-    window.location.hash = newHash;
-    // Normalize URL: admin routes always use root path /#/admin so sphnsx.com/admin and /a become /#/admin.
-    const pathPart = (route === '/admin' || route.startsWith('/admin/')) ? '/' + newHash : (base ? base + newHash : '/' + newHash);
-    if (window.location.pathname + window.location.hash !== pathPart) {
-      window.history.replaceState(undefined, '', window.location.origin + pathPart);
-    }
-  }, [location.pathname]);
-  return null;
 };
 
 /** Redirect /project/new and /admin/deployment to home when on phone (admin disabled). */
@@ -435,9 +408,16 @@ const AdminDeploymentGuard: React.FC<{ children: React.ReactNode }> = ({ childre
   return <>{children}</>;
 };
 
+const LoadingScreen: React.FC = () => (
+  <div className="min-h-screen bg-bgMain text-textPrimary font-sans flex items-center justify-center">
+    <p className="font-mono text-sm uppercase tracking-wider text-textSecondary">Loading…</p>
+  </div>
+);
+
 const App: React.FC = () => {
   const isMobile = useIsMobile();
-  const [data, setData] = useState<PortfolioData>(getPortfolioData());
+  const waitForRemote = isAuthoritativeRemoteConfigured();
+  const [data, setData] = useState<PortfolioData | null>(waitForRemote ? null : getPortfolioData());
 
   const refreshData = (updatedData?: PortfolioData) => {
     if (updatedData != null) {
@@ -451,10 +431,21 @@ const App: React.FC = () => {
     getPortfolioDataAsync().then(setData);
   }, []);
 
+  if (waitForRemote && data === null) {
+    return (
+      <Router basename={getBasePath() || '/'}>
+        <AdminAuthProvider>
+          <LoadingScreen />
+        </AdminAuthProvider>
+      </Router>
+    );
+  }
+
+  const portfolioData = data ?? getPortfolioData();
+
   return (
-    <Router>
+    <Router basename={getBasePath() || '/'}>
       <AdminAuthProvider>
-        <HashPathSync />
         <AdminRouteMobileRedirect />
         <div className="min-h-screen bg-bgMain text-textPrimary font-sans">
           <Toaster position="top-center" />
@@ -462,11 +453,11 @@ const App: React.FC = () => {
           <FixedHomeButton />
           <AdminBar />
           <Routes>
-            <Route path="/" element={<ShowcaseView data={data} onRefresh={refreshData} />} />
-            <Route path="/project/new" element={<NewProjectPage data={data} onRefresh={refreshData} />} />
-            <Route path="/project/:id" element={<ProjectDetailsPage data={data} onRefresh={refreshData} />} />
-            <Route path="/about" element={<AboutPage data={data} onRefresh={refreshData} />} />
-            <Route path="/contact" element={<ContactPage data={data} onRefresh={refreshData} />} />
+            <Route path="/" element={<ShowcaseView data={portfolioData} onRefresh={refreshData} />} />
+            <Route path="/project/new" element={<NewProjectPage data={portfolioData} onRefresh={refreshData} />} />
+            <Route path="/project/:id" element={<ProjectDetailsPage data={portfolioData} onRefresh={refreshData} />} />
+            <Route path="/about" element={<AboutPage data={portfolioData} onRefresh={refreshData} />} />
+            <Route path="/contact" element={<ContactPage data={portfolioData} onRefresh={refreshData} />} />
             <Route path="/admin" element={<AdminLoginPage />} />
             <Route path="/a" element={<AdminLoginPage />} />
             <Route path="/admin/deployment" element={<AdminDeploymentGuard><DeploymentPage /></AdminDeploymentGuard>} />

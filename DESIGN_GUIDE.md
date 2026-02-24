@@ -55,6 +55,7 @@ Single source of truth for the SPHNSX site design. Add new rules as new sections
   - **Left (2/5):** Text only — page title, body copy, links (e.g. Contact: email, Instagram). For projects: year, title, description paragraphs.
   - **Right (3/5):** Images only — project gallery, or about/contact images (or placeholder if none).
 - **Divider:** Vertical line (e.g. 1px black) between the two sides. Each side scrolls independently if content overflows.
+- **About Me photo:** The About Me detail page image **may have a border** (e.g. `border-paletteBorder`). This is the only view-mode image where a border is allowed; project gallery photos are borderless.
 
 ## 9. Section hover and palette
 
@@ -105,3 +106,18 @@ Single source of truth for the SPHNSX site design. Add new rules as new sections
 - **Cover on the right:** The cover image and its control (“Change cover”) live on the **right** panel only. No cover file input on the left.
 - **Gallery layout:** One, Two, or Three columns — same radio group in both New and Edit; choice is per project and persisted.
 - **Gallery per-image actions:** For each gallery thumbnail, show a row of actions below the image (not hover-only): **Set as cover**, **Replace** (file input), **Remove**. Same order and style in New and Edit. Replace is required so users can change a single image without re-uploading the whole gallery.
+
+## 16. Project detail gallery (view mode)
+
+- **No borders or frames:** Gallery photos are curated and borderless. Do not add a border, stroke, or cell background around each photo; no Polaroid-style frame in view mode.
+- **No gaps:** No gap between photos horizontally or vertically — photos touch (e.g. `gap-0` on the gallery grid).
+- **Full width:** The gallery uses the full width of the right (3/5) column; do not cap it with a max-width so images stay small.
+- **Vertical alignment with title:** The top of the first row of photos aligns with the top of the project title. Right column uses the same top padding as the left (`pt-pageTop`); add a spacer matching the left column’s year line + margin so the gallery starts level with the title.
+- **Photo size:** Photos are large and impactful. Each image can use a substantial portion of the viewport height (e.g. `max-h-[70vh]`) so the gallery feels prominent, not small. Preserve aspect ratio (`object-contain`).
+
+## 17. Mobile zigzag / wave dividers
+
+- **Where:** Phone-only, between stacked content blocks (e.g. sections on the mobile home or detail views), rendered via `MobileSectionDivider` (`type: 'zigzag' | 'wave'`).
+- **Full-bleed width:** Dividers span the full viewport width (`w-screen`, SVG `preserveAspectRatio="none"`), so both edges touch the screen sides on mobile.
+- **Thickness:** Divider height is a slim strip (default ~8px); can be adjusted via the `height` prop but should stay visually light and unobtrusive.
+- **Role:** Purely decorative linear separators; they do not carry meaning or interaction states and should not be reused as buttons or controls.

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ThreeColumnLayout from './ThreeColumnLayout';
 import ModularSection from './ModularSection';
 import AboutMePreview from './AboutMePreview';
@@ -8,6 +8,7 @@ import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { reorderProjects } from '../services/storageService';
 import { PALETTE } from '../constants';
 import { useIsMobile } from '../hooks/useMediaQuery';
+import { MobileSectionDivider } from './MobileDividers';
 
 const STORAGE_KEYS = { left: 'sphnsx_left_heights', middle: 'sphnsx_middle_heights', right: 'sphnsx_right_heights' };
 
@@ -121,59 +122,11 @@ const AddProjectSection: React.FC<{ hoverColor: string }> = ({ hoverColor }) => 
   />
 );
 
-const DIVIDER_HEIGHT = 8;
-const DIVIDER_STROKE = PALETTE.border;
-
-// Zig-zag: 8 equal segments of 12.5 units; y alternates mid→top→mid→bottom, repeated. One exact string.
-const zigzagPoints = '0,4 12.5,0 25,4 37.5,8 50,4 62.5,0 75,4 87.5,8 100,4';
-
-// Wave: four identical half-periods; each half-period uses same Bezier offsets (9.25, 15.75).
-const wavePath = 'M 0 4 C 9.25 0 15.75 8 25 4 C 34.25 8 40.75 0 50 4 C 59.25 0 65.75 8 75 4 C 84.25 8 90.75 0 100 4';
-
-/** Mobile-only section divider: zig-zag or wave. Strictly periodic via uniform scaling. */
-const MobileSectionDivider: React.FC<{ type: 'zigzag' | 'wave' }> = ({ type }) => (
-  <div className="w-full overflow-hidden bg-bgMain" style={{ height: DIVIDER_HEIGHT }} aria-hidden>
-    <svg
-      width="100%"
-      height={DIVIDER_HEIGHT}
-      viewBox="0 0 100 8"
-      preserveAspectRatio="none"
-      className="block"
-      shapeRendering={type === 'zigzag' ? 'crispEdges' : 'geometricPrecision'}
-    >
-      {type === 'zigzag' ? (
-        <polyline
-          points={zigzagPoints}
-          fill="none"
-          stroke={DIVIDER_STROKE}
-          strokeWidth="1"
-          vectorEffect="non-scaling-stroke"
-          shapeRendering="crispEdges"
-        />
-      ) : (
-        <path
-          d={wavePath}
-          fill="none"
-          stroke={DIVIDER_STROKE}
-          strokeWidth="1"
-          vectorEffect="non-scaling-stroke"
-          shapeRendering="geometricPrecision"
-        />
-      )}
-    </svg>
-  </div>
-);
-
 /** Simple mobile row: no absolute layout, so content is always in flow and visible. */
 const MobileProjectRow: React.FC<{ project: Project }> = ({ project }) => {
+  const navigate = useNavigate();
   const path = `/project/${project.id}`;
-  const goToProject = () => {
-    // HashRouter's navigate() does not update location in this context (logs: H1/H2 fire, H3 never).
-    // Set hash and reload so the app loads with the correct route and shows the detail page.
-    const hash = path ? `#${path}` : '#/';
-    window.location.hash = hash;
-    window.location.reload();
-  };
+  const goToProject = () => navigate(path);
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();

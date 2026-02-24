@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { PALETTE } from '../constants';
+import { WaveDivider } from './MobileDividers';
 
 const HamburgerIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
   <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="square" aria-hidden>
@@ -53,20 +54,21 @@ const MobileHeader: React.FC = () => {
             className="fixed top-0 left-0 z-[102] w-64 h-full bg-bgMain border-r border-paletteBorder flex flex-col pt-14 pl-4 pr-4 pb-4"
             aria-label="Main navigation"
           >
-            <a
-              href="#/about"
-              className="font-mono text-sm uppercase tracking-wider py-3 border-b border-paletteBorder text-textPrimary hover:underline block"
+            <Link
+              to="/about"
+              className="font-mono text-sm uppercase tracking-wider py-3 text-textPrimary hover:underline block"
               onClick={() => setDrawerOpen(false)}
             >
               About me
-            </a>
-            <a
-              href="#/contact"
-              className="font-mono text-sm uppercase tracking-wider py-3 border-b border-paletteBorder text-textPrimary hover:underline block"
+            </Link>
+            <WaveDivider height={6} className="my-1 -mx-4 w-[calc(100%+2rem)]" />
+            <Link
+              to="/contact"
+              className="font-mono text-sm uppercase tracking-wider py-3 text-textPrimary hover:underline block"
               onClick={() => setDrawerOpen(false)}
             >
               Contact
-            </a>
+            </Link>
           </nav>
         </>
       )}

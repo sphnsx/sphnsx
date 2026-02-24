@@ -18,6 +18,11 @@ const REMOTE_PORTFOLIO_URL =
     ? String(import.meta.env.VITE_PORTFOLIO_URL).trim() || undefined
     : undefined;
 
+/** True when portfolio is loaded from a remote source (Supabase or VITE_PORTFOLIO_URL). When true, app should wait for getPortfolioDataAsync() before showing content to avoid flash of stale local data. */
+export function isAuthoritativeRemoteConfigured(): boolean {
+  return isSupabaseConfigured() || Boolean(REMOTE_PORTFOLIO_URL);
+}
+
 let cache: PortfolioData | null = null;
 
 /** Fetch published portfolio from remote URL. Returns null on failure or if URL not configured. */
