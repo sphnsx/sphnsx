@@ -340,14 +340,14 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
               {project.gallery && project.gallery.length > 0 ? (
                 <>
                   <div className="h-6 shrink-0" aria-hidden />
-                  <div className={`grid gap-0 max-w-4xl items-start ${project.galleryColumns === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : project.galleryColumns === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+                  <div className={`grid gap-0 w-full items-start ${project.galleryColumns === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : project.galleryColumns === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
                   {project.gallery.map((img, index) => (
                     <div key={index} className="w-full min-w-0">
                       <div className="relative w-full">
                         <img
                           src={img}
                           alt={`${project.title} ${index + 1}`}
-                          className="w-full max-h-48 object-contain block"
+                          className="w-full max-h-[70vh] object-contain block"
                           onContextMenu={(e) => e.preventDefault()}
                           onDragStart={(e) => e.preventDefault()}
                           style={{ pointerEvents: 'none' }}
