@@ -124,43 +124,15 @@ const AddProjectSection: React.FC<{ hoverColor: string }> = ({ hoverColor }) => 
 const DIVIDER_HEIGHT = 8;
 const DIVIDER_STROKE = PALETTE.border;
 
-// Zig-zag: strictly periodic — integer segment index, fixed step 12.5, only y in {0, 4, 8}.
-const ZIGZAG_NUM_SEGMENTS = 8;
-const ZIGZAG_STEP = 100 / ZIGZAG_NUM_SEGMENTS; // 12.5
-const ZIGZAG_TOP = 0;
-const ZIGZAG_MID = 4;
-const ZIGZAG_BOTTOM = 8;
-const zigzagPoints = (() => {
-  const pts: string[] = [];
-  for (let i = 0; i <= ZIGZAG_NUM_SEGMENTS; i++) {
-    const x = Math.round(i * ZIGZAG_STEP * 10) / 10; // avoid float drift
-    const y = i % 2 === 0 ? ZIGZAG_MID : (i % 4 === 1 ? ZIGZAG_TOP : ZIGZAG_BOTTOM);
-    pts.push(`${x},${y}`);
-  }
-  return pts.join(' ');
-})();
+// Zig-zag: 8 equal segments of 12.5 units; y alternates mid→top→mid→bottom, repeated. One exact string.
+const zigzagPoints = '0,4 12.5,0 25,4 37.5,8 50,4 62.5,0 75,4 87.5,8 100,4';
 
-// Wave: strictly periodic — same cubic Bezier half-period repeated (κ ≈ 0.37 for half-sine).
-const WAVE_HALF_PERIOD = 25;
-const WAVE_K = 0.37;
-const CP1_X = Math.round(WAVE_HALF_PERIOD * WAVE_K * 100) / 100;
-const CP2_X = Math.round(WAVE_HALF_PERIOD * (1 - WAVE_K) * 100) / 100;
-const wavePath = (() => {
-  const parts: string[] = [`M 0 4`];
-  for (let p = 0; p < 4; p++) {
-    const x0 = p * WAVE_HALF_PERIOD;
-    const x1 = (p + 1) * WAVE_HALF_PERIOD;
-    const up = p % 2 === 0;
-    const cp1y = up ? 0 : 8;
-    const cp2y = up ? 8 : 0;
-    parts.push(`C ${x0 + CP1_X} ${cp1y} ${x0 + CP2_X} ${cp2y} ${x1} 4`);
-  }
-  return parts.join(' ');
-})();
+// Wave: four identical half-periods; each half-period uses same Bezier offsets (9.25, 15.75).
+const wavePath = 'M 0 4 C 9.25 0 15.75 8 25 4 C 34.25 8 40.75 0 50 4 C 59.25 0 65.75 8 75 4 C 84.25 8 90.75 0 100 4';
 
-/** Mobile-only section divider: zig-zag or wave. Strictly periodic, crisp rendering. */
+/** Mobile-only section divider: zig-zag or wave. Strictly periodic via uniform scaling. */
 const MobileSectionDivider: React.FC<{ type: 'zigzag' | 'wave' }> = ({ type }) => (
-  <div className="w-full bg-bgMain" style={{ height: DIVIDER_HEIGHT }} aria-hidden>
+  <div className="w-full overflow-hidden bg-bgMain" style={{ height: DIVIDER_HEIGHT }} aria-hidden>
     <svg
       width="100%"
       height={DIVIDER_HEIGHT}
@@ -345,8 +317,8 @@ const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = 
       const idx = newOrder.indexOf(targetId);
       if (idx === -1) return;
       newOrder.splice(idx, 0, draggedId);
-      await reorderProjects(newOrder);
-      onRefresh?.();
+      const updatedData = await reorderProjects(newOrder);
+      onRefresh?.(updatedData);
     },
     [allProjectIds, onRefresh]
   );

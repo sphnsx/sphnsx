@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { HashRouter as Router, Routes, Route, Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import ShowcaseView from './components/ShowcaseView';
@@ -338,8 +339,11 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
                 {displayMethods.map((m, i) => (
                   <p key={i}>
                     <span
-                      className="inline-block border border-paletteBorder px-3 py-2"
-                      style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%)' }}
+                      className="inline-block px-3 py-2"
+                      style={{
+                        clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%)',
+                        boxShadow: `inset 0 0 0 1px ${PALETTE.border}`,
+                      }}
                     >
                       <a
                         href={m.value.includes('@') ? `mailto:${m.value}` : m.value}
@@ -436,8 +440,11 @@ const App: React.FC = () => {
   const [data, setData] = useState<PortfolioData>(getPortfolioData());
 
   const refreshData = (updatedData?: PortfolioData) => {
-    if (updatedData != null) setData(updatedData);
-    else getPortfolioDataAsync().then(setData);
+    if (updatedData != null) {
+      flushSync(() => setData(updatedData));
+    } else {
+      getPortfolioDataAsync().then(setData);
+    }
   };
 
   useEffect(() => {

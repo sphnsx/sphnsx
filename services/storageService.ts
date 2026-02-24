@@ -241,9 +241,9 @@ export async function updateAboutMe(text: string): Promise<void> {
 
 export async function updateAboutImage(imageDataUrl: string): Promise<PortfolioData> {
   const data = await getPortfolioDataAsync();
-  data.aboutImage = imageDataUrl;
-  await writePortfolioData(data);
-  return data;
+  const updated = { ...data, aboutImage: imageDataUrl };
+  await writePortfolioData(updated);
+  return updated;
 }
 
 export async function updateContact(contact: PortfolioData['contact']): Promise<void> {
@@ -274,20 +274,22 @@ export async function updateProject(id: string, project: Project): Promise<void>
   await writePortfolioData(data);
 }
 
-export async function deleteProject(id: string): Promise<void> {
+export async function deleteProject(id: string): Promise<PortfolioData> {
   const data = await getPortfolioDataAsync();
-  data.projects = data.projects.filter(p => p.id !== id);
-  await writePortfolioData(data);
+  const updated = { ...data, projects: data.projects.filter(p => p.id !== id) };
+  await writePortfolioData(updated);
+  return updated;
 }
 
 /** Reorder projects to match the order of projectIds. Missing ids are appended. */
-export async function reorderProjects(projectIds: string[]): Promise<void> {
+export async function reorderProjects(projectIds: string[]): Promise<PortfolioData> {
   const data = await getPortfolioDataAsync();
   const byId = new Map(data.projects.map(p => [p.id, p]));
   const ordered = projectIds.map(id => byId.get(id)).filter((p): p is Project => p != null);
   const rest = data.projects.filter(p => !projectIds.includes(p.id));
-  data.projects = [...ordered, ...rest];
-  await writePortfolioData(data);
+  const updated = { ...data, projects: [...ordered, ...rest] };
+  await writePortfolioData(updated);
+  return updated;
 }
 
 /** Export current portfolio as JSON string for publishing (e.g. save as portfolio.json so viewers load it). */

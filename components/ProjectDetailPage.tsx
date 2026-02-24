@@ -37,7 +37,7 @@ const ProtectedImage: React.FC<{ src: string; alt: string; className?: string }>
 
 interface ProjectDetailPageProps {
   project: Project;
-  onRefresh: () => void;
+  onRefresh: (updatedData?: PortfolioData) => void;
 }
 
 const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialProject, onRefresh }) => {
@@ -154,8 +154,8 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
     if (!confirm('Delete this project?')) return;
     try {
       setIsDeleting(true);
-      await deleteProject(initialProject.id);
-      onRefresh();
+      const updatedData = await deleteProject(initialProject.id);
+      onRefresh(updatedData);
       toast.success('Project deleted');
       navigate('/');
     } finally {
@@ -338,10 +338,20 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
           ) : (
             <>
               {project.gallery && project.gallery.length > 0 ? (
-                <div className={`grid gap-0 max-w-4xl ${project.galleryColumns === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : project.galleryColumns === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+                <div className={`grid gap-4 max-w-4xl items-start ${project.galleryColumns === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : project.galleryColumns === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
                   {project.gallery.map((img, index) => (
-                    <div key={index}>
-                      <ProtectedImage src={img} alt={`${project.title} ${index + 1}`} />
+                    <div key={index} className="inline-block border border-paletteBorder max-w-full bg-bgMain">
+                      <div className="relative">
+                        <img
+                          src={img}
+                          alt={`${project.title} ${index + 1}`}
+                          className="max-h-48 w-auto object-contain block"
+                          onContextMenu={(e) => e.preventDefault()}
+                          onDragStart={(e) => e.preventDefault()}
+                          style={{ pointerEvents: 'none' }}
+                        />
+                        <div className="absolute inset-0 z-10 bg-transparent" onContextMenu={(e) => e.preventDefault()} aria-hidden />
+                      </div>
                     </div>
                   ))}
                 </div>
