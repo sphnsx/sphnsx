@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useParams, useLocation, useNavigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import ShowcaseView from './components/ShowcaseView';
 import MobileHeader from './components/MobileHeader';
 import AdminLoginPage from './components/AdminLoginPage';
@@ -270,6 +271,7 @@ const App: React.FC = () => {
         <HashPathSync />
         <AdminRouteMobileRedirect />
         <div className="min-h-screen bg-bgMain text-textPrimary font-sans">
+          <Toaster position="top-center" />
           {isMobile && <MobileHeader />}
           <FixedHomeButton />
           <AdminBar />

@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { updateProject, deleteProject } from '../services/storageService';
 import { compressImageDataUrl, getImageAspectRatio } from '../utils/imageCompress';
@@ -48,6 +49,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
   const [editProject, setEditProject] = useState<Project>(initialProject);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditUploading, setIsEditUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const project = isEditing ? editProject : initialProject;
 
@@ -151,13 +153,13 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
   const handleDelete = async () => {
     if (!confirm('Delete this project?')) return;
     try {
+      setIsDeleting(true);
       await deleteProject(initialProject.id);
-      alert('Project deleted successfully.');
       onRefresh();
+      toast.success('Project deleted');
       navigate('/');
-    } catch (err) {
-      console.error(err);
-      alert('Failed to delete project.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -230,9 +232,10 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                     <button
                       type="button"
                       onClick={handleDelete}
-                      className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-destructive bg-bgMain text-destructive hover:bg-destructive hover:text-white transition-colors duration-150 rounded-sm"
+                      disabled={isDeleting}
+                      className="font-mono text-xs uppercase tracking-wider px-3 py-2 bg-destructive text-white hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
                     >
-                      Delete
+                      {isDeleting ? 'Deleting…' : 'Delete'}
                     </button>
                   </div>
                 )}
@@ -312,7 +315,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                           type="button"
                           onClick={() => handleRemoveImage(i)}
                           disabled={project.gallery.length <= 1}
-                          className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-destructive bg-bgMain text-destructive hover:bg-destructive hover:text-white disabled:opacity-50 transition-colors duration-150 rounded-sm"
+                          className="font-mono text-xs uppercase tracking-wider px-2 py-1 bg-destructive text-white hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
                         >
                           Remove
                         </button>

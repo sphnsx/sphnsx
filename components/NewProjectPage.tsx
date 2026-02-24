@@ -20,6 +20,7 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
   const [imageUrl, setImageUrl] = useState('');
   const [gallery, setGallery] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   React.useEffect(() => {
     if (!isAdmin) navigate('/');
   }, [isAdmin, navigate]);
@@ -77,6 +78,7 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
       return;
     }
     try {
+      setIsSaving(true);
       const id = Date.now().toString();
       const cover = imageUrl || gallery[0] || '';
       const coverAspectRatio = cover ? await getImageAspectRatio(cover).catch(() => undefined) : undefined;
@@ -90,7 +92,7 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
         galleryColumns: 1,
         coverAspectRatio,
       });
-      await Promise.resolve(onRefresh());
+      await onRefresh();
       navigate(`/project/${id}`);
     } catch (err) {
       console.error(err);
@@ -99,6 +101,8 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
       } else {
         alert('Failed to create project.');
       }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -152,17 +156,10 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  disabled={isUploading}
+                  disabled={isUploading || isSaving}
                   className="font-mono text-sm uppercase tracking-wider px-4 py-2 bg-accent text-textPrimary hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
                 >
-                  {isUploading ? 'Processing…' : 'Create project'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate('/')}
-                  className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
-                >
-                  Cancel
+                  {isSaving ? 'Processing…' : isUploading ? 'Processing…' : 'Create project'}
                 </button>
               </div>
             </form>
@@ -196,7 +193,7 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
                       <button
                         type="button"
                         onClick={() => removeGalleryImage(i)}
-                        className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-destructive bg-bgMain text-destructive hover:bg-destructive hover:text-white transition-colors duration-150 rounded-sm"
+                        className="font-mono text-xs uppercase tracking-wider px-2 py-1 bg-destructive text-white hover:opacity-90 transition-opacity duration-150 rounded-sm"
                       >
                         Remove
                       </button>
