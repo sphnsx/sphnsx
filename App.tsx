@@ -408,35 +408,6 @@ const AdminDeploymentGuard: React.FC<{ children: React.ReactNode }> = ({ childre
   return <>{children}</>;
 };
 
-const RouteChangeLogger: React.FC = () => {
-  const location = useLocation();
-  useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Debug-Session-Id': 'bc9388',
-      },
-      body: JSON.stringify({
-        sessionId: 'bc9388',
-        runId: 'pre-fix-1',
-        hypothesisId: 'H3',
-        location: 'App.tsx:417',
-        message: 'Route change',
-        data: {
-          pathname: location.pathname,
-          search: location.search,
-          hash: location.hash,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion agent log
-  }, [location.pathname, location.search, location.hash]);
-  return null;
-};
-
 /** Keep React Router location in sync with the real URL path, in case legacy hash flows or other links change window.location without React noticing. */
 const PathSync: React.FC = () => {
   const location = useLocation();
@@ -449,30 +420,6 @@ const PathSync: React.FC = () => {
     const routerPath = location.pathname || '/';
 
     if (browserPath !== routerPath) {
-      // #region agent log
-      fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Debug-Session-Id': 'bc9388',
-        },
-        body: JSON.stringify({
-          sessionId: 'bc9388',
-          runId: 'pre-fix-2',
-          hypothesisId: 'H3',
-          location: 'App.tsx:446',
-          message: 'PathSync correcting router location',
-          data: {
-            browserPath,
-            routerPath,
-            search,
-            hash,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion agent log
-
       navigate(browserPath + search + hash, { replace: true });
     }
   }, [location.pathname, navigate]);
@@ -523,7 +470,6 @@ const App: React.FC = () => {
   return (
     <Router basename={routerBasename}>
       <AdminAuthProvider>
-        <RouteChangeLogger />
         <PathSync />
         <AdminRouteMobileRedirect />
         <div className="min-h-screen bg-bgMain text-textPrimary font-sans">
