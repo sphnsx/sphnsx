@@ -60,6 +60,7 @@ const MobileHeader: React.FC = () => {
             >
               About me
             </Link>
+            <hr className="border-0 border-t border-paletteBorder my-0 w-full" aria-hidden />
             <Link
               to="/contact"
               className="font-mono text-sm uppercase tracking-wider py-3 text-textPrimary hover:underline block"
@@ -67,6 +68,7 @@ const MobileHeader: React.FC = () => {
             >
               Contact
             </Link>
+            <hr className="border-0 border-t border-paletteBorder my-0 w-full" aria-hidden />
           </nav>
         </>
       )}

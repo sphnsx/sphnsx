@@ -164,7 +164,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
   };
 
   const textBlock = (
-    <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-6 px-6 pb-12' : `w-2/5 min-w-0 overflow-y-auto pt-pageTop px-6 ${showAdminActions ? 'pb-24' : 'pb-12'}`}>
+    <div className={isMobile ? 'w-full min-w-0 min-h-[50vh] overflow-y-auto pt-6 px-6 pb-12' : `w-2/5 min-w-0 overflow-y-auto pt-pageTop px-6 ${showAdminActions ? 'pb-24' : 'pb-12'}`}>
       <div className="max-w-xl">
         {!isMobile && isEditing ? (
               <div className="space-y-4">
@@ -246,7 +246,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
   );
 
   const galleryBlock = (
-    <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-6 px-6 pb-6' : 'w-3/5 min-w-0 overflow-y-auto pt-pageTop px-6 pb-12'}>
+    <div className={isMobile ? 'w-full min-w-0 min-h-[70vh] max-h-[70vh] overflow-y-auto pt-6 px-6 pb-6' : 'w-3/5 min-w-0 overflow-y-auto pt-pageTop px-6 pb-12'}>
           {!isMobile && isEditing ? (
             <div className="space-y-4">
               <div>
@@ -368,10 +368,10 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
     <FullScreenDetail>
       <main className={`flex-1 min-h-0 flex overflow-hidden ${isMobile ? 'flex-col pt-12' : ''}`}>
         {isMobile ? (
-          <>
+          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
             {galleryBlock}
             {textBlock}
-          </>
+          </div>
         ) : (
           <>
             {textBlock}
