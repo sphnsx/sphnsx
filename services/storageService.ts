@@ -25,6 +25,9 @@ export function isAuthoritativeRemoteConfigured(): boolean {
 
 let cache: PortfolioData | null = null;
 
+/** In-flight promise for getPortfolioDataAsync so concurrent callers (e.g. StrictMode double effect) share one load. */
+let loadPromise: Promise<PortfolioData> | null = null;
+
 /** Fetch published portfolio from remote URL. Returns null on failure or if URL not configured. */
 async function fetchFromRemote(): Promise<PortfolioData | null> {
   if (!REMOTE_PORTFOLIO_URL || typeof fetch === 'undefined') return null;
@@ -136,11 +139,15 @@ export const getPortfolioData = (): PortfolioData => {
   return INITIAL_DATA;
 };
 
-/** Load: Supabase first (when configured, auto-publish), then remote URL, then IDB, localStorage, sessionStorage, cookie, initial. */
+/** Load: Supabase first (when configured, auto-publish), then remote URL, then IDB, localStorage, sessionStorage, cookie, initial. Deduplicates concurrent calls. */
 export async function getPortfolioDataAsync(): Promise<PortfolioData> {
-  // #region agent log
-  fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '1d77cc' }, body: JSON.stringify({ sessionId: '1d77cc', location: 'storageService.ts:getPortfolioDataAsync', message: 'async load config', data: { remoteConfigured: !!REMOTE_PORTFOLIO_URL }, timestamp: Date.now(), hypothesisId: 'H1' }) }).catch(() => {});
-  // #endregion
+  if (loadPromise) return loadPromise;
+  loadPromise = getPortfolioDataAsyncImpl();
+  loadPromise.finally(() => { loadPromise = null; });
+  return loadPromise;
+}
+
+async function getPortfolioDataAsyncImpl(): Promise<PortfolioData> {
   if (isSupabaseConfigured()) {
     const fromSupabase = await getPortfolioFromSupabase();
     if (fromSupabase) {
@@ -151,9 +158,6 @@ export async function getPortfolioDataAsync(): Promise<PortfolioData> {
   }
   if (REMOTE_PORTFOLIO_URL) {
     const fromRemote = await fetchFromRemote();
-    // #region agent log
-    fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '1d77cc' }, body: JSON.stringify({ sessionId: '1d77cc', location: 'storageService.ts:getPortfolioDataAsync', message: 'remote result', data: { hasData: !!fromRemote, projectsCount: fromRemote?.projects?.length }, timestamp: Date.now(), hypothesisId: 'H2' }) }).catch(() => {});
-    // #endregion
     if (fromRemote) {
       cache = fromRemote;
       writePortfolioData(fromRemote).catch(() => {}); // seed local storage for offline / fast subsequent loads
@@ -196,9 +200,6 @@ export async function getPortfolioDataAsync(): Promise<PortfolioData> {
     writePortfolioData(fromCookie).catch(() => {});
     return fromCookie;
   }
-  // #region agent log
-  fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '1d77cc' }, body: JSON.stringify({ sessionId: '1d77cc', location: 'storageService.ts:getPortfolioDataAsync', message: 'fallback to INITIAL_DATA', data: {}, timestamp: Date.now(), hypothesisId: 'H5' }) }).catch(() => {});
-  // #endregion
   cache = INITIAL_DATA;
   return INITIAL_DATA;
 }
