@@ -31,6 +31,23 @@ const FixedHomeButton: React.FC = () => {
   );
 };
 
+const CloseToHomeButton: React.FC = () => {
+  const location = useLocation();
+  if (location.pathname === '/') return null;
+  return (
+    <Link
+      to="/"
+      className="fixed top-0 right-0 z-[100] p-4 transition-opacity duration-150 hover:opacity-80"
+      aria-label="Back to home"
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={PALETTE.textSecondary} strokeWidth="1" strokeLinecap="square" aria-hidden>
+        <line x1="6" y1="6" x2="18" y2="18" />
+        <line x1="18" y1="6" x2="6" y2="18" />
+      </svg>
+    </Link>
+  );
+};
+
 const AdminBar: React.FC = () => {
   const isMobile = useIsMobile();
   const { isAdmin, logout } = useAdminAuth();
@@ -408,52 +425,104 @@ const AdminDeploymentGuard: React.FC<{ children: React.ReactNode }> = ({ childre
   return <>{children}</>;
 };
 
-/** Keep React Router location in sync with the real URL path when the browser URL changes but the router state did not update (e.g. after programmatic navigate). */
-const PathSync: React.FC = () => {
+/** Keys home view by location so it remounts when navigating back to "/", fixing blank on bfcache/popstate. */
+const HomeRouteWrapper: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ data, onRefresh }) => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const routerPathRef = useRef(location.pathname || '/');
-  routerPathRef.current = location.pathname || '/';
-  const replaceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  return <ShowcaseView key={location.key} data={data} onRefresh={onRefresh} />;
+};
 
-  const syncFromBrowser = useCallback(() => {
-    if (typeof window === 'undefined') return;
-    const { pathname, search, hash } = window.location;
-    const browserPath = pathname || '/';
-    const routerPath = routerPathRef.current;
-    if (browserPath !== routerPath) {
-      if (replaceTimeoutRef.current) {
-        clearTimeout(replaceTimeoutRef.current);
-        replaceTimeoutRef.current = null;
-      }
-      navigate(browserPath + search + hash, { replace: true });
-      replaceTimeoutRef.current = window.setTimeout(() => {
-        replaceTimeoutRef.current = null;
-        if (window.location.pathname !== routerPathRef.current) {
-          window.location.replace(window.location.pathname + window.location.search + window.location.hash);
-        }
-      }, 400);
-    }
-  }, [location.pathname, navigate]);
+/** Shared reload helper: show loading overlay and full reload (used for back-to-home and client-nav back). */
+function reloadFromHomeHelper(): void {
+  if (typeof window === 'undefined') return;
+  if (document.getElementById('back-reload-overlay')) return;
+  const overlay = document.createElement('div');
+  overlay.setAttribute('id', 'back-reload-overlay');
+  overlay.style.cssText = `position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:${PALETTE.backgroundMain};color:${PALETTE.textSecondary};font-family:system-ui,sans-serif;font-size:14px;letter-spacing:0.1em;text-transform:uppercase;`;
+  overlay.textContent = 'Loading…';
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => window.location.reload());
+  });
+}
 
-  useEffect(() => {
-    syncFromBrowser();
-  }, [syncFromBrowser]);
-
+/** When user navigates back to home (popstate or bfcache restore), reload so the home page always shows correctly. */
+const BackToHomeReload: React.FC = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const id = setInterval(syncFromBrowser, 150);
-    return () => {
-      clearInterval(id);
-      if (replaceTimeoutRef.current) {
-        clearTimeout(replaceTimeoutRef.current);
-      }
+    const isHome = () => {
+      const basePath = getBasePath();
+      const full = window.location.pathname || '/';
+      return full === '/' || (basePath && (full === basePath || full === basePath + '/'));
     };
-  }, [syncFromBrowser]);
-
+    const reload = () => reloadFromHomeHelper();
+    const onPopState = () => {
+      if (isHome()) reload();
+    };
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) reload();
+    };
+    window.addEventListener('popstate', onPopState);
+    window.addEventListener('pageshow', onPageShow);
+    return () => {
+      window.removeEventListener('popstate', onPopState);
+      window.removeEventListener('pageshow', onPageShow);
+    };
+  }, []);
   return null;
 };
 
+/** When user navigates back to "/" via in-app Link (not browser back), reload so the home page paints correctly (avoids blank after leaving detail pages). */
+const ClientNavBackToHomeReload: React.FC = () => {
+  const location = useLocation();
+  const prevPathnameRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    const prev = prevPathnameRef.current;
+    if (location.pathname === '/' && prev !== undefined && prev !== '/') {
+      reloadFromHomeHelper();
+      return;
+    }
+    prevPathnameRef.current = location.pathname;
+  }, [location.pathname]);
+  return null;
+};
+
+/** Sync React Router to the browser URL when the URL changes (e.g. link click) so we don't get stuck. Do not overwrite when the router just navigated (lastBrowserPathRef). */
+const PathSync: React.FC = () => {
+  const location = useLocation();
+  const routerPathRef = useRef(location.pathname || '/');
+  routerPathRef.current = location.pathname || '/';
+  const lastBrowserPathRef = useRef<string>(
+    typeof window !== 'undefined'
+      ? (() => {
+          const basePath = getBasePath();
+          const full = window.location.pathname || '/';
+          return basePath && (full === basePath || full.startsWith(basePath + '/')) ? (full === basePath ? '/' : full.slice(basePath.length)) : full;
+        })()
+      : '/'
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const sync = () => {
+      const basePath = getBasePath();
+      const full = window.location.pathname || '/';
+      const browserPath = basePath && (full === basePath || full.startsWith(basePath + '/')) ? (full === basePath ? '/' : full.slice(basePath.length)) : full;
+      const routerPath = routerPathRef.current;
+      if (browserPath === routerPath) {
+        lastBrowserPathRef.current = browserPath;
+        return;
+      }
+      if (browserPath === lastBrowserPathRef.current) return;
+      lastBrowserPathRef.current = browserPath;
+      // Router state didn't update from navigate(); reload so the app boots with the current URL and shows the correct route.
+      window.location.reload();
+    };
+    const id = setInterval(sync, 100);
+    return () => clearInterval(id);
+  }, [location.pathname]);
+
+  return null;
+};
 
 const LoadingScreen: React.FC = () => (
   <div className="min-h-screen bg-bgMain text-textPrimary font-sans flex items-center justify-center">
@@ -465,15 +534,6 @@ const App: React.FC = () => {
   const isMobile = useIsMobile();
   const waitForRemote = isAuthoritativeRemoteConfigured();
   const [data, setData] = useState<PortfolioData | null>(waitForRemote ? null : getPortfolioData());
-  const [routerKey, setRouterKey] = useState(() => (typeof window !== 'undefined' ? window.location.pathname || '/' : '/'));
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const id = setInterval(() => {
-      const p = window.location.pathname || '/';
-      setRouterKey((prev) => (prev !== p ? p : prev));
-    }, 100);
-    return () => clearInterval(id);
-  }, []);
 
   const refreshData = (updatedData?: PortfolioData) => {
     if (updatedData != null) {
@@ -491,7 +551,7 @@ const App: React.FC = () => {
     const basePath = getBasePath();
     const routerBasename = basePath && basePath !== '/' ? basePath : undefined;
     return (
-      <Router key={routerKey} basename={routerBasename}>
+      <Router basename={routerBasename}>
         <AdminAuthProvider>
           <LoadingScreen />
         </AdminAuthProvider>
@@ -505,17 +565,20 @@ const App: React.FC = () => {
   const routerBasename = basePath && basePath !== '/' ? basePath : undefined;
 
   return (
-    <Router key={routerKey} basename={routerBasename}>
+    <Router basename={routerBasename}>
       <AdminAuthProvider>
+        <BackToHomeReload />
+        <ClientNavBackToHomeReload />
         <PathSync />
         <AdminRouteMobileRedirect />
         <div className="min-h-screen bg-bgMain text-textPrimary font-sans">
           <Toaster position="top-center" />
           {isMobile && <MobileHeader />}
           <FixedHomeButton />
+          <CloseToHomeButton />
           <AdminBar />
           <Routes>
-            <Route path="/" element={<ShowcaseView data={portfolioData} onRefresh={refreshData} />} />
+            <Route path="/" element={<HomeRouteWrapper data={portfolioData} onRefresh={refreshData} />} />
             <Route path="/project/new" element={<NewProjectPage data={portfolioData} onRefresh={refreshData} />} />
             <Route path="/project/:id" element={<ProjectDetailsPage data={portfolioData} onRefresh={refreshData} />} />
             <Route path="/about" element={<AboutPage data={portfolioData} onRefresh={refreshData} />} />

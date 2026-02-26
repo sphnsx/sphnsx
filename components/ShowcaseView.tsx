@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import ThreeColumnLayout from './ThreeColumnLayout';
 import ModularSection from './ModularSection';
 import AboutMePreview from './AboutMePreview';
@@ -124,25 +124,11 @@ const AddProjectSection: React.FC<{ hoverColor: string }> = ({ hoverColor }) => 
 
 /** Simple mobile row: no absolute layout, so content is always in flow and visible. */
 const MobileProjectRow: React.FC<{ project: Project }> = ({ project }) => {
-  const navigate = useNavigate();
   const path = `/project/${project.id}`;
-  const goToProject = () => navigate(path);
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    goToProject();
-  };
   return (
-    <div
-      role="link"
-      tabIndex={0}
+    <Link
+      to={path}
       className="block py-4 px-4 bg-bgMain hover:opacity-90 transition-opacity cursor-pointer"
-      onClick={handleClick}
-      onTouchEnd={(e) => {
-        e.preventDefault();
-        goToProject();
-      }}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToProject(); } }}
     >
       <p className="font-mono text-xs uppercase tracking-wider text-textSecondary">{project.year}</p>
       <h3 className="font-mono text-lg uppercase tracking-wider text-textPrimary mt-1">{project.title}</h3>
@@ -154,7 +140,7 @@ const MobileProjectRow: React.FC<{ project: Project }> = ({ project }) => {
           onContextMenu={(e) => e.preventDefault()}
         />
       ) : null}
-    </div>
+    </Link>
   );
 };
 

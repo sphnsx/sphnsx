@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 interface ModularSectionProps {
   title: string;
@@ -20,18 +20,12 @@ const ModularSection: React.FC<ModularSectionProps> = ({
   draggable = true,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const navigate = useNavigate();
   const normalizedTo = to.startsWith('/') ? to : `/${to}`;
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    navigate(normalizedTo);
-  };
 
   return (
     <Link
       to={normalizedTo}
       draggable={draggable}
-      onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={`block w-full h-full text-left overflow-hidden bg-bgMain relative group ${className}`}
