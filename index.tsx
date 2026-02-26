@@ -2,6 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import { getPortfolioDataAsync } from './services/storageService';
+
+// Start loading portfolio as early as possible (helps private/incognito where there is no cache).
+getPortfolioDataAsync().catch(() => {});
 
 // Migrate legacy hash-based routes (e.g. sphnsx.com/#/about) to path-based URLs before React mounts,
 // and also if any old hash links are clicked while the app is running.
