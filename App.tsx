@@ -9,7 +9,7 @@ import DeploymentPage from './components/DeploymentPage';
 import NewProjectPage from './components/NewProjectPage';
 import ProjectDetailPage from './components/ProjectDetailPage';
 import { PortfolioData, ContactMethod } from './types';
-import { getPortfolioData, getPortfolioDataAsync, updateAboutMe, updateAboutImage, updateContactMethods } from './services/storageService';
+import { getPortfolioData, getPortfolioDataAsync, isAuthoritativeRemoteConfigured, updateAboutMe, updateAboutImage, updateContactMethods } from './services/storageService';
 import { PALETTE } from './constants';
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
 import { useIsMobile } from './hooks/useMediaQuery';
@@ -532,7 +532,8 @@ const LoadingScreen: React.FC = () => (
 
 const App: React.FC = () => {
   const isMobile = useIsMobile();
-  const [data, setData] = useState<PortfolioData | null>(() => getPortfolioData());
+  const waitForRemote = isAuthoritativeRemoteConfigured();
+  const [data, setData] = useState<PortfolioData | null>(() => (waitForRemote ? null : getPortfolioData()));
 
   const refreshData = (updatedData?: PortfolioData) => {
     if (updatedData != null) {
@@ -550,6 +551,16 @@ const App: React.FC = () => {
 
   const basePath = getBasePath();
   const routerBasename = basePath && basePath !== '/' ? basePath : undefined;
+
+  if (waitForRemote && data === null) {
+    return (
+      <Router basename={routerBasename}>
+        <AdminAuthProvider>
+          <LoadingScreen />
+        </AdminAuthProvider>
+      </Router>
+    );
+  }
 
   return (
     <Router basename={routerBasename}>

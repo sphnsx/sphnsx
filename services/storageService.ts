@@ -303,3 +303,34 @@ export async function exportPortfolioJson(): Promise<string> {
   const data = await getPortfolioDataAsync();
   return JSON.stringify(data, null, 2);
 }
+
+/**
+ * Where portfolio data is stored (the "old" data that could flash before async load):
+ * - In-memory: `cache` in this module
+ * - localStorage: key "silvia_jiang_portfolio_v1"
+ * - sessionStorage: key "silvia_jiang_portfolio_v1"
+ * - IndexedDB: database "sphnsx_portfolio", store "portfolio", key "data"
+ * - Cookie: name "sphnsx_portfolio_v1"
+ */
+
+/** Clear all locally stored portfolio data (in-memory, localStorage, sessionStorage, cookie, IndexedDB). Next load will come from remote only. */
+export function clearPortfolioStorage(): void {
+  cache = null;
+  loadPromise = null;
+  try {
+    if (typeof localStorage !== 'undefined') localStorage.removeItem(STORAGE_KEY);
+  } catch (_) {}
+  try {
+    if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(STORAGE_KEY);
+  } catch (_) {}
+  try {
+    if (typeof document !== 'undefined') {
+      document.cookie = COOKIE_KEY + '=; path=/; max-age=0; SameSite=Lax';
+    }
+  } catch (_) {}
+  openDB().then((db) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).delete(DATA_KEY);
+    db.close();
+  }).catch(() => {});
+}
