@@ -51,20 +51,54 @@ export async function getPortfolioFromSupabase(): Promise<PortfolioData | null> 
   }
 }
 
-/** Publish portfolio to Supabase (requires authenticated user). Retries once on statement timeout. */
+function isAuthOrRlsUpsertError(err: { message?: string; code?: string } | null): boolean {
+  if (!err) return false;
+  const s = `${err.message ?? ''} ${err.code ?? ''}`.toLowerCase();
+  return (
+    s.includes('jwt')
+    || s.includes('expired')
+    || s.includes('invalid')
+    || s.includes('unauthorized')
+    || s.includes('401')
+    || s.includes('403')
+    || s.includes('row-level security')
+    || s.includes('rls')
+    || s.includes('permission denied')
+    || s.includes('not authorized')
+  );
+}
+
+/** Publish portfolio to Supabase (requires a session with JWT). Prefer getSession(); refresh + retry once on auth/RLS upsert errors (expired JWT). */
 export async function publishPortfolioToSupabase(data: PortfolioData): Promise<void> {
   const supabase = getClient();
   if (!supabase) return;
   const run = async (): Promise<void> => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { error } = await supabase.from(TABLE).upsert({ id: ROW_ID, data }, { onConflict: 'id' });
-    if (error) throw new Error(error.message);
+    let { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      ({ data: { session } } = await supabase.auth.getSession());
+    }
+    if (!session?.access_token) return;
+    const attemptUpsert = async () =>
+      supabase.from(TABLE).upsert({ id: ROW_ID, data }, { onConflict: 'id' });
+
+    let { error } = await attemptUpsert();
+    if (!error) return;
+    if (isAuthOrRlsUpsertError(error)) {
+      await supabase.auth.refreshSession();
+      const second = await attemptUpsert();
+      if (!second.error) return;
+      throw new Error(second.error.message);
+    }
+    throw new Error(error.message);
   };
   try {
     await withRetry(run);
-  } catch (_) {
-    // Already logged or surfaced elsewhere; avoid unhandled rejection
+  } catch (e) {
+    if (typeof console !== 'undefined' && console.warn) {
+      console.warn('Live publish to Supabase failed:', e instanceof Error ? e.message : e);
+    }
   }
 }
 

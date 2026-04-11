@@ -33,17 +33,10 @@ async function fetchFromRemote(): Promise<PortfolioData | null> {
   if (!REMOTE_PORTFOLIO_URL || typeof fetch === 'undefined') return null;
   try {
     const res = await fetch(REMOTE_PORTFOLIO_URL, { cache: 'no-store' });
-    // #region agent log
-    fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '1d77cc' }, body: JSON.stringify({ sessionId: '1d77cc', location: 'storageService.ts:fetchFromRemote', message: 'remote response', data: { ok: res.ok, status: res.status }, timestamp: Date.now(), hypothesisId: 'H2' }) }).catch(() => {});
-    // #endregion
     if (!res.ok) return null;
     const data = (await res.json()) as PortfolioData;
     if (data && Array.isArray(data.projects)) return data;
-  } catch (e) {
-    // #region agent log
-    fetch('http://127.0.0.1:7244/ingest/d73bb932-4ac7-45e1-8337-35cb70e602f8', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '1d77cc' }, body: JSON.stringify({ sessionId: '1d77cc', location: 'storageService.ts:fetchFromRemote', message: 'remote fetch error', data: { err: String((e as Error)?.message) }, timestamp: Date.now(), hypothesisId: 'H2' }) }).catch(() => {});
-    // #endregion
-  }
+  } catch (_) {}
   return null;
 }
 
@@ -204,39 +197,49 @@ async function getPortfolioDataAsyncImpl(): Promise<PortfolioData> {
   return INITIAL_DATA;
 }
 
+function writeLocalStorageLayers(data: PortfolioData): void {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+  } catch (e) {
+    if (typeof console !== 'undefined' && console.warn) {
+      console.warn('Portfolio localStorage write failed (storage may be full or restricted):', e);
+    }
+  }
+  try {
+    if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (_) {}
+  writeCookie(data);
+}
+
+/** Persist portfolio: local layers, then run live publish and IndexedDB together (await both so saves finish before callers continue). */
 function writePortfolioData(data: PortfolioData): Promise<void> {
   cache = data;
-  return openDB().then((db) => {
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      const store = tx.objectStore(STORE_NAME);
-      const req = store.put({ key: DATA_KEY, value: JSON.stringify(data) });
-    req.onerror = () => {
-      db.close();
-      reject(req.error);
-    };
-    req.onsuccess = () => {
-        db.close();
-        let localOk = false;
-        try {
-          if (typeof localStorage !== 'undefined') {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            localOk = true;
-          }
-        } catch (e) {
-          if (typeof console !== 'undefined' && console.warn) {
-            console.warn('Portfolio localStorage write failed (storage may be full or restricted):', e);
-          }
-        }
-        try {
-          if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        } catch (_) {}
-        writeCookie(data);
-        if (isSupabaseConfigured()) publishPortfolioToSupabase(data).catch(() => {});
-        resolve();
-      };
+  writeLocalStorageLayers(data);
+  const publishP = isSupabaseConfigured() ? publishPortfolioToSupabase(data) : Promise.resolve();
+  const idbP = openDB()
+    .then((db) => {
+      return new Promise<void>((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.put({ key: DATA_KEY, value: JSON.stringify(data) });
+        req.onerror = () => {
+          db.close();
+          reject(req.error);
+        };
+        req.onsuccess = () => {
+          db.close();
+          resolve();
+        };
+      });
+    })
+    .catch((e) => {
+      if (typeof console !== 'undefined' && console.warn) {
+        console.warn('Portfolio IndexedDB write failed (local + live publish still applied):', e);
+      }
     });
-  });
+  return Promise.all([publishP, idbP]).then(() => {});
 }
 
 export async function updateAboutMe(text: string): Promise<void> {
@@ -267,9 +270,9 @@ export async function updateContactMethods(methods: ContactMethod[]): Promise<Po
 
 export async function addProject(project: Project): Promise<PortfolioData> {
   const data = await getPortfolioDataAsync();
-  data.projects.unshift(project);
-  await writePortfolioData(data);
-  return data;
+  const updated: PortfolioData = { ...data, projects: [project, ...data.projects] };
+  await writePortfolioData(updated);
+  return updated;
 }
 
 export async function updateProject(id: string, project: Project): Promise<void> {

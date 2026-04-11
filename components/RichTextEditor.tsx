@@ -9,6 +9,12 @@ import { plainTextToHtml } from '../utils/plainTextToHtml';
 const FONT_SIZES = ['14', '16', '18', '20', '24'];
 const LINE_HEIGHTS = ['1.2', '1.4', '1.5', '1.75', '2'];
 
+/** True if HTML has non-whitespace text (avoids wiping the editor when parent state is still empty after blur/focus races). */
+function htmlHasVisibleText(html: string): boolean {
+  const text = html.replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
+  return text.length > 0;
+}
+
 export interface RichTextEditorProps {
   value: string;
   onChange: (html: string) => void;
@@ -82,9 +88,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   useEffect(() => {
     if (!editor) return;
     const current = editor.getHTML();
-    const next = value?.trim() ? (value.includes('<') ? value : plainTextToHtml(value)) : '<p></p>';
-    if (current !== next && document.activeElement !== editor.view.dom) {
-      editor.commands.setContent(next, false);
+    const valueEmpty = !value?.trim();
+    const next = valueEmpty ? '<p></p>' : (value.includes('<') ? value : plainTextToHtml(value));
+    if (document.activeElement === editor.view.dom) return;
+    if (valueEmpty && htmlHasVisibleText(current)) return;
+    if (current !== next) {
+      editor.commands.setContent(next, { emitUpdate: false });
     }
   }, [editor, value]);
 
