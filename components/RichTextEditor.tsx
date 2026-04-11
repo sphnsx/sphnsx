@@ -91,7 +91,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     const valueEmpty = !value?.trim();
     const next = valueEmpty ? '<p></p>' : (value.includes('<') ? value : plainTextToHtml(value));
     if (document.activeElement === editor.view.dom) return;
-    if (valueEmpty && htmlHasVisibleText(current)) return;
+    // Never replace real editor content with an empty doc because parent state lagged (blur/paste races).
+    if (!htmlHasVisibleText(next) && htmlHasVisibleText(current)) return;
     if (current !== next) {
       editor.commands.setContent(next, { emitUpdate: false });
     }

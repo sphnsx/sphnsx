@@ -12,6 +12,13 @@ const DATA_KEY = 'data';
 const COOKIE_KEY = 'sphnsx_portfolio_v1';
 const COOKIE_MAX_BYTES = 3800;
 
+/**
+ * Browsers cap localStorage around 5MB; base64-heavy portfolios exceed it quickly.
+ * Skip (and clear stale) webStorage beyond this size so IndexedDB + Supabase remain authoritative
+ * and we never leave an old smaller snapshot that hides newer projects on reload.
+ */
+const WEB_STORAGE_MAX_CHARS = 4 * 1024 * 1024;
+
 /** When set (e.g. https://yoursite.com/portfolio.json), viewers always load from this URL first so updates survive hard refresh. */
 const REMOTE_PORTFOLIO_URL =
   typeof import.meta !== 'undefined' && import.meta.env?.VITE_PORTFOLIO_URL
@@ -197,33 +204,63 @@ async function getPortfolioDataAsyncImpl(): Promise<PortfolioData> {
   return INITIAL_DATA;
 }
 
-function writeLocalStorageLayers(data: PortfolioData): void {
+function clearWebStoragePortfolio(): void {
+  try {
+    if (typeof localStorage !== 'undefined') localStorage.removeItem(STORAGE_KEY);
+  } catch (_) {}
+  try {
+    if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(STORAGE_KEY);
+  } catch (_) {}
+}
+
+/** Persist small snapshot to localStorage/sessionStorage; skip and clear when over quota risk (IDB + remote hold full data). */
+function writeWebStorageFromSerialized(serialized: string, data: PortfolioData): void {
+  if (serialized.length > WEB_STORAGE_MAX_CHARS) {
+    clearWebStoragePortfolio();
+    writeCookie(data);
+    return;
+  }
+
   try {
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(STORAGE_KEY, serialized);
     }
   } catch (e) {
     if (typeof console !== 'undefined' && console.warn) {
       console.warn('Portfolio localStorage write failed (storage may be full or restricted):', e);
     }
+    clearWebStoragePortfolio();
   }
   try {
-    if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (_) {}
+    if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(STORAGE_KEY, serialized);
+  } catch (_) {
+    try {
+      if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(STORAGE_KEY);
+    } catch (_) {}
+  }
   writeCookie(data);
 }
 
 /** Persist portfolio: local layers, then run live publish and IndexedDB together (await both so saves finish before callers continue). */
 function writePortfolioData(data: PortfolioData): Promise<void> {
   cache = data;
-  writeLocalStorageLayers(data);
+  let serialized: string;
+  try {
+    serialized = JSON.stringify(data);
+  } catch (e) {
+    if (typeof console !== 'undefined' && console.warn) {
+      console.warn('Portfolio JSON serialization failed:', e);
+    }
+    return Promise.resolve();
+  }
+  writeWebStorageFromSerialized(serialized, data);
   const publishP = isSupabaseConfigured() ? publishPortfolioToSupabase(data) : Promise.resolve();
   const idbP = openDB()
     .then((db) => {
       return new Promise<void>((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readwrite');
         const store = tx.objectStore(STORE_NAME);
-        const req = store.put({ key: DATA_KEY, value: JSON.stringify(data) });
+        const req = store.put({ key: DATA_KEY, value: serialized });
         req.onerror = () => {
           db.close();
           reject(req.error);
@@ -310,10 +347,9 @@ export async function exportPortfolioJson(): Promise<string> {
 /**
  * Where portfolio data is stored (the "old" data that could flash before async load):
  * - In-memory: `cache` in this module
- * - localStorage: key "silvia_jiang_portfolio_v1"
- * - sessionStorage: key "silvia_jiang_portfolio_v1"
- * - IndexedDB: database "sphnsx_portfolio", store "portfolio", key "data"
- * - Cookie: name "sphnsx_portfolio_v1"
+ * - localStorage / sessionStorage: same key, only while JSON is under ~4MB (large image payloads skip to avoid QuotaExceededError)
+ * - IndexedDB: database "sphnsx_portfolio", store "portfolio", key "data" (full payload)
+ * - Cookie: name "sphnsx_portfolio_v1" (tiny fallback only)
  */
 
 /** Clear all locally stored portfolio data (in-memory, localStorage, sessionStorage, cookie, IndexedDB). Next load will come from remote only. */
