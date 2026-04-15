@@ -347,7 +347,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                         <img
                           src={img}
                           alt={`${project.title} ${index + 1}`}
-                          className="w-full max-h-[70vh] object-contain block"
+                          className="w-full block"
                           onContextMenu={(e) => e.preventDefault()}
                           onDragStart={(e) => e.preventDefault()}
                           style={{ pointerEvents: 'none' }}

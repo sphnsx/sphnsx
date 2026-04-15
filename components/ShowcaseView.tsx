@@ -69,7 +69,7 @@ const ProjectPreview: React.FC<{ project: Project; hoverColor?: string; dragDisa
         <img
           src={project.imageUrl}
           alt={project.title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           onContextMenu={(e) => e.preventDefault()}
           onDragStart={(e) => e.preventDefault()}
           style={{ pointerEvents: 'none' }}
@@ -128,20 +128,18 @@ const MobileProjectRow: React.FC<{ project: Project }> = ({ project }) => {
   return (
     <Link
       to={path}
-      className="block bg-bgMain hover:opacity-90 transition-opacity cursor-pointer"
+      className="block py-4 px-4 bg-bgMain hover:opacity-90 transition-opacity cursor-pointer"
     >
+      <p className="font-mono text-xs uppercase tracking-wider text-textSecondary">{project.year}</p>
+      <h3 className="font-mono text-lg uppercase tracking-wider text-textPrimary mt-1">{project.title}</h3>
       {project.imageUrl ? (
         <img
           src={project.imageUrl}
           alt=""
-          className="w-full block bg-bgMain"
+          className="mt-3 w-full max-h-48 object-contain bg-bgMain"
           onContextMenu={(e) => e.preventDefault()}
         />
       ) : null}
-      <div className="px-4 py-3">
-        <h3 className="font-mono text-sm uppercase tracking-wider text-textPrimary">{project.title}</h3>
-        <p className="font-mono text-xs uppercase tracking-wider text-textSecondary mt-0.5">{project.year}</p>
-      </div>
     </Link>
   );
 };
