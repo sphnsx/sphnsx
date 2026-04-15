@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -431,99 +431,6 @@ const HomeRouteWrapper: React.FC<{ data: PortfolioData; onRefresh: () => void }>
   return <ShowcaseView key={location.key} data={data} onRefresh={onRefresh} />;
 };
 
-/** Shared reload helper: show loading overlay and full reload (used for back-to-home and client-nav back). */
-function reloadFromHomeHelper(): void {
-  if (typeof window === 'undefined') return;
-  if (document.getElementById('back-reload-overlay')) return;
-  const overlay = document.createElement('div');
-  overlay.setAttribute('id', 'back-reload-overlay');
-  overlay.style.cssText = `position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:${PALETTE.backgroundMain};color:${PALETTE.textSecondary};font-family:system-ui,sans-serif;font-size:14px;letter-spacing:0.1em;text-transform:uppercase;`;
-  overlay.textContent = 'Loading…';
-  document.body.appendChild(overlay);
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => window.location.reload());
-  });
-}
-
-/** When user navigates back to home (popstate or bfcache restore), reload so the home page always shows correctly. */
-const BackToHomeReload: React.FC = () => {
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const isHome = () => {
-      const basePath = getBasePath();
-      const full = window.location.pathname || '/';
-      return full === '/' || (basePath && (full === basePath || full === basePath + '/'));
-    };
-    const reload = () => reloadFromHomeHelper();
-    const onPopState = () => {
-      if (isHome()) reload();
-    };
-    const onPageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) reload();
-    };
-    window.addEventListener('popstate', onPopState);
-    window.addEventListener('pageshow', onPageShow);
-    return () => {
-      window.removeEventListener('popstate', onPopState);
-      window.removeEventListener('pageshow', onPageShow);
-    };
-  }, []);
-  return null;
-};
-
-/** When user navigates back to "/" via in-app Link (not browser back), reload so the home page paints correctly (avoids blank after leaving detail pages). */
-const ClientNavBackToHomeReload: React.FC = () => {
-  const location = useLocation();
-  const prevPathnameRef = useRef<string | undefined>(undefined);
-  useEffect(() => {
-    const prev = prevPathnameRef.current;
-    if (location.pathname === '/' && prev !== undefined && prev !== '/') {
-      reloadFromHomeHelper();
-      return;
-    }
-    prevPathnameRef.current = location.pathname;
-  }, [location.pathname]);
-  return null;
-};
-
-/** Sync React Router to the browser URL when the URL changes (e.g. link click) so we don't get stuck. Do not overwrite when the router just navigated (lastBrowserPathRef). */
-const PathSync: React.FC = () => {
-  const location = useLocation();
-  const routerPathRef = useRef(location.pathname || '/');
-  routerPathRef.current = location.pathname || '/';
-  const lastBrowserPathRef = useRef<string>(
-    typeof window !== 'undefined'
-      ? (() => {
-          const basePath = getBasePath();
-          const full = window.location.pathname || '/';
-          return basePath && (full === basePath || full.startsWith(basePath + '/')) ? (full === basePath ? '/' : full.slice(basePath.length)) : full;
-        })()
-      : '/'
-  );
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const sync = () => {
-      const basePath = getBasePath();
-      const full = window.location.pathname || '/';
-      const browserPath = basePath && (full === basePath || full.startsWith(basePath + '/')) ? (full === basePath ? '/' : full.slice(basePath.length)) : full;
-      const routerPath = routerPathRef.current;
-      if (browserPath === routerPath) {
-        lastBrowserPathRef.current = browserPath;
-        return;
-      }
-      if (browserPath === lastBrowserPathRef.current) return;
-      lastBrowserPathRef.current = browserPath;
-      // Router state didn't update from navigate(); reload so the app boots with the current URL and shows the correct route.
-      window.location.reload();
-    };
-    const id = setInterval(sync, 100);
-    return () => clearInterval(id);
-  }, [location.pathname]);
-
-  return null;
-};
-
 const LoadingScreen: React.FC = () => (
   <div className="min-h-screen bg-bgMain text-textPrimary font-sans flex items-center justify-center">
     <p className="font-mono text-sm uppercase tracking-wider text-textSecondary">Loading…</p>
@@ -565,9 +472,6 @@ const App: React.FC = () => {
   return (
     <Router basename={routerBasename}>
       <AdminAuthProvider>
-        <BackToHomeReload />
-        <ClientNavBackToHomeReload />
-        <PathSync />
         <AdminRouteMobileRedirect />
         <div className="min-h-screen bg-bgMain text-textPrimary font-sans">
           <Toaster position="top-center" />
