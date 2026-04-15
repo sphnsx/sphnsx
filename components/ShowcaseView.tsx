@@ -177,9 +177,10 @@ const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = 
   const rightProjects = data.projects.slice(mid);
 
   const addProjectInMiddle = isAdmin && middleProjects.length <= rightProjects.length;
+  const addProjectInRight = !addProjectInMiddle && isAdmin;
   const leftLen = 2;
   const middleLen = middleProjects.length + (addProjectInMiddle ? 1 : 0);
-  const rightLen = rightProjects.length + (addProjectInMiddle ? 0 : 1);
+  const rightLen = rightProjects.length + (addProjectInRight ? 1 : 0);
   const totalSections = leftLen + middleLen + rightLen;
 
   const { leftColors, middleColors, rightColors } = useMemo(
@@ -213,7 +214,7 @@ const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = 
     if (s?.right) return s.right;
     return heightsFromAspectRatios(
       rightProjects.map((p) => p.coverAspectRatio ?? 1),
-      !addProjectInMiddle && isAdmin
+      addProjectInRight
     );
   });
 
@@ -228,9 +229,9 @@ const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = 
     }
     if (rightHeights.length !== rightLen) {
       const s = loadHeights(leftLen, middleLen, rightLen);
-      setRightHeights(s?.right ?? heightsFromAspectRatios(rightProjects.map((p) => p.coverAspectRatio ?? 1), !addProjectInMiddle && isAdmin));
+      setRightHeights(s?.right ?? heightsFromAspectRatios(rightProjects.map((p) => p.coverAspectRatio ?? 1), addProjectInRight));
     }
-  }, [leftLen, middleLen, rightLen, middleProjects, rightProjects, addProjectInMiddle, isAdmin]);
+  }, [leftLen, middleLen, rightLen, middleProjects, rightProjects, addProjectInMiddle, addProjectInRight]);
 
   const onLeftHeightsChange = useCallback((h: number[]) => {
     setLeftHeights(h);
@@ -315,7 +316,7 @@ const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = 
           <ProjectPreview key={project.id} project={project} hoverColor={rightColors[i]} />
         )
       ),
-      ...(!addProjectInMiddle && isAdmin ? [<AddProjectSection key="add-project" hoverColor={rightColors[rightProjects.length]} />] : []),
+      ...(addProjectInRight ? [<AddProjectSection key="add-project" hoverColor={rightColors[rightProjects.length]} />] : []),
     ],
     [data, rightProjects, rightColors, addProjectInMiddle, isAdmin, handleReorder]
   );

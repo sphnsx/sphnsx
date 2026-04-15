@@ -442,13 +442,13 @@ const App: React.FC = () => {
   const waitForRemote = isAuthoritativeRemoteConfigured();
   const [data, setData] = useState<PortfolioData | null>(() => (waitForRemote ? null : getPortfolioData()));
 
-  const refreshData = (updatedData?: PortfolioData) => {
+  const refreshData = useCallback((updatedData?: PortfolioData) => {
     if (updatedData != null) {
       flushSync(() => setData(updatedData));
     } else {
       getPortfolioDataAsync().then(setData);
     }
-  };
+  }, []);
 
   useEffect(() => {
     getPortfolioDataAsync().then(setData);
