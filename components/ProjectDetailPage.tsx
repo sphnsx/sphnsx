@@ -8,6 +8,7 @@ import { useIsMobile } from '../hooks/useMediaQuery';
 import RichTextEditor from './RichTextEditor';
 import SafeHtml from './SafeHtml';
 import { PortfolioData, Project } from '../types';
+import { DetailBreadcrumb, DetailGreyFooter, DetailHeading, DetailMetaRow, DetailRightBar } from './detailPrimitives';
 
 const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="fixed inset-0 bg-bgMain flex flex-col overflow-hidden">
@@ -38,9 +39,11 @@ const ProtectedImage: React.FC<{ src: string; alt: string; className?: string }>
 interface ProjectDetailPageProps {
   project: Project;
   onRefresh: (updatedData?: PortfolioData) => void;
+  /** Next project in navigation order (for the grey footer link). */
+  nextProject?: Project;
 }
 
-const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialProject, onRefresh }) => {
+const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialProject, onRefresh, nextProject }) => {
   const isMobile = useIsMobile();
   const { isAdmin } = useAdminAuth();
   const navigate = useNavigate();
@@ -163,8 +166,26 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
     }
   };
 
+  const readHeader = !isMobile && !isEditing ? (
+    <>
+      <div style={{ height: 48 }} aria-hidden />
+      <DetailBreadcrumb trail={['SPHNSX', 'WORKS', project.title]} />
+    </>
+  ) : null;
+
+  const readFooter = !isMobile && !isEditing && nextProject ? (
+    <DetailGreyFooter
+      to={`/project/${nextProject.id}`}
+      label={`Next · ${nextProject.title}`}
+    />
+  ) : null;
+
   const textBlock = (
-    <div className={isMobile ? 'w-full min-w-0 min-h-[50vh] overflow-y-auto pt-6 px-6 pb-12' : `w-2/5 min-w-0 overflow-y-auto pt-pageTop px-6 ${showAdminActions ? 'pb-24' : 'pb-12'}`}>
+    <div className={isMobile
+      ? 'w-full min-w-0 min-h-[50vh] overflow-y-auto pt-6 px-6 pb-12'
+      : `w-2/5 min-w-0 flex flex-col ${showAdminActions ? 'pb-0' : ''}`}>
+      {readHeader}
+      <div className={isMobile ? '' : 'flex-1 min-h-0 overflow-y-auto'} style={isMobile ? undefined : { padding: '48px 48px 24px' }}>
       <div className="max-w-xl">
         {!isMobile && isEditing ? (
               <div className="space-y-4">
@@ -215,8 +236,22 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
               </div>
             ) : (
               <>
-                <p className="font-mono text-xs uppercase tracking-wider text-textSecondary mb-2">{project.year}</p>
-                <h1 className="text-3xl font-bold mb-6">{project.title}</h1>
+                {isMobile ? (
+                  <>
+                    <p className="font-mono text-xs uppercase tracking-wider text-textSecondary mb-2">{project.year}</p>
+                    <h1 className="text-3xl font-bold mb-6">{project.title}</h1>
+                  </>
+                ) : (
+                  <>
+                    <DetailHeading title={project.title} />
+                    <DetailMetaRow
+                      items={[
+                        { label: 'Year', value: project.year },
+                        { label: 'Plates', value: String(project.gallery.length).padStart(2, '0') },
+                      ]}
+                    />
+                  </>
+                )}
                 <div className="text-base leading-relaxed text-textPrimary [&_p]:mb-8 [&_p:last-child]:mb-0">
                   <SafeHtml html={project.description} />
                 </div>
@@ -242,13 +277,29 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
               </>
             )}
       </div>
+      </div>
+      {readFooter}
     </div>
   );
 
+  const galleryRightBar = !isMobile && !isEditing ? (
+    <>
+      <div style={{ height: 48 }} aria-hidden />
+      <DetailRightBar
+        left={`Plates · ${String(project.gallery.length).padStart(2, '0')} total`}
+        right={<>Scroll {'\u2193'}</>}
+      />
+    </>
+  ) : null;
+
   const galleryBlock = (
-    <div className={isMobile ? 'w-full min-w-0 min-h-[70vh] max-h-[70vh] overflow-y-auto pt-6 px-6 pb-6' : 'w-3/5 min-w-0 overflow-y-auto pt-pageTop px-6 pb-12'}>
+    <div className={isMobile
+      ? 'w-full min-w-0 min-h-[70vh] max-h-[70vh] overflow-y-auto pt-6 px-6 pb-6'
+      : 'w-3/5 min-w-0 flex flex-col'}>
+      {galleryRightBar}
+      <div className={isMobile ? '' : 'flex-1 min-h-0 overflow-y-auto'}>
           {!isMobile && isEditing ? (
-            <div className="space-y-4">
+            <div className="space-y-4 px-6 py-6">
               <div>
                 <p className="font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Cover</p>
                 {project.imageUrl ? (
@@ -361,6 +412,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
               ) : null}
             </>
           )}
+      </div>
     </div>
   );
 

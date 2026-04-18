@@ -16,6 +16,7 @@ import { useIsMobile } from './hooks/useMediaQuery';
 import RichTextEditor from './components/RichTextEditor';
 import SafeHtml from './components/SafeHtml';
 import { compressImageDataUrl } from './utils/imageCompress';
+import { DetailBreadcrumb, DetailGreyFooter, DetailHeading, DetailContactRow } from './components/detailPrimitives';
 
 const FixedHomeButton: React.FC = () => {
   const isMobile = useIsMobile();
@@ -86,7 +87,11 @@ const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children })
 
 const ProjectDetailsPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ data, onRefresh }) => {
   const { id } = useParams<{ id: string }>();
-  const project = data.projects.find(p => p.id === id);
+  const idx = data.projects.findIndex(p => p.id === id);
+  const project = idx >= 0 ? data.projects[idx] : undefined;
+  const nextProject = idx >= 0
+    ? data.projects[(idx + 1) % data.projects.length]
+    : undefined;
 
   if (!project) return (
     <FullScreenDetail>
@@ -96,7 +101,7 @@ const ProjectDetailsPage: React.FC<{ data: PortfolioData; onRefresh: () => void 
     </FullScreenDetail>
   );
 
-  return <ProjectDetailPage project={project} onRefresh={onRefresh} />;
+  return <ProjectDetailPage project={project} onRefresh={onRefresh} nextProject={nextProject && nextProject.id !== project.id ? nextProject : undefined} />;
 };
 
 const AboutPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ data, onRefresh }) => {
@@ -120,7 +125,20 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ d
   return (
     <FullScreenDetail>
       <main className={`flex-1 min-h-0 flex overflow-hidden ${isMobile ? 'flex-col' : ''}`}>
-        <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-pageTop px-6 pb-12' : `w-2/5 min-w-0 overflow-y-auto pt-pageTop px-6 ${isAdmin ? 'pb-24' : 'pb-12'}`}>
+        <div className={isMobile
+          ? 'w-full min-w-0 overflow-y-auto pt-pageTop px-6 pb-12'
+          : 'w-2/5 min-w-0 flex flex-col'}>
+          {!isMobile && !isEditing && (
+            <>
+              <div style={{ height: 48 }} aria-hidden />
+              <DetailBreadcrumb trail={['SPHNSX', 'ABOUT']} />
+            </>
+          )}
+          <div className={isMobile
+            ? ''
+            : `flex-1 min-h-0 overflow-y-auto ${isAdmin ? 'pb-24' : 'pb-12'}`}
+            style={isMobile ? undefined : { padding: '48px 48px 24px' }}
+          >
           <div className="max-w-xl">
             {showEditBiography && (
               <div className="mb-6">
@@ -162,13 +180,19 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ d
             )}
             {!isEditing && (
               <>
-                <h1 className="text-3xl font-bold mb-8 text-textPrimary">About me</h1>
-                <div className="space-y-6 text-base leading-relaxed text-textPrimary">
+                {isMobile ? (
+                  <h1 className="text-3xl font-bold mb-8 text-textPrimary">About me</h1>
+                ) : (
+                  <DetailHeading eyebrow="Biography" title="About me" />
+                )}
+                <div className="space-y-6 text-base leading-relaxed text-textPrimary" style={!isMobile ? { marginTop: 24, fontSize: 16, lineHeight: 1.65 } : undefined}>
                   <SafeHtml html={data.aboutMe} />
                 </div>
               </>
             )}
           </div>
+          </div>
+          {!isMobile && !isEditing && <DetailGreyFooter to="/contact" label="Contact" />}
         </div>
         {!isMobile && <div className="w-px shrink-0 bg-paletteBorder" aria-hidden />}
         <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-6 px-6 pb-12 flex items-center justify-center text-textSecondary' : `w-3/5 min-w-0 overflow-y-auto pt-pageTop px-6 ${isAdmin ? 'pb-24' : 'pb-12'} flex items-center justify-center text-textSecondary`}>
@@ -282,9 +306,26 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
   return (
     <FullScreenDetail>
       <main className={`flex-1 min-h-0 flex overflow-hidden ${isMobile ? 'flex-col' : ''}`}>
-        <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-pageTop px-6 pb-12' : `w-2/5 min-w-0 overflow-y-auto pt-pageTop px-6 ${isAdmin ? 'pb-24' : 'pb-12'}`}>
+        <div className={isMobile
+          ? 'w-full min-w-0 overflow-y-auto pt-pageTop px-6 pb-12'
+          : 'w-2/5 min-w-0 flex flex-col'}>
+          {!isMobile && !isEditing && (
+            <>
+              <div style={{ height: 48 }} aria-hidden />
+              <DetailBreadcrumb trail={['SPHNSX', 'CONTACT']} />
+            </>
+          )}
+          <div className={isMobile
+            ? ''
+            : `flex-1 min-h-0 overflow-y-auto ${isAdmin ? 'pb-24' : 'pb-12'}`}
+            style={isMobile ? undefined : { padding: '48px 48px 24px' }}
+          >
           <div className="max-w-xl">
-            <h1 className="text-3xl font-bold mb-8 text-textPrimary">Contact</h1>
+            {isMobile || isEditing ? (
+              <h1 className="text-3xl font-bold mb-8 text-textPrimary">Contact</h1>
+            ) : (
+              <DetailHeading eyebrow="Get in touch" title="Contact" />
+            )}
             {showEditContact && (
               <div className="mb-6">
                 {!isEditing ? (
@@ -352,30 +393,45 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
               </div>
             )}
             {!isEditing && (
-              <div className="space-y-4">
-                {displayMethods.map((m, i) => (
-                  <p key={i}>
-                    <span
-                      className="inline-block px-3 py-2"
-                      style={{
-                        clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%)',
-                        boxShadow: `inset 0 0 0 1px ${PALETTE.border}`,
-                      }}
-                    >
-                      <a
-                        href={m.value.includes('@') ? `mailto:${m.value}` : m.value}
-                        target={m.value.includes('@') ? undefined : '_blank'}
-                        rel={m.value.includes('@') ? undefined : 'noopener noreferrer'}
-                        className="underline font-medium transition-colors duration-150 hover:opacity-80"
+              isMobile ? (
+                <div className="space-y-4">
+                  {displayMethods.map((m, i) => (
+                    <p key={i}>
+                      <span
+                        className="inline-block px-3 py-2"
+                        style={{
+                          clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%)',
+                          boxShadow: `inset 0 0 0 1px ${PALETTE.border}`,
+                        }}
                       >
-                        {m.label || m.value}
-                      </a>
-                    </span>
-                  </p>
-                ))}
-              </div>
+                        <a
+                          href={m.value.includes('@') ? `mailto:${m.value}` : m.value}
+                          target={m.value.includes('@') ? undefined : '_blank'}
+                          rel={m.value.includes('@') ? undefined : 'noopener noreferrer'}
+                          className="underline font-medium transition-colors duration-150 hover:opacity-80"
+                        >
+                          {m.label || m.value}
+                        </a>
+                      </span>
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ borderTop: `1px solid ${PALETTE.border}` }}>
+                  {displayMethods.map((m, i) => (
+                    <DetailContactRow
+                      key={i}
+                      index={i}
+                      label={m.label}
+                      value={m.value}
+                    />
+                  ))}
+                </div>
+              )
             )}
           </div>
+          </div>
+          {!isMobile && !isEditing && <DetailGreyFooter to="/" label="Back to works" />}
         </div>
         {!isMobile && <div className="w-px shrink-0 bg-paletteBorder" aria-hidden />}
         <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-6 px-6 pb-12 flex items-center justify-center text-textSecondary' : 'w-3/5 min-w-0 overflow-y-auto pt-pageTop px-6 pb-12 flex items-center justify-center text-textSecondary'}>
