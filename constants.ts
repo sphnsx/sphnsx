@@ -5,6 +5,10 @@ export const PALETTE = {
   accent: '#66FFCC',
   backgroundMain: '#FAFAFA',
   backgroundSidebar: '#EBEBEB',
+  /** Soft grey used as an accent layer for the Contact block (fotohof absorption). */
+  greySoft: '#E8E8E8',
+  /** Mid grey reserved for heavier accent surfaces. */
+  greyMid: '#C8C8C8',
   border: '#333333',
   textPrimary: '#1a1a1a',
   textSecondary: '#737373',

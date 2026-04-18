@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import ThreeColumnLayout from './ThreeColumnLayout';
 import ModularSection from './ModularSection';
 import AboutMePreview from './AboutMePreview';
+import LeftIndexColumn from './LeftIndexColumn';
 import { PortfolioData, Project } from '../types';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { reorderProjects } from '../services/storageService';
@@ -58,12 +59,22 @@ function saveColumnHeights(column: 'left' | 'middle' | 'right', heights: number[
   } catch {}
 }
 
-const ProjectPreview: React.FC<{ project: Project; hoverColor?: string; dragDisabled?: boolean }> = ({ project, hoverColor, dragDisabled }) => (
+const ProjectPreview: React.FC<{
+  project: Project;
+  hoverColor?: string;
+  dragDisabled?: boolean;
+  forceHovered?: boolean;
+  onHoverChange?: (hovered: boolean) => void;
+}> = ({ project, hoverColor, dragDisabled, forceHovered, onHoverChange }) => (
   <ModularSection
     to={`/project/${project.id}`}
     title={project.title}
+    year={project.year}
     hoverColor={hoverColor}
     draggable={!dragDisabled}
+    forceHovered={forceHovered}
+    onHoverChange={onHoverChange}
+    hoverLabel="View"
     preview={
       project.imageUrl ? (
         <img
@@ -172,6 +183,7 @@ const MobileHomeLayout: React.FC<{
 const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = ({ data, onRefresh }) => {
   const isMobile = useIsMobile();
   const { isAdmin } = useAdminAuth();
+  const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);
   const mid = Math.ceil(data.projects.length / 2);
   const middleProjects = data.projects.slice(0, mid);
   const rightProjects = data.projects.slice(mid);
@@ -277,6 +289,7 @@ const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = 
         to="/contact"
         title="Contact"
         hoverColor={leftColors[1]}
+        background={PALETTE.greySoft}
         preview={
           <div className="pl-6 pr-4 mt-4">
             <span className="font-mono text-xs text-textSecondary uppercase tracking-wider">
@@ -291,34 +304,52 @@ const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = 
 
   const middleRows = useMemo(
     () => [
-      ...middleProjects.map((project, i) =>
-        isAdmin ? (
+      ...middleProjects.map((project, i) => {
+        const preview = (
+          <ProjectPreview
+            project={project}
+            hoverColor={middleColors[i]}
+            dragDisabled={isAdmin}
+            forceHovered={hoveredProjectId === project.id}
+            onHoverChange={(h) => setHoveredProjectId(h ? project.id : null)}
+          />
+        );
+        return isAdmin ? (
           <DraggableProjectRow key={project.id} projectId={project.id} onReorder={handleReorder}>
-            <ProjectPreview project={project} hoverColor={middleColors[i]} dragDisabled />
+            {preview}
           </DraggableProjectRow>
         ) : (
-          <ProjectPreview key={project.id} project={project} hoverColor={middleColors[i]} />
-        )
-      ),
+          <React.Fragment key={project.id}>{preview}</React.Fragment>
+        );
+      }),
       ...(addProjectInMiddle ? [<AddProjectSection key="add-project" hoverColor={middleColors[middleProjects.length]} />] : []),
     ],
-    [data, middleProjects, middleColors, addProjectInMiddle, isAdmin, handleReorder]
+    [data, middleProjects, middleColors, addProjectInMiddle, isAdmin, handleReorder, hoveredProjectId]
   );
 
   const rightRows = useMemo(
     () => [
-      ...rightProjects.map((project, i) =>
-        isAdmin ? (
+      ...rightProjects.map((project, i) => {
+        const preview = (
+          <ProjectPreview
+            project={project}
+            hoverColor={rightColors[i]}
+            dragDisabled={isAdmin}
+            forceHovered={hoveredProjectId === project.id}
+            onHoverChange={(h) => setHoveredProjectId(h ? project.id : null)}
+          />
+        );
+        return isAdmin ? (
           <DraggableProjectRow key={project.id} projectId={project.id} onReorder={handleReorder}>
-            <ProjectPreview project={project} hoverColor={rightColors[i]} dragDisabled />
+            {preview}
           </DraggableProjectRow>
         ) : (
-          <ProjectPreview key={project.id} project={project} hoverColor={rightColors[i]} />
-        )
-      ),
+          <React.Fragment key={project.id}>{preview}</React.Fragment>
+        );
+      }),
       ...(addProjectInRight ? [<AddProjectSection key="add-project" hoverColor={rightColors[rightProjects.length]} />] : []),
     ],
-    [data, rightProjects, rightColors, addProjectInMiddle, isAdmin, handleReorder]
+    [data, rightProjects, rightColors, addProjectInRight, isAdmin, handleReorder, hoveredProjectId]
   );
 
   const projectsByYear = useMemo(
@@ -344,6 +375,14 @@ const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = 
       onLeftHeightsChange={onLeftHeightsChange}
       onMiddleHeightsChange={onMiddleHeightsChange}
       onRightHeightsChange={onRightHeightsChange}
+      leftOverride={
+        <LeftIndexColumn
+          aboutHeadline="Silvia, London-based fine art photographer."
+          projects={data.projects}
+          hoveredProjectId={hoveredProjectId}
+          onHoverProject={setHoveredProjectId}
+        />
+      }
     />
   );
 };
