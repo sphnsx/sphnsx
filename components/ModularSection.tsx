@@ -49,15 +49,23 @@ const ModularSection: React.FC<ModularSectionProps> = ({
       className={`block w-full h-full text-left overflow-hidden relative group ${className}`}
       style={background ? { backgroundColor: background } : { backgroundColor: PALETTE.backgroundMain }}
     >
-      <div className="absolute top-0 left-0 pl-6 pt-4 pr-4 pb-4 z-10 flex items-center gap-3">
-        <span className="relative inline-block pt-0 pb-1.5 pl-0 pr-3">
+      <div
+        className="absolute left-0 z-10 flex items-baseline"
+        style={{ top: 48, paddingLeft: 24, paddingRight: 16, paddingBottom: 16, gap: 12, whiteSpace: 'nowrap' }}
+      >
+        <span className="relative inline-block" style={{ padding: '0 12px 4px 0' }}>
           {hoverColor && isHovered && (
             <div
               className="absolute inset-0 rounded-none"
               style={{ backgroundColor: hoverColor }}
             />
           )}
-          <span className="relative font-mono text-sm uppercase tracking-wider group-hover:underline underline-offset-2">{title}</span>
+          <span
+            className="relative font-mono uppercase group-hover:underline"
+            style={{ fontSize: 13, letterSpacing: '0.1em', textUnderlineOffset: 2 }}
+          >
+            {title}
+          </span>
         </span>
         {year && (
           <span
@@ -68,7 +76,7 @@ const ModularSection: React.FC<ModularSectionProps> = ({
           </span>
         )}
       </div>
-      <div className="absolute inset-0 pt-16">
+      <div className="absolute inset-0" style={{ paddingTop: 84 }}>
         {preview}
       </div>
       {/* Hover arrow glyph (fotohof absorption) — bottom-right, only while hovered. */}

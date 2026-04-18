@@ -127,16 +127,6 @@ const LeftIndexColumn: React.FC<LeftIndexColumnProps> = ({
               >
                 {y}
               </span>
-              <span
-                className="font-mono uppercase"
-                style={{
-                  fontSize: 10,
-                  color: PALETTE.textSecondary,
-                  letterSpacing: '0.12em',
-                }}
-              >
-                more →
-              </span>
             </div>
             {byYear.get(y)!.map((p) => {
               const isActive = hoveredProjectId === p.id;
