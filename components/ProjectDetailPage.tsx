@@ -247,7 +247,6 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                     <DetailMetaRow
                       items={[
                         { label: 'Year', value: project.year },
-                        { label: 'Plates', value: String(project.gallery.length).padStart(2, '0') },
                       ]}
                     />
                   </>
@@ -450,7 +449,6 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
               <h1 style={{ fontFamily: 'Inter, sans-serif', fontSize: 30, fontWeight: 700, lineHeight: 1.05, letterSpacing: '-0.01em', margin: '0 0 14px', color: P.textPrimary }}>{project.title}</h1>
               <div style={{ borderTop: `1px solid ${P.border}`, borderBottom: '1px solid #e4e4e4', padding: '8px 0', display: 'flex', flexWrap: 'wrap', gap: 14, fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
                 <span><span style={{ color: P.textSecondary }}>Year </span>{project.year}</span>
-                <span><span style={{ color: P.textSecondary }}>Plates </span>{String(project.gallery.length).padStart(2, '0')}</span>
               </div>
             </div>
 
