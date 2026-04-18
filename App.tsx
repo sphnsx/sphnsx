@@ -122,23 +122,65 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ d
 
   const showEditBiography = isAdmin && !isMobile;
 
+  if (isMobile) {
+    const P = { border: '#333333', bgMain: '#FAFAFA', greySoft: '#E8E8E8', textPrimary: '#1a1a1a', textSecondary: '#737373' };
+    return (
+      <FullScreenDetail>
+        <div className="flex flex-col" style={{ paddingTop: 48, height: '100%' }}>
+          {/* Breadcrumb */}
+          <div style={{ padding: '12px 18px', borderBottom: `1px solid ${P.border}`, background: P.bgMain, flexShrink: 0 }}>
+            <nav style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: P.textSecondary, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span>SPHNSX</span>
+              <span style={{ color: '#bbb' }}>›</span>
+              <span style={{ color: P.textPrimary }}>ABOUT</span>
+            </nav>
+          </div>
+
+          {/* Scrollable content */}
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: P.bgMain, scrollbarWidth: 'none' as const }}>
+            {data.aboutImage && (
+              <img src={data.aboutImage} alt="Silvia" style={{ width: '100%', display: 'block' }} />
+            )}
+            <div style={{ padding: '22px 18px 28px' }}>
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: P.textSecondary, marginBottom: 8 }}>
+                Biography
+              </div>
+              <h1 style={{ fontFamily: 'Inter, sans-serif', fontSize: 30, fontWeight: 700, lineHeight: 1.05, letterSpacing: '-0.01em', margin: '0 0 18px', color: P.textPrimary }}>About me</h1>
+              <div style={{ fontSize: 15, lineHeight: 1.65, color: P.textPrimary }}>
+                <SafeHtml html={data.aboutMe} />
+              </div>
+            </div>
+            <div style={{ height: 28 }} aria-hidden />
+          </div>
+
+          {/* Grey Contact footer */}
+          <Link
+            to="/contact"
+            style={{ textDecoration: 'none', color: P.textPrimary, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: P.greySoft, borderTop: `1px solid ${P.border}`, flexShrink: 0 }}
+          >
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em' }}>Contact</span>
+            <svg width="18" height="18" viewBox="0 0 40 40" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+              <line x1="4" y1="20" x2="36" y2="20" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
+              <line x1="36" y1="20" x2="24" y2="10" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
+              <line x1="36" y1="20" x2="24" y2="30" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
+            </svg>
+          </Link>
+        </div>
+      </FullScreenDetail>
+    );
+  }
+
   return (
     <FullScreenDetail>
-      <main className={`flex-1 min-h-0 flex overflow-hidden ${isMobile ? 'flex-col' : ''}`}>
-        <div className={isMobile
-          ? 'w-full min-w-0 overflow-y-auto pt-pageTop px-6 pb-12'
-          : 'w-2/5 min-w-0 flex flex-col'}>
-          {!isMobile && !isEditing && (
+      <main className="flex-1 min-h-0 flex overflow-hidden">
+        <div className="w-2/5 min-w-0 flex flex-col">
+          {!isEditing && (
             <>
               <div style={{ height: 48 }} aria-hidden />
               <DetailBreadcrumb trail={['SPHNSX', 'ABOUT']} />
             </>
           )}
-          <div className={isMobile
-            ? ''
-            : `flex-1 min-h-0 overflow-y-auto ${isAdmin ? 'pb-24' : 'pb-12'}`}
-            style={isMobile ? undefined : { padding: '48px 48px 24px' }}
-          >
+          <div className={`flex-1 min-h-0 overflow-y-auto ${isAdmin ? 'pb-24' : 'pb-12'}`} style={{ padding: '48px 48px 24px' }}>
           <div className="max-w-xl">
             {showEditBiography && (
               <div className="mb-6">
@@ -180,22 +222,18 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ d
             )}
             {!isEditing && (
               <>
-                {isMobile ? (
-                  <h1 className="text-3xl font-bold mb-8 text-textPrimary">About me</h1>
-                ) : (
-                  <DetailHeading eyebrow="Biography" title="About me" />
-                )}
-                <div className="space-y-6 text-base leading-relaxed text-textPrimary" style={!isMobile ? { marginTop: 24, fontSize: 16, lineHeight: 1.65 } : undefined}>
+                <DetailHeading eyebrow="Biography" title="About me" />
+                <div className="space-y-6 text-base leading-relaxed text-textPrimary" style={{ marginTop: 24, fontSize: 16, lineHeight: 1.65 }}>
                   <SafeHtml html={data.aboutMe} />
                 </div>
               </>
             )}
           </div>
           </div>
-          {!isMobile && !isEditing && <DetailGreyFooter to="/contact" label="Contact" />}
+          {!isEditing && <DetailGreyFooter to="/contact" label="Contact" />}
         </div>
-        {!isMobile && <div className="w-px shrink-0 bg-paletteBorder" aria-hidden />}
-        <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-6 px-6 pb-12 flex items-center justify-center text-textSecondary' : `w-3/5 min-w-0 overflow-y-auto pt-pageTop px-6 ${isAdmin ? 'pb-24' : 'pb-12'} flex items-center justify-center text-textSecondary`}>
+        <div className="w-px shrink-0 bg-paletteBorder" aria-hidden />
+        <div className={`w-3/5 min-w-0 overflow-y-auto pt-pageTop px-6 ${isAdmin ? 'pb-24' : 'pb-12'} flex items-center justify-center text-textSecondary`}>
           <AboutRightColumn data={data} onRefresh={onRefresh} />
         </div>
       </main>
@@ -303,25 +341,100 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
   const showEditContact = isAdmin && !isMobile;
   const displayMethods = getContactMethods(data);
 
+  if (isMobile) {
+    const P = { border: '#333333', bgMain: '#FAFAFA', greySoft: '#E8E8E8', textPrimary: '#1a1a1a', textSecondary: '#737373', accent: '#66FFCC' };
+    return (
+      <FullScreenDetail>
+        <div className="flex flex-col" style={{ paddingTop: 48, height: '100%' }}>
+          {/* Breadcrumb */}
+          <div style={{ padding: '12px 18px', borderBottom: `1px solid ${P.border}`, background: P.bgMain, flexShrink: 0 }}>
+            <nav style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: P.textSecondary, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span>SPHNSX</span>
+              <span style={{ color: '#bbb' }}>›</span>
+              <span style={{ color: P.textPrimary }}>CONTACT</span>
+            </nav>
+          </div>
+
+          {/* Scrollable content */}
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: P.bgMain, scrollbarWidth: 'none' as const }}>
+            <div style={{ padding: '22px 18px 28px' }}>
+              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: P.textSecondary, marginBottom: 8 }}>
+                Get in touch
+              </div>
+              <h1 style={{ fontFamily: 'Inter, sans-serif', fontSize: 30, fontWeight: 700, lineHeight: 1.05, letterSpacing: '-0.01em', margin: '0 0 18px', color: P.textPrimary }}>Contact</h1>
+
+              <div style={{ borderTop: `1px solid ${P.border}` }}>
+                {displayMethods.map((m, i) => {
+                  const isEmail = m.value.includes('@');
+                  const href = isEmail ? `mailto:${m.value}` : m.value;
+                  return (
+                    <a
+                      key={i}
+                      href={href}
+                      target={isEmail ? undefined : '_blank'}
+                      rel={isEmail ? undefined : 'noopener noreferrer'}
+                      style={{ textDecoration: 'none', color: P.textPrimary, display: 'block', padding: '16px 0', borderBottom: '1px solid #e4e4e4' }}
+                    >
+                      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: P.textSecondary, marginBottom: 6 }}>
+                        {String(i + 1).padStart(2, '0')} · {m.label}
+                      </div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 16, color: P.textPrimary }}>
+                        {m.value}
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+
+              {/* Studio ASCII map */}
+              <div style={{ marginTop: 28, paddingTop: 18, borderTop: '1px solid #e4e4e4' }}>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: P.textSecondary, marginBottom: 8 }}>
+                  Studio
+                </div>
+                <pre style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, lineHeight: 1.4, color: '#9a9a9a', margin: 0, letterSpacing: '0.02em', whiteSpace: 'pre' }}>
+{`  ╷   ╷
+──┼───┼── Regent's Canal
+  ╵   ╵
+     ╭───╮
+     │ ◉ │  SPHNSX studio
+     ╰───╯  Hackney Wick · E9
+                          N ↑`}
+                </pre>
+              </div>
+            </div>
+            <div style={{ height: 28 }} aria-hidden />
+          </div>
+
+          {/* Grey "Back to works" footer */}
+          <Link
+            to="/"
+            style={{ textDecoration: 'none', color: P.textPrimary, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: P.greySoft, borderTop: `1px solid ${P.border}`, flexShrink: 0 }}
+          >
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em' }}>Back to works</span>
+            <svg width="18" height="18" viewBox="0 0 40 40" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+              <line x1="4" y1="20" x2="36" y2="20" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
+              <line x1="36" y1="20" x2="24" y2="10" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
+              <line x1="36" y1="20" x2="24" y2="30" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
+            </svg>
+          </Link>
+        </div>
+      </FullScreenDetail>
+    );
+  }
+
   return (
     <FullScreenDetail>
-      <main className={`flex-1 min-h-0 flex overflow-hidden ${isMobile ? 'flex-col' : ''}`}>
-        <div className={isMobile
-          ? 'w-full min-w-0 overflow-y-auto pt-pageTop px-6 pb-12'
-          : 'w-2/5 min-w-0 flex flex-col'}>
-          {!isMobile && !isEditing && (
+      <main className="flex-1 min-h-0 flex overflow-hidden">
+        <div className="w-2/5 min-w-0 flex flex-col">
+          {!isEditing && (
             <>
               <div style={{ height: 48 }} aria-hidden />
               <DetailBreadcrumb trail={['SPHNSX', 'CONTACT']} />
             </>
           )}
-          <div className={isMobile
-            ? ''
-            : `flex-1 min-h-0 overflow-y-auto ${isAdmin ? 'pb-24' : 'pb-12'}`}
-            style={isMobile ? undefined : { padding: '48px 48px 24px' }}
-          >
+          <div className={`flex-1 min-h-0 overflow-y-auto ${isAdmin ? 'pb-24' : 'pb-12'}`} style={{ padding: '48px 48px 24px' }}>
           <div className="max-w-xl">
-            {isMobile || isEditing ? (
+            {isEditing ? (
               <h1 className="text-3xl font-bold mb-8 text-textPrimary">Contact</h1>
             ) : (
               <DetailHeading eyebrow="Get in touch" title="Contact" />
@@ -393,48 +506,23 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
               </div>
             )}
             {!isEditing && (
-              isMobile ? (
-                <div className="space-y-4">
-                  {displayMethods.map((m, i) => (
-                    <p key={i}>
-                      <span
-                        className="inline-block px-3 py-2"
-                        style={{
-                          clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%)',
-                          boxShadow: `inset 0 0 0 1px ${PALETTE.border}`,
-                        }}
-                      >
-                        <a
-                          href={m.value.includes('@') ? `mailto:${m.value}` : m.value}
-                          target={m.value.includes('@') ? undefined : '_blank'}
-                          rel={m.value.includes('@') ? undefined : 'noopener noreferrer'}
-                          className="underline font-medium transition-colors duration-150 hover:opacity-80"
-                        >
-                          {m.label || m.value}
-                        </a>
-                      </span>
-                    </p>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ borderTop: `1px solid ${PALETTE.border}` }}>
-                  {displayMethods.map((m, i) => (
-                    <DetailContactRow
-                      key={i}
-                      index={i}
-                      label={m.label}
-                      value={m.value}
-                    />
-                  ))}
-                </div>
-              )
+              <div style={{ borderTop: `1px solid ${PALETTE.border}` }}>
+                {displayMethods.map((m, i) => (
+                  <DetailContactRow
+                    key={i}
+                    index={i}
+                    label={m.label}
+                    value={m.value}
+                  />
+                ))}
+              </div>
             )}
           </div>
           </div>
-          {!isMobile && !isEditing && <DetailGreyFooter to="/" label="Back to works" />}
+          {!isEditing && <DetailGreyFooter to="/" label="Back to works" />}
         </div>
-        {!isMobile && <div className="w-px shrink-0 bg-paletteBorder" aria-hidden />}
-        <div className={isMobile ? 'w-full min-w-0 overflow-y-auto pt-6 px-6 pb-12 flex items-center justify-center text-textSecondary' : 'w-3/5 min-w-0 overflow-y-auto pt-pageTop px-6 pb-12 flex items-center justify-center text-textSecondary'}>
+        <div className="w-px shrink-0 bg-paletteBorder" aria-hidden />
+        <div className="w-3/5 min-w-0 overflow-y-auto pt-pageTop px-6 pb-12 flex items-center justify-center text-textSecondary">
           {null}
         </div>
       </main>

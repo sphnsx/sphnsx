@@ -9,7 +9,6 @@ import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { reorderProjects } from '../services/storageService';
 import { PALETTE } from '../constants';
 import { useIsMobile } from '../hooks/useMediaQuery';
-import { MobileSectionDivider } from './MobileDividers';
 
 const STORAGE_KEYS = { left: 'sphnsx_left_heights', middle: 'sphnsx_middle_heights', right: 'sphnsx_right_heights' };
 
@@ -133,54 +132,151 @@ const AddProjectSection: React.FC<{ hoverColor: string }> = ({ hoverColor }) => 
   />
 );
 
-/** Simple mobile row: no absolute layout, so content is always in flow and visible. */
-const MobileProjectRow: React.FC<{ project: Project }> = ({ project }) => {
-  const path = `/project/${project.id}`;
-  return (
-    <Link
-      to={path}
-      className="block py-4 px-4 bg-bgMain hover:opacity-90 transition-opacity cursor-pointer"
-    >
-      <p className="font-mono text-xs uppercase tracking-wider text-textSecondary">{project.year}</p>
-      <h3 className="font-mono text-lg uppercase tracking-wider text-textPrimary mt-1">{project.title}</h3>
-      {project.imageUrl ? (
-        <img
-          src={project.imageUrl}
-          alt=""
-          className="mt-3 w-full max-h-48 object-contain bg-bgMain"
-          onContextMenu={(e) => e.preventDefault()}
-        />
-      ) : null}
-    </Link>
-  );
-};
-
 const MobileHomeLayout: React.FC<{
   data: PortfolioData;
   projectsByYear: Project[];
-}> = ({ projectsByYear }) => {
+}> = ({ data, projectsByYear }) => {
+  // Derive year range from projects
+  const years = data.projects.map((p) => parseInt(p.year, 10)).filter((n) => !Number.isNaN(n));
+  const minYear = years.length ? Math.min(...years) : null;
+  const maxYear = years.length ? Math.max(...years) : null;
+  const yearRange = minYear && maxYear ? (minYear === maxYear ? String(maxYear) : `${minYear}–${String(maxYear).slice(2)}`) : null;
+
+  // Group by year for index section
+  const byYear = new Map<string, Project[]>();
+  for (const p of projectsByYear) {
+    const bucket = byYear.get(p.year) ?? [];
+    bucket.push(p);
+    byYear.set(p.year, bucket);
+  }
+  const yearKeys = Array.from(byYear.keys());
+
+  const P = PALETTE;
+
   return (
-    <div className="min-h-screen h-screen w-full flex flex-col overflow-hidden bg-bgMain text-textPrimary">
+    <div className="h-screen w-full flex flex-col overflow-hidden bg-bgMain text-textPrimary">
+      {/* Scrollable content — pushed below fixed 48px MobileHeader */}
       <div
-        className="overflow-y-auto pt-12 pb-8 bg-bgMain"
-        style={{ position: 'fixed', top: '3rem', left: 0, right: 0, bottom: 0, zIndex: 1 }}
+        style={{
+          position: 'fixed', top: 48, left: 0, right: 0, bottom: 0, zIndex: 1,
+          overflowY: 'auto', background: P.backgroundMain, scrollbarWidth: 'none',
+        }}
       >
-        <div className="flex flex-col">
-          {projectsByYear.map((project, i) => (
-            <React.Fragment key={project.id}>
-              <MobileProjectRow project={project} />
-              {i < projectsByYear.length - 1 && (
-                <MobileSectionDivider type={i % 2 === 0 ? 'zigzag' : 'wave'} />
-              )}
-            </React.Fragment>
+        {/* Masthead */}
+        <div style={{ padding: '22px 18px 18px', borderBottom: `1px solid ${P.border}` }}>
+          {yearRange && (
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: P.textSecondary, marginBottom: 10 }}>
+              Portfolio · {yearRange}
+            </div>
+          )}
+          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 32, fontWeight: 700, lineHeight: 1.02, letterSpacing: '-0.01em' }}>
+            sphnsx
+          </div>
+          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, lineHeight: 1.45, color: P.textPrimary, marginTop: 10, maxWidth: 300 }}>
+            Silvia, London-based fine art photographer.
+          </div>
+        </div>
+
+        {/* About me row */}
+        <Link
+          to="/about"
+          style={{
+            textDecoration: 'none', color: P.textPrimary,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '16px 18px', borderBottom: `1px solid ${P.border}`,
+          }}
+        >
+          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em' }}>About me</span>
+          <svg width="18" height="18" viewBox="0 0 40 40" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+            <line x1="4" y1="20" x2="36" y2="20" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
+            <line x1="36" y1="20" x2="24" y2="10" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
+            <line x1="36" y1="20" x2="24" y2="30" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
+          </svg>
+        </Link>
+
+        {/* Year index */}
+        <div style={{ padding: '18px 18px 8px', borderBottom: `1px solid ${P.border}` }}>
+          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: P.textSecondary, marginBottom: 14 }}>
+            Projects — Index
+          </div>
+          {yearKeys.map((y) => (
+            <div key={y} style={{ marginBottom: 16 }}>
+              <div style={{ borderBottom: `1px solid ${P.border}`, paddingBottom: 4, marginBottom: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 12, letterSpacing: '0.12em' }}>{y}</div>
+              {byYear.get(y)!.map((p) => (
+                <Link
+                  key={p.id}
+                  to={`/project/${p.id}`}
+                  style={{
+                    textDecoration: 'none', color: P.textPrimary,
+                    display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+                    padding: '6px 0', fontFamily: 'Inter, sans-serif', fontSize: 14,
+                  }}
+                >
+                  <span>{p.title}</span>
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: P.textSecondary, letterSpacing: '0.12em' }}>↗</span>
+                </Link>
+              ))}
+            </div>
           ))}
         </div>
+
+        {/* Covers — numbered title bar above image */}
+        <div>
+          {data.projects.map((p, i, arr) => (
+            <Link
+              key={p.id}
+              to={`/project/${p.id}`}
+              style={{
+                display: 'block', textDecoration: 'none', color: P.textPrimary,
+                borderBottom: i < arr.length - 1 ? `1px solid ${P.border}` : 'none',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '14px 18px 10px' }}>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                  <span style={{ color: P.textSecondary, marginRight: 8 }}>{String(i + 1).padStart(2, '0')}</span>
+                  {p.title}
+                </span>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: P.textSecondary, letterSpacing: '0.12em' }}>{p.year}</span>
+              </div>
+              {p.imageUrl && (
+                <div style={{ padding: '0 18px 18px' }}>
+                  <img
+                    src={p.imageUrl}
+                    alt={p.title}
+                    style={{ width: '100%', display: 'block' }}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                  />
+                </div>
+              )}
+            </Link>
+          ))}
+        </div>
+
+        {/* Grey Contact footer */}
+        <Link
+          to="/contact"
+          style={{
+            textDecoration: 'none', color: P.textPrimary,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '16px 18px', background: P.greySoft, borderTop: `1px solid ${P.border}`,
+          }}
+        >
+          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em' }}>Contact</span>
+          <svg width="18" height="18" viewBox="0 0 40 40" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+            <line x1="4" y1="20" x2="36" y2="20" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
+            <line x1="36" y1="20" x2="24" y2="10" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
+            <line x1="36" y1="20" x2="24" y2="30" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
+          </svg>
+        </Link>
+
+        <div style={{ height: 28 }} aria-hidden />
       </div>
     </div>
   );
 };
 
-const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: () => void }> = ({ data, onRefresh }) => {
+const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: (updatedData?: PortfolioData) => void }> = ({ data, onRefresh }) => {
   const isMobile = useIsMobile();
   const { isAdmin } = useAdminAuth();
   const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);

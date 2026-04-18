@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { updateProject, deleteProject } from '../services/storageService';
@@ -416,21 +416,101 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
     </div>
   );
 
+  if (isMobile) {
+    const P = { border: '#333333', bgMain: '#FAFAFA', greySoft: '#E8E8E8', textPrimary: '#1a1a1a', textSecondary: '#737373' };
+    return (
+      <FullScreenDetail>
+        <div className="flex flex-col" style={{ paddingTop: 48, height: '100%' }}>
+          {/* Breadcrumb strip */}
+          <div style={{ padding: '12px 18px', borderBottom: `1px solid ${P.border}`, background: P.bgMain, flexShrink: 0 }}>
+            <nav style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: P.textSecondary, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <span>SPHNSX</span>
+              <span style={{ color: '#bbb' }}>›</span>
+              <span>WORKS</span>
+              <span style={{ color: '#bbb' }}>›</span>
+              <span style={{ color: P.textPrimary }}>{project.title}</span>
+            </nav>
+          </div>
+
+          {/* Scrollable content */}
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: P.bgMain, scrollbarWidth: 'none' as const }}>
+            {/* Hero image */}
+            {project.gallery[0] && (
+              <img
+                src={project.gallery[0]}
+                alt={project.title}
+                style={{ width: '100%', display: 'block' }}
+                onContextMenu={(e) => e.preventDefault()}
+                onDragStart={(e) => e.preventDefault()}
+              />
+            )}
+
+            {/* Title + meta */}
+            <div style={{ padding: '22px 18px 10px' }}>
+              <h1 style={{ fontFamily: 'Inter, sans-serif', fontSize: 30, fontWeight: 700, lineHeight: 1.05, letterSpacing: '-0.01em', margin: '0 0 14px', color: P.textPrimary }}>{project.title}</h1>
+              <div style={{ borderTop: `1px solid ${P.border}`, borderBottom: '1px solid #e4e4e4', padding: '8px 0', display: 'flex', flexWrap: 'wrap', gap: 14, fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                <span><span style={{ color: P.textSecondary }}>Year </span>{project.year}</span>
+                <span><span style={{ color: P.textSecondary }}>Plates </span>{String(project.gallery.length).padStart(2, '0')}</span>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div style={{ padding: '14px 18px 26px', fontSize: 15, lineHeight: 1.6, color: P.textPrimary }}>
+              <SafeHtml html={project.description} />
+            </div>
+
+            {/* Plates bar */}
+            {project.gallery.length > 0 && (
+              <div style={{ padding: '12px 18px', borderTop: `1px solid ${P.border}`, borderBottom: `1px solid ${P.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: P.textSecondary }}>
+                  Plates · {String(project.gallery.length).padStart(2, '0')} total
+                </span>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: P.textSecondary }}>Scroll ↓</span>
+              </div>
+            )}
+
+            {/* Gallery plates — edge-to-edge, no gaps */}
+            <div>
+              {project.gallery.map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt={`${project.title} ${i + 1}`}
+                  style={{ width: '100%', display: 'block' }}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onDragStart={(e) => e.preventDefault()}
+                />
+              ))}
+            </div>
+
+            <div style={{ height: 28 }} aria-hidden />
+          </div>
+
+          {/* Grey Next footer */}
+          {nextProject && (
+            <Link
+              to={`/project/${nextProject.id}`}
+              style={{ textDecoration: 'none', color: P.textPrimary, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: P.greySoft, borderTop: `1px solid ${P.border}`, flexShrink: 0 }}
+            >
+              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em' }}>Next · {nextProject.title}</span>
+              <svg width="18" height="18" viewBox="0 0 40 40" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+                <line x1="4" y1="20" x2="36" y2="20" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
+                <line x1="36" y1="20" x2="24" y2="10" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
+                <line x1="36" y1="20" x2="24" y2="30" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
+              </svg>
+            </Link>
+          )}
+        </div>
+      </FullScreenDetail>
+    );
+  }
+
   return (
     <FullScreenDetail>
-      <main className={`flex-1 min-h-0 flex overflow-hidden ${isMobile ? 'flex-col pt-12' : ''}`}>
-        {isMobile ? (
-          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
-            {galleryBlock}
-            {textBlock}
-          </div>
-        ) : (
-          <>
-            {textBlock}
-            <div className="w-px shrink-0 bg-paletteBorder" aria-hidden />
-            {galleryBlock}
-          </>
-        )}
+      <main className="flex-1 min-h-0 flex overflow-hidden">
+        {textBlock}
+        <div className="w-px shrink-0 bg-paletteBorder" aria-hidden />
+        {galleryBlock}
       </main>
     </FullScreenDetail>
   );
