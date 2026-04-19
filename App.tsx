@@ -158,8 +158,8 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ d
             to="/contact"
             style={{ textDecoration: 'none', color: P.textPrimary, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: P.greySoft, borderTop: `1px solid ${P.border}`, flexShrink: 0 }}
           >
-            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em' }}>Contact</span>
-            <svg width="18" height="18" viewBox="0 0 40 40" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', whiteSpace: 'nowrap' }}>Contact</span>
+            <svg width="16" height="16" viewBox="0 0 40 40" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
               <line x1="4" y1="20" x2="36" y2="20" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
               <line x1="36" y1="20" x2="24" y2="10" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
               <line x1="36" y1="20" x2="24" y2="30" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
@@ -386,21 +386,6 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
                 })}
               </div>
 
-              {/* Studio ASCII map */}
-              <div style={{ marginTop: 28, paddingTop: 18, borderTop: '1px solid #e4e4e4' }}>
-                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: P.textSecondary, marginBottom: 8 }}>
-                  Studio
-                </div>
-                <pre style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, lineHeight: 1.4, color: '#9a9a9a', margin: 0, letterSpacing: '0.02em', whiteSpace: 'pre' }}>
-{`  ╷   ╷
-──┼───┼── Regent's Canal
-  ╵   ╵
-     ╭───╮
-     │ ◉ │  SPHNSX studio
-     ╰───╯  Hackney Wick · E9
-                          N ↑`}
-                </pre>
-              </div>
             </div>
             <div style={{ height: 28 }} aria-hidden />
           </div>
@@ -410,8 +395,8 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
             to="/"
             style={{ textDecoration: 'none', color: P.textPrimary, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: P.greySoft, borderTop: `1px solid ${P.border}`, flexShrink: 0 }}
           >
-            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em' }}>Back to works</span>
-            <svg width="18" height="18" viewBox="0 0 40 40" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', whiteSpace: 'nowrap' }}>Back to works</span>
+            <svg width="16" height="16" viewBox="0 0 40 40" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
               <line x1="4" y1="20" x2="36" y2="20" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
               <line x1="36" y1="20" x2="24" y2="10" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
               <line x1="36" y1="20" x2="24" y2="30" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
