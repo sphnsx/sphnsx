@@ -9,6 +9,7 @@ import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { reorderProjects } from '../services/storageService';
 import { PALETTE } from '../constants';
 import { useIsMobile } from '../hooks/useMediaQuery';
+import { projectPath } from '../utils/slug';
 
 const STORAGE_KEYS = { left: 'sphnsx_left_heights', middle: 'sphnsx_middle_heights', right: 'sphnsx_right_heights' };
 
@@ -66,7 +67,7 @@ const ProjectPreview: React.FC<{
   onHoverChange?: (hovered: boolean) => void;
 }> = ({ project, hoverColor, dragDisabled, forceHovered, onHoverChange }) => (
   <ModularSection
-    to={`/project/${project.id}`}
+    to={projectPath(project)}
     title={project.title}
     year={project.year}
     hoverColor={hoverColor}
@@ -205,7 +206,7 @@ const MobileHomeLayout: React.FC<{
               {byYear.get(y)!.map((p) => (
                 <Link
                   key={p.id}
-                  to={`/project/${p.id}`}
+                  to={projectPath(p)}
                   style={{
                     textDecoration: 'none', color: P.textPrimary,
                     display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
@@ -225,7 +226,7 @@ const MobileHomeLayout: React.FC<{
           {data.projects.map((p, i, arr) => (
             <Link
               key={p.id}
-              to={`/project/${p.id}`}
+              to={projectPath(p)}
               style={{
                 display: 'block', textDecoration: 'none', color: P.textPrimary,
                 borderBottom: i < arr.length - 1 ? `1px solid ${P.border}` : 'none',

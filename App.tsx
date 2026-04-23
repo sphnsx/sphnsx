@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { flushSync } from 'react-dom';
-import { BrowserRouter as Router, Routes, Route, Link, useParams, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import ShowcaseView from './components/ShowcaseView';
 import MobileHeader from './components/MobileHeader';
@@ -16,6 +16,7 @@ import { useIsMobile } from './hooks/useMediaQuery';
 import RichTextEditor from './components/RichTextEditor';
 import SafeHtml from './components/SafeHtml';
 import { compressImageDataUrl } from './utils/imageCompress';
+import { findProjectBySlug, projectPath, slugify } from './utils/slug';
 import { DetailBreadcrumb, DetailGreyFooter, DetailHeading, DetailContactRow } from './components/detailPrimitives';
 
 const FixedHomeButton: React.FC = () => {
@@ -85,10 +86,17 @@ const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children })
   </div>
 );
 
+/** Redirect /project/:slug → /:slug, resolving via id OR slugified title so both old numeric-id links and new slug links land on the right project. */
+const LegacyProjectRedirect: React.FC<{ data: PortfolioData }> = ({ data }) => {
+  const { slug } = useParams<{ slug: string }>();
+  const project = findProjectBySlug(data.projects, slug);
+  return <Navigate to={project ? projectPath(project) : '/'} replace />;
+};
+
 const ProjectDetailsPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ data, onRefresh }) => {
-  const { id } = useParams<{ id: string }>();
-  const idx = data.projects.findIndex(p => p.id === id);
-  const project = idx >= 0 ? data.projects[idx] : undefined;
+  const { slug } = useParams<{ slug: string }>();
+  const project = findProjectBySlug(data.projects, slug);
+  const idx = project ? data.projects.indexOf(project) : -1;
   const nextProject = idx >= 0
     ? data.projects[(idx + 1) % data.projects.length]
     : undefined;
@@ -611,12 +619,15 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<HomeRouteWrapper data={portfolioData} onRefresh={refreshData} />} />
             <Route path="/project/new" element={<NewProjectPage data={portfolioData} onRefresh={refreshData} />} />
-            <Route path="/project/:id" element={<ProjectDetailsPage data={portfolioData} onRefresh={refreshData} />} />
+            {/* Legacy /project/:id URLs: redirect to the canonical /:slug so old bookmarks keep working. */}
+            <Route path="/project/:slug" element={<LegacyProjectRedirect data={portfolioData} />} />
             <Route path="/about" element={<AboutPage data={portfolioData} onRefresh={refreshData} />} />
             <Route path="/contact" element={<ContactPage data={portfolioData} onRefresh={refreshData} />} />
             <Route path="/admin" element={<AdminLoginPage />} />
             <Route path="/a" element={<AdminLoginPage />} />
             <Route path="/admin/deployment" element={<AdminDeploymentGuard><DeploymentPage /></AdminDeploymentGuard>} />
+            {/* Root-level slug route — must sit after all named routes so /about, /contact, /admin win. */}
+            <Route path="/:slug" element={<ProjectDetailsPage data={portfolioData} onRefresh={refreshData} />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>

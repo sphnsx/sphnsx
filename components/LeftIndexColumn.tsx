@@ -4,6 +4,7 @@ import Breadcrumb from './Breadcrumb';
 import Arrow from './Arrow';
 import { Project } from '../types';
 import { PALETTE } from '../constants';
+import { projectPath } from '../utils/slug';
 
 interface LeftIndexColumnProps {
   /** Hero sentence shown in the About preview block. */
@@ -133,7 +134,7 @@ const LeftIndexColumn: React.FC<LeftIndexColumnProps> = ({
               return (
                 <Link
                   key={p.id}
-                  to={`/project/${p.id}`}
+                  to={projectPath(p)}
                   onMouseEnter={() => onHoverProject(p.id)}
                   onMouseLeave={() => onHoverProject(null)}
                   style={{

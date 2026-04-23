@@ -6,6 +6,7 @@ import { addProject } from '../services/storageService';
 import { compressImageDataUrl, getImageAspectRatio } from '../utils/imageCompress';
 import RichTextEditor from './RichTextEditor';
 import { PortfolioData, Project } from '../types';
+import { isReservedSlug, projectPath, slugify } from '../utils/slug';
 
 interface NewProjectPageProps {
   data: PortfolioData;
@@ -110,7 +111,8 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) {
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
       alert('Please provide a project title.');
       return;
     }
@@ -118,23 +120,34 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
       alert('Please provide at least one image.');
       return;
     }
+    const slug = slugify(trimmedTitle);
+    if (!slug || isReservedSlug(slug)) {
+      alert('That title produces a URL that conflicts with a site page. Please choose a different title.');
+      return;
+    }
+    if (data.projects.some((p) => slugify(p.title) === slug)) {
+      alert('A project with this title already exists. Please choose a different title.');
+      return;
+    }
     try {
       setIsSaving(true);
-      const id = Date.now().toString();
+      // Use the slug itself as the stored id so the canonical URL is stable even if the title is later edited.
+      const id = slug;
       const cover = imageUrl || gallery[0] || '';
       const ratio = coverAspectRatio ?? (cover ? await getImageAspectRatio(cover).catch(() => undefined) : undefined);
-      const updatedData = await addProject({
+      const newProject: Project = {
         id,
-        title: title.trim(),
+        title: trimmedTitle,
         year: year.trim(),
         description: description.trim() || '',
         imageUrl: cover,
         gallery,
         galleryColumns,
         coverAspectRatio: ratio,
-      });
+      };
+      const updatedData = await addProject(newProject);
       onRefresh(updatedData);
-      navigate(`/project/${id}`);
+      navigate(projectPath(newProject));
     } catch (err) {
       console.error(err);
       if (err instanceof DOMException && err.name === 'QuotaExceededError') {

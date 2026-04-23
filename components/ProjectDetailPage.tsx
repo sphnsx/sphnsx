@@ -9,6 +9,7 @@ import RichTextEditor from './RichTextEditor';
 import SafeHtml from './SafeHtml';
 import { PortfolioData, Project } from '../types';
 import { DetailBreadcrumb, DetailGreyFooter, DetailHeading, DetailMetaRow, DetailRightBar } from './detailPrimitives';
+import { projectPath } from '../utils/slug';
 
 const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="fixed inset-0 bg-bgMain flex flex-col overflow-hidden">
@@ -175,7 +176,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
 
   const readFooter = !isMobile && !isEditing && nextProject ? (
     <DetailGreyFooter
-      to={`/project/${nextProject.id}`}
+      to={projectPath(nextProject)}
       label={`Next · ${nextProject.title}`}
     />
   ) : null;
@@ -487,7 +488,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
           {/* Grey Next footer */}
           {nextProject && (
             <Link
-              to={`/project/${nextProject.id}`}
+              to={projectPath(nextProject)}
               style={{ textDecoration: 'none', color: P.textPrimary, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: P.greySoft, borderTop: `1px solid ${P.border}`, flexShrink: 0 }}
             >
               <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', whiteSpace: 'nowrap' }}>Next · {nextProject.title}</span>
