@@ -16,11 +16,15 @@ export function isReservedSlug(slug: string): boolean {
   return RESERVED_SLUGS.has(slug);
 }
 
-/** Resolve a URL param to a project. Prefers slugified title match (new-style URLs); falls back to raw id match so old numeric-id links keep working. */
+/** Resolve a URL param to a project. Tries (1) slugified title match (new-style URLs), (2) raw string-id match, (3) case-insensitive id match — so old numeric-id links AND old alphabetic-id links ("twice") both resolve even if the jsonb payload stored the id as a number. */
 export function findProjectBySlug(projects: Project[], slug: string | undefined): Project | undefined {
   if (!slug) return undefined;
   const target = slug.toLowerCase();
-  return projects.find((p) => slugify(p.title) === target) ?? projects.find((p) => p.id === slug);
+  return (
+    projects.find((p) => slugify(p.title) === target)
+    ?? projects.find((p) => String(p.id) === slug)
+    ?? projects.find((p) => String(p.id).toLowerCase() === target)
+  );
 }
 
 /** Canonical URL path for a project. */
