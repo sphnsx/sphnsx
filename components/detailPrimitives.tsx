@@ -3,6 +3,39 @@ import { Link } from 'react-router-dom';
 import Arrow from './Arrow';
 import { PALETTE } from '../constants';
 
+const BREADCRUMB_NAV: Record<string, string> = {
+  SPHNSX: '/',
+  WORKS: '/',
+  ABOUT: '/about',
+  CONTACT: '/contact',
+};
+
+const BreadcrumbCrumb: React.FC<{ label: string; isLast: boolean }> = ({ label, isLast }) => {
+  const [hover, setHover] = React.useState(false);
+  const to = BREADCRUMB_NAV[label.toUpperCase()];
+  if (isLast || !to) {
+    return <span style={isLast ? { color: PALETTE.textPrimary } : undefined}>{label}</span>;
+  }
+  return (
+    <Link
+      to={to}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        position: 'relative',
+        display: 'inline-block',
+        padding: '2px 4px',
+        margin: '-2px -4px',
+        textDecoration: 'none',
+        color: hover ? PALETTE.textPrimary : 'inherit',
+      }}
+    >
+      {hover && <span aria-hidden style={{ position: 'absolute', inset: 0, background: PALETTE.accent }} />}
+      <span style={{ position: 'relative' }}>{label}</span>
+    </Link>
+  );
+};
+
 /** Breadcrumb strip at the top of a detail page's left column (below Home offset). */
 export const DetailBreadcrumb: React.FC<{ trail: string[] }> = ({ trail }) => (
   <div
@@ -28,9 +61,7 @@ export const DetailBreadcrumb: React.FC<{ trail: string[] }> = ({ trail }) => (
       {trail.map((t, i) => (
         <React.Fragment key={i}>
           {i > 0 && <span style={{ color: '#bbb' }} aria-hidden>{'\u203A'}</span>}
-          <span style={i === trail.length - 1 ? { color: PALETTE.textPrimary } : undefined}>
-            {t}
-          </span>
+          <BreadcrumbCrumb label={t} isLast={i === trail.length - 1} />
         </React.Fragment>
       ))}
     </nav>

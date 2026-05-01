@@ -10,6 +10,8 @@ export interface Project {
   coverAspectRatio?: number;
   /** 1 = one column, 2 = two columns, 3 = three columns; default (undefined) = 1. */
   galleryColumns?: 1 | 2 | 3;
+  /** Plain-text location labels shown alongside year on the project detail page. */
+  locations?: string[];
 }
 
 /** Single contact method: user-editable label (e.g. "Email", "Instagram") and value (URL or address). */

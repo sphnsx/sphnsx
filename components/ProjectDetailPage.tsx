@@ -10,6 +10,7 @@ import SafeHtml from './SafeHtml';
 import { PortfolioData, Project } from '../types';
 import { DetailBreadcrumb, DetailGreyFooter, DetailHeading, DetailMetaRow, DetailRightBar } from './detailPrimitives';
 import { projectPath } from '../utils/slug';
+import AdminButton from './admin/AdminButton';
 
 const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="fixed inset-0 bg-bgMain flex flex-col overflow-hidden">
@@ -218,28 +219,19 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                   />
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="font-mono text-sm uppercase tracking-wider px-4 py-2 bg-accent text-textPrimary hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
-                  >
+                  <AdminButton type="button" variant="primary" size="md" onClick={handleSave} disabled={isSaving}>
                     {isSaving ? 'Saving…' : 'Save'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setIsEditing(false); setEditProject(initialProject); }}
-                    className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
-                  >
+                  </AdminButton>
+                  <AdminButton type="button" size="md" onClick={() => { setIsEditing(false); setEditProject(initialProject); }}>
                     Cancel
-                  </button>
+                  </AdminButton>
                 </div>
               </div>
             ) : (
               <>
                 {isMobile ? (
                   <>
-                    <p className="font-mono text-xs uppercase tracking-wider text-textSecondary mb-2">{project.year}</p>
+                    <p className="font-mono text-xs uppercase tracking-wider text-textSecondary mb-2">{[project.year, ...(project.locations ?? [])].filter(Boolean).join(' · ')}</p>
                     <h1 className="text-3xl font-bold mb-6">{project.title}</h1>
                   </>
                 ) : (
@@ -248,6 +240,12 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                     <DetailMetaRow
                       items={[
                         { label: 'Year', value: project.year },
+                        ...((project.locations ?? []).length
+                          ? [{
+                              label: (project.locations ?? []).length > 1 ? 'Places' : 'Place',
+                              value: (project.locations ?? []).join(' · '),
+                            }]
+                          : []),
                       ]}
                     />
                   </>
@@ -257,21 +255,22 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                 </div>
                 {showAdminActions && (
                   <div className="flex gap-2 mt-6">
-                    <button
+                    <AdminButton
                       type="button"
+                      size="sm"
                       onClick={() => { setEditProject(initialProject); setIsEditing(true); }}
-                      className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
                     >
                       Edit
-                    </button>
-                    <button
+                    </AdminButton>
+                    <AdminButton
                       type="button"
+                      size="sm"
+                      variant="ghost-destructive"
                       onClick={handleDelete}
                       disabled={isDeleting}
-                      className="font-mono text-xs uppercase tracking-wider px-3 py-2 bg-destructive text-white hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
                     >
-                      {isDeleting ? 'Deleting…' : 'Delete'}
-                    </button>
+                      {isDeleting ? 'Deleting…' : 'Delete project'}
+                    </AdminButton>
                   </div>
                 )}
               </>
@@ -308,10 +307,10 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
                   <div className="max-h-64 h-64 border border-paletteBorder flex items-center justify-center font-mono text-xs text-textSecondary">No cover</div>
                 )}
                 <div className="mt-2 flex gap-2">
-                  <label className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 cursor-pointer rounded-sm">
+                  <AdminButton size="sm" asLabel>
                     Change cover
                     <input type="file" accept="image/*" className="hidden" onChange={handleCoverFile} />
-                  </label>
+                  </AdminButton>
                 </div>
               </div>
               <div>
@@ -450,6 +449,9 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
               <h1 style={{ fontFamily: 'Inter, sans-serif', fontSize: 30, fontWeight: 700, lineHeight: 1.05, letterSpacing: '-0.01em', margin: '0 0 14px', color: P.textPrimary }}>{project.title}</h1>
               <div style={{ borderTop: `1px solid ${P.border}`, borderBottom: '1px solid #e4e4e4', padding: '8px 0', display: 'flex', flexWrap: 'wrap', gap: 14, fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
                 <span><span style={{ color: P.textSecondary }}>Year </span>{project.year}</span>
+                {(project.locations ?? []).length > 0 && (
+                  <span><span style={{ color: P.textSecondary }}>{(project.locations ?? []).length > 1 ? 'Places ' : 'Place '}</span>{(project.locations ?? []).join(' · ')}</span>
+                )}
               </div>
             </div>
 

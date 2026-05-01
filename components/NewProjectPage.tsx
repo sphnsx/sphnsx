@@ -5,6 +5,10 @@ import { useIsMobile } from '../hooks/useMediaQuery';
 import { addProject } from '../services/storageService';
 import { compressImageDataUrl, getImageAspectRatio } from '../utils/imageCompress';
 import RichTextEditor from './RichTextEditor';
+import Breadcrumb from './Breadcrumb';
+import AdminButton from './admin/AdminButton';
+import AdminInput from './admin/AdminInput';
+import LocationsField from './admin/LocationsField';
 import { PortfolioData, Project } from '../types';
 import { isReservedSlug, projectPath, slugify } from '../utils/slug';
 
@@ -13,12 +17,26 @@ interface NewProjectPageProps {
   onRefresh: (updatedData?: PortfolioData) => void;
 }
 
+const DragHandle: React.FC = () => (
+  <svg width="10" height="14" viewBox="0 0 10 14" className="text-textSecondary cursor-grab" aria-hidden>
+    <g fill="currentColor">
+      <circle cx="2" cy="2" r="1" />
+      <circle cx="8" cy="2" r="1" />
+      <circle cx="2" cy="7" r="1" />
+      <circle cx="8" cy="7" r="1" />
+      <circle cx="2" cy="12" r="1" />
+      <circle cx="8" cy="12" r="1" />
+    </g>
+  </svg>
+);
+
 const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
   const { isAdmin } = useAdminAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [locations, setLocations] = useState<string[]>([]);
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [coverAspectRatio, setCoverAspectRatio] = useState<number | undefined>(undefined);
@@ -131,7 +149,6 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
     }
     try {
       setIsSaving(true);
-      // Use the slug itself as the stored id so the canonical URL is stable even if the title is later edited.
       const id = slug;
       const cover = imageUrl || gallery[0] || '';
       const ratio = coverAspectRatio ?? (cover ? await getImageAspectRatio(cover).catch(() => undefined) : undefined);
@@ -144,6 +161,7 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
         gallery,
         galleryColumns,
         coverAspectRatio: ratio,
+        locations: locations.length ? locations : undefined,
       };
       const updatedData = await addProject(newProject);
       onRefresh(updatedData);
@@ -167,32 +185,37 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
   return (
     <div className="fixed inset-0 bg-bgMain flex flex-col overflow-hidden">
       <main className="flex-1 min-h-0 flex">
-        <div className={`w-2/5 min-w-0 overflow-y-auto pt-pageTop pl-6 pr-6 ${bottomPadding}`}>
+        <div className={`w-2/5 min-w-0 overflow-y-auto pt-pageTop pl-12 pr-12 ${bottomPadding}`}>
           <div className="max-w-xl">
-            <h1 className="font-mono text-sm uppercase tracking-wider text-textPrimary mb-6">New project</h1>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Title</label>
-                <input
-                  type="text"
-                  className="w-full p-3 border border-paletteBorder bg-transparent font-mono text-sm placeholder:text-textSecondary text-textPrimary focus:outline-none"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Year</label>
-                <input
-                  type="text"
-                  className="w-full p-3 border border-paletteBorder bg-transparent font-mono text-sm placeholder:text-textSecondary text-textPrimary focus:outline-none"
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Description</label>
+            <Breadcrumb trail={['SPHNSX', 'Admin', 'Create']} className="mb-9" />
+            <div className="mb-9">
+              <span className="block font-mono text-[11px] uppercase tracking-wider text-textSecondary mb-2">
+                Create
+              </span>
+              <h1 className="font-sans text-[40px] font-bold leading-[1.05] tracking-[-0.01em] text-textPrimary">
+                New project
+              </h1>
+            </div>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              <AdminInput
+                label="Title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
+              <AdminInput
+                label="Year"
+                type="text"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                required
+              />
+              <LocationsField value={locations} onChange={setLocations} />
+              <div className="flex flex-col gap-2">
+                <span className="font-mono text-[11px] uppercase tracking-wider text-textPrimary">
+                  Description
+                </span>
                 <RichTextEditor
                   value={description}
                   onChange={setDescription}
@@ -200,106 +223,139 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
                   minHeight="10rem"
                 />
               </div>
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  disabled={isUploading || isSaving}
-                  className="font-mono text-sm uppercase tracking-wider px-4 py-2 bg-accent text-textPrimary hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
-                >
+              <div className="flex gap-2 pt-2">
+                <AdminButton type="submit" variant="primary" size="md" disabled={isUploading || isSaving}>
                   {isSaving ? 'Processing…' : isUploading ? 'Processing…' : 'Create project'}
-                </button>
+                </AdminButton>
               </div>
             </form>
           </div>
         </div>
         <div className="w-px shrink-0 bg-paletteBorder" aria-hidden />
-        <div className={`w-3/5 min-w-0 overflow-y-auto pt-pageTop px-6 ${bottomPadding}`}>
-          <div className="space-y-4">
+        <div className={`w-3/5 min-w-0 overflow-y-auto pt-pageTop px-12 ${bottomPadding}`}>
+          <div className="flex flex-col gap-7">
             <div>
-              <p className="font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Cover</p>
+              <p className="font-mono text-[11px] uppercase tracking-wider text-textPrimary mb-2.5">
+                Cover
+              </p>
               {imageUrl ? (
-                <img src={imageUrl} alt="Cover" className="max-h-64 w-auto border border-paletteBorder" />
+                <img
+                  src={imageUrl}
+                  alt="Cover"
+                  className="max-h-64 w-auto border border-paletteBorder"
+                />
               ) : (
-                <div className="max-h-64 h-64 border border-paletteBorder flex items-center justify-center font-mono text-xs text-textSecondary">No cover</div>
+                <div className="max-h-64 h-64 border border-dashed border-paletteBorder flex items-center justify-center font-mono text-[11px] uppercase tracking-wider text-textSecondary">
+                  No cover
+                </div>
               )}
-              <div className="mt-2 flex gap-2">
-                <label className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 cursor-pointer rounded-sm">
+              <div className="mt-2.5 flex gap-2">
+                <AdminButton size="sm" asLabel>
                   Change cover
                   <input type="file" accept="image/*" className="hidden" onChange={handleCoverFile} />
-                </label>
+                </AdminButton>
               </div>
             </div>
-            <div>
-              <p className="font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Gallery layout</p>
-              <div className="flex gap-4 mb-2">
-                <label className="flex items-center gap-2 font-mono text-sm cursor-pointer">
-                  <input
-                    type="radio"
-                    name="galleryColumnsNew"
-                    checked={galleryColumns === 1}
-                    onChange={() => setGalleryColumns(1)}
-                    className="border border-paletteBorder"
-                  />
-                  One column
-                </label>
-                <label className="flex items-center gap-2 font-mono text-sm cursor-pointer">
-                  <input
-                    type="radio"
-                    name="galleryColumnsNew"
-                    checked={galleryColumns === 2}
-                    onChange={() => setGalleryColumns(2)}
-                    className="border border-paletteBorder"
-                  />
-                  Two columns
-                </label>
-                <label className="flex items-center gap-2 font-mono text-sm cursor-pointer">
-                  <input
-                    type="radio"
-                    name="galleryColumnsNew"
-                    checked={galleryColumns === 3}
-                    onChange={() => setGalleryColumns(3)}
-                    className="border border-paletteBorder"
-                  />
-                  Three columns
-                </label>
+
+            <div className="flex flex-col gap-3.5">
+              <span className="font-mono text-[11px] uppercase tracking-wider text-textPrimary">
+                Gallery layout
+              </span>
+              <div className="flex border border-paletteBorder">
+                {[1, 2, 3].map((n) => {
+                  const active = galleryColumns === n;
+                  return (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setGalleryColumns(n as 1 | 2 | 3)}
+                      className={`flex-1 py-2.5 px-3.5 font-mono text-[11px] uppercase tracking-wider rounded-none ${n > 1 ? 'border-l border-paletteBorder' : ''} ${active ? 'bg-textPrimary text-white' : 'bg-transparent text-textPrimary hover:bg-accent'}`}
+                    >
+                      {['One', 'Two', 'Three'][n - 1]} column{n > 1 ? 's' : ''}
+                    </button>
+                  );
+                })}
               </div>
-              <p className="font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Gallery</p>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                className="block w-full text-sm font-mono file:mr-4 file:py-2 file:px-4 file:border file:border-paletteBorder file:bg-bgMain file:font-mono file:text-xs file:uppercase file:tracking-wider file:text-textPrimary file:hover:bg-neutral-800 file:hover:text-white file:transition-colors file:duration-150 file:rounded-sm mb-2"
-                onChange={handleGalleryFiles}
-              />
-              {gallery.length > 0 && (
-                <div className="flex flex-wrap gap-4">
-                  {gallery.map((img, i) => (
-                    <div key={i} className="flex flex-col">
-                      <img src={img} alt="" className="max-h-24 w-auto object-contain border border-paletteBorder" />
-                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <button
-                          type="button"
-                          onClick={() => setCoverFromGallery(i)}
-                          className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
-                        >
-                          Set as cover
-                        </button>
-                        <label className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white cursor-pointer transition-colors duration-150 rounded-sm">
-                          Replace
-                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleReplaceImage(i, e)} />
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => removeGalleryImage(i)}
-                          disabled={gallery.length <= 1}
-                          className="font-mono text-xs uppercase tracking-wider px-2 py-1 bg-destructive text-white hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-3.5">
+                <span className="font-mono text-[11px] uppercase tracking-wider text-textPrimary">
+                  Gallery
+                </span>
+                <AdminButton size="sm" asLabel>
+                  Add images
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleGalleryFiles}
+                  />
+                </AdminButton>
+              </div>
+              {gallery.length === 0 ? (
+                <div className="border border-dashed border-paletteBorder p-8 text-center font-mono text-[11px] uppercase tracking-wider text-textSecondary">
+                  Drop images here, or use “Add images”
                 </div>
+              ) : (
+                <table className="w-full border-collapse font-mono text-[11px]">
+                  <thead>
+                    <tr className="border-b border-paletteBorder text-textSecondary uppercase tracking-wider">
+                      <th className="text-left py-2.5 px-2 w-20">Plate</th>
+                      <th className="text-left py-2.5 px-2">Image</th>
+                      <th className="text-right py-2.5 px-2 w-[300px]">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gallery.map((src, i) => (
+                      <tr key={i} className="border-b border-neutral-200">
+                        <td className="py-3 px-2 align-middle text-textSecondary">
+                          <span className="inline-flex items-center gap-2">
+                            <DragHandle /> {String(i + 1).padStart(2, '0')}
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 align-middle">
+                          <div className="flex items-center gap-3.5">
+                            <img
+                              src={src}
+                              alt=""
+                              className="w-24 h-[72px] object-cover border border-paletteBorder block"
+                            />
+                            <span className="font-sans text-[13px] text-textPrimary">
+                              plate-{String(i + 1).padStart(2, '0')}.jpg
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-2 align-middle text-right">
+                          <div className="inline-flex gap-1.5">
+                            <AdminButton size="sm" type="button" onClick={() => setCoverFromGallery(i)}>
+                              Set as cover
+                            </AdminButton>
+                            <AdminButton size="sm" asLabel>
+                              Replace
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => handleReplaceImage(i, e)}
+                              />
+                            </AdminButton>
+                            <AdminButton
+                              size="sm"
+                              type="button"
+                              variant="ghost-destructive"
+                              onClick={() => removeGalleryImage(i)}
+                              disabled={gallery.length <= 1}
+                            >
+                              Remove
+                            </AdminButton>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
             </div>
           </div>

@@ -18,6 +18,8 @@ import SafeHtml from './components/SafeHtml';
 import { compressImageDataUrl } from './utils/imageCompress';
 import { findProjectBySlug, projectPath, slugify } from './utils/slug';
 import { DetailBreadcrumb, DetailGreyFooter, DetailHeading, DetailContactRow } from './components/detailPrimitives';
+import AdminButton from './components/admin/AdminButton';
+import AdminInput from './components/admin/AdminInput';
 
 const FixedHomeButton: React.FC = () => {
   const isMobile = useIsMobile();
@@ -35,6 +37,8 @@ const FixedHomeButton: React.FC = () => {
 
 const CloseToHomeButton: React.FC = () => {
   const location = useLocation();
+  const isMobile = useIsMobile();
+  if (isMobile) return null;
   if (location.pathname === '/') return null;
   return (
     <Link
@@ -55,27 +59,26 @@ const AdminBar: React.FC = () => {
   const { isAdmin, logout } = useAdminAuth();
   const navigate = useNavigate();
   if (isMobile || !isAdmin) return null;
+
+  const link = 'relative font-mono text-[11px] uppercase tracking-wider text-textPrimary px-1.5 py-0.5 -my-0.5 hover:bg-accent';
+  const danger = 'relative font-mono text-[11px] uppercase tracking-wider text-destructive px-1.5 py-0.5 -my-0.5 hover:bg-destructive hover:text-white';
+
   return (
-    <div className="fixed bottom-0 left-0 z-[99] pl-6 pb-6 flex gap-2">
-      <Link
-        to="/project/new"
-        className="font-mono text-xs uppercase tracking-wider border border-paletteBorder px-3 py-2 bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
-      >
-        Add project
-      </Link>
-      <Link
-        to="/admin/deployment"
-        className="font-mono text-xs uppercase tracking-wider border border-paletteBorder px-3 py-2 bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
-      >
-        Domain setup
-      </Link>
-      <button
-        type="button"
-        onClick={() => { logout(); navigate('/'); }}
-        className="font-mono text-xs uppercase tracking-wider border border-paletteBorder px-3 py-2 bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
-      >
-        Logout
-      </button>
+    <div className="fixed left-0 right-0 bottom-0 z-[99] h-12 bg-bgSidebar border-t border-paletteBorder flex items-center justify-between px-6">
+      <div className="flex items-center gap-4">
+        <span className="inline-flex items-center gap-2">
+          <span className="inline-block w-2 h-2 bg-accent" aria-hidden />
+          <span className="font-mono text-[10px] uppercase tracking-wider text-textPrimary">Admin · Live</span>
+        </span>
+        <span className="w-px h-[18px] bg-neutral-400" />
+        <Link to="/project/new" className={link}>+ New project</Link>
+        <Link to="/about" className={link}>Edit biography</Link>
+        <Link to="/contact" className={link}>Edit contact</Link>
+      </div>
+      <div className="flex items-center gap-4">
+        <Link to="/admin/deployment" className={link}>Deployment</Link>
+        <button type="button" onClick={() => { logout(); navigate('/'); }} className={danger}>Sign out</button>
+      </div>
     </div>
   );
 };
@@ -193,13 +196,9 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ d
             {showEditBiography && (
               <div className="mb-6">
                 {!isEditing ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsEditing(true)}
-                    className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
-                  >
+                  <AdminButton type="button" size="sm" onClick={() => setIsEditing(true)}>
                     Edit biography
-                  </button>
+                  </AdminButton>
                 ) : (
                   <div className="space-y-4">
                     <RichTextEditor
@@ -209,20 +208,12 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ d
                       minHeight="14rem"
                     />
                     <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={handleSave}
-                        className="font-mono text-sm uppercase tracking-wider px-4 py-2 bg-accent text-textPrimary hover:opacity-90 transition-opacity duration-150 rounded-sm"
-                      >
+                      <AdminButton type="button" variant="primary" size="md" onClick={handleSave}>
                         Save
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setIsEditing(false); setAboutText(data.aboutMe); }}
-                        className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
-                      >
+                      </AdminButton>
+                      <AdminButton type="button" size="md" onClick={() => { setIsEditing(false); setAboutText(data.aboutMe); }}>
                         Cancel
-                      </button>
+                      </AdminButton>
                     </div>
                   </div>
                 )}
@@ -288,19 +279,14 @@ const AboutRightColumn: React.FC<{ data: PortfolioData; onRefresh: (updatedData?
       )}
       {isAdmin && (
         <div className="mt-4 flex gap-2">
-          <label className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white cursor-pointer transition-colors duration-150 rounded-sm">
+          <AdminButton size="sm" asLabel>
             {hasImage ? 'Change photo' : 'Choose file'}
             <input type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={isUploading} />
-          </label>
+          </AdminButton>
           {hasImage && (
-            <button
-              type="button"
-              onClick={handleRemove}
-              disabled={isUploading}
-              className="font-mono text-xs uppercase tracking-wider px-3 py-2 bg-destructive text-white hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
-            >
+            <AdminButton type="button" size="sm" variant="ghost-destructive" onClick={handleRemove} disabled={isUploading}>
               Remove
-            </button>
+            </AdminButton>
           )}
         </div>
       )}
@@ -435,36 +421,28 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
             {showEditContact && (
               <div className="mb-6">
                 {!isEditing ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsEditing(true)}
-                    className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
-                  >
+                  <AdminButton type="button" size="sm" onClick={() => setIsEditing(true)}>
                     Edit contact
-                  </button>
+                  </AdminButton>
                 ) : (
                   <div className="space-y-4">
                     {editMethods.map((m, i) => (
-                      <div key={i} className="flex flex-col gap-2 p-3 border border-paletteBorder rounded-sm">
+                      <div key={i} className="flex flex-col gap-2 p-3 border border-paletteBorder">
                         <div className="flex gap-2 items-center">
-                          <input
+                          <AdminInput
                             type="text"
-                            className="flex-1 p-2 border border-paletteBorder bg-transparent font-mono text-sm text-textPrimary focus:outline-none"
+                            className="!p-2"
                             value={m.label}
                             onChange={(e) => updateMethod(i, 'label', e.target.value)}
                             placeholder="Label (e.g. Email, Instagram)"
                           />
-                          <button
-                            type="button"
-                            onClick={() => removeMethod(i)}
-                            className="font-mono text-xs uppercase tracking-wider px-2 py-1 bg-destructive text-white hover:opacity-90 rounded-sm"
-                          >
+                          <AdminButton type="button" size="sm" variant="ghost-destructive" onClick={() => removeMethod(i)}>
                             Remove
-                          </button>
+                          </AdminButton>
                         </div>
-                        <input
+                        <AdminInput
                           type="text"
-                          className="w-full p-2 border border-paletteBorder bg-transparent font-mono text-sm text-textPrimary focus:outline-none"
+                          className="!p-2"
                           value={m.value}
                           onChange={(e) => updateMethod(i, 'value', e.target.value)}
                           placeholder="URL or email address"
@@ -472,27 +450,15 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
                       </div>
                     ))}
                     <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={addMethod}
-                        className="font-mono text-xs uppercase tracking-wider px-3 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
-                      >
+                      <AdminButton type="button" size="sm" onClick={addMethod}>
                         Add method
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSave}
-                        className="font-mono text-sm uppercase tracking-wider px-4 py-2 bg-accent text-textPrimary hover:opacity-90 transition-opacity duration-150 rounded-sm"
-                      >
+                      </AdminButton>
+                      <AdminButton type="button" variant="primary" size="md" onClick={handleSave}>
                         Save
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setIsEditing(false); setEditMethods(getContactMethods(data)); }}
-                        className="font-mono text-sm uppercase tracking-wider px-4 py-2 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
-                      >
+                      </AdminButton>
+                      <AdminButton type="button" size="md" onClick={() => { setIsEditing(false); setEditMethods(getContactMethods(data)); }}>
                         Cancel
-                      </button>
+                      </AdminButton>
                     </div>
                   </div>
                 )}
