@@ -37,24 +37,26 @@ const BreadcrumbCrumb: React.FC<{ label: string; isLast: boolean }> = ({ label, 
 };
 
 /** Breadcrumb strip at the top of a detail page's left column (below Home offset). */
-export const DetailBreadcrumb: React.FC<{ trail: string[] }> = ({ trail }) => (
+export const DetailBreadcrumb: React.FC<{ trail: string[]; compact?: boolean }> = ({ trail, compact = false }) => (
   <div
     style={{
-      padding: '16px 24px',
+      padding: compact ? '12px 18px' : '16px 24px',
       borderBottom: `1px solid ${PALETTE.border}`,
+      background: PALETTE.backgroundMain,
+      flexShrink: 0,
     }}
   >
     <nav
       aria-label="Breadcrumb"
       style={{
         fontFamily: 'ui-monospace, SFMono-Regular, "JetBrains Mono", monospace',
-        fontSize: 11,
+        fontSize: compact ? 10 : 11,
         textTransform: 'uppercase',
-        letterSpacing: '0.12em',
+        letterSpacing: compact ? '0.14em' : '0.12em',
         color: PALETTE.textSecondary,
         display: 'flex',
         alignItems: 'center',
-        gap: 8,
+        gap: compact ? 6 : 8,
         flexWrap: 'wrap',
       }}
     >

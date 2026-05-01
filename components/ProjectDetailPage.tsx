@@ -420,16 +420,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
     return (
       <FullScreenDetail>
         <div className="flex flex-col" style={{ paddingTop: 48, height: '100%' }}>
-          {/* Breadcrumb strip */}
-          <div style={{ padding: '12px 18px', borderBottom: `1px solid ${P.border}`, background: P.bgMain, flexShrink: 0 }}>
-            <nav style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: P.textSecondary, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              <span>SPHNSX</span>
-              <span style={{ color: '#bbb' }}>›</span>
-              <span>WORKS</span>
-              <span style={{ color: '#bbb' }}>›</span>
-              <span style={{ color: P.textPrimary }}>{project.title}</span>
-            </nav>
-          </div>
+          <DetailBreadcrumb compact trail={['SPHNSX', 'WORKS', project.title]} />
 
           {/* Scrollable content */}
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: P.bgMain, scrollbarWidth: 'none' as const }}>

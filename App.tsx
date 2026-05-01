@@ -138,14 +138,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: () => void }> = ({ d
     return (
       <FullScreenDetail>
         <div className="flex flex-col" style={{ paddingTop: 48, height: '100%' }}>
-          {/* Breadcrumb */}
-          <div style={{ padding: '12px 18px', borderBottom: `1px solid ${P.border}`, background: P.bgMain, flexShrink: 0 }}>
-            <nav style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: P.textSecondary, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span>SPHNSX</span>
-              <span style={{ color: '#bbb' }}>›</span>
-              <span style={{ color: P.textPrimary }}>ABOUT</span>
-            </nav>
-          </div>
+          <DetailBreadcrumb compact trail={['SPHNSX', 'ABOUT']} />
 
           {/* Scrollable content */}
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: P.bgMain, scrollbarWidth: 'none' as const }}>
@@ -340,14 +333,7 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
     return (
       <FullScreenDetail>
         <div className="flex flex-col" style={{ paddingTop: 48, height: '100%' }}>
-          {/* Breadcrumb */}
-          <div style={{ padding: '12px 18px', borderBottom: `1px solid ${P.border}`, background: P.bgMain, flexShrink: 0 }}>
-            <nav style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: P.textSecondary, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span>SPHNSX</span>
-              <span style={{ color: '#bbb' }}>›</span>
-              <span style={{ color: P.textPrimary }}>CONTACT</span>
-            </nav>
-          </div>
+          <DetailBreadcrumb compact trail={['SPHNSX', 'CONTACT']} />
 
           {/* Scrollable content */}
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: P.bgMain, scrollbarWidth: 'none' as const }}>
