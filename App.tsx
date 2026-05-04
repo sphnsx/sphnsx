@@ -83,11 +83,19 @@ const AdminBar: React.FC = () => {
   );
 };
 
-const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="fixed inset-0 bg-bgMain flex flex-col overflow-hidden">
-    {children}
-  </div>
-);
+const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAdmin } = useAdminAuth();
+  const isMobile = useIsMobile();
+  const liftForAdminBar = isAdmin && !isMobile;
+  return (
+    <div
+      className="fixed left-0 right-0 top-0 bg-bgMain flex flex-col overflow-hidden"
+      style={{ bottom: liftForAdminBar ? 48 : 0 }}
+    >
+      {children}
+    </div>
+  );
+};
 
 /** Redirect /project/:slug → /:slug, resolving via id OR slugified title so both old numeric-id links and new slug links land on the right project. */
 const LegacyProjectRedirect: React.FC<{ data: PortfolioData }> = ({ data }) => {

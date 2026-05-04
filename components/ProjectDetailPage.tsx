@@ -12,11 +12,19 @@ import { DetailBreadcrumb, DetailGreyFooter, DetailHeading, DetailMetaRow, Detai
 import { projectPath } from '../utils/slug';
 import AdminButton from './admin/AdminButton';
 
-const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="fixed inset-0 bg-bgMain flex flex-col overflow-hidden">
-    {children}
-  </div>
-);
+const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAdmin } = useAdminAuth();
+  const isMobile = useIsMobile();
+  const liftForAdminBar = isAdmin && !isMobile;
+  return (
+    <div
+      className="fixed left-0 right-0 top-0 bg-bgMain flex flex-col overflow-hidden"
+      style={{ bottom: liftForAdminBar ? 48 : 0 }}
+    >
+      {children}
+    </div>
+  );
+};
 
 const ProtectedImage: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
   const bgClass = 'bg-bgMain';

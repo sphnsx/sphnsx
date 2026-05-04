@@ -181,9 +181,13 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
   if (!isAdmin) return null;
 
   const bottomPadding = isAdmin && !isMobile ? 'pb-24' : 'pb-12';
+  const liftForAdminBar = isAdmin && !isMobile;
 
   return (
-    <div className="fixed inset-0 bg-bgMain flex flex-col overflow-hidden">
+    <div
+      className="fixed left-0 right-0 top-0 bg-bgMain flex flex-col overflow-hidden"
+      style={{ bottom: liftForAdminBar ? 48 : 0 }}
+    >
       <main className="flex-1 min-h-0 flex">
         <div className={`w-2/5 min-w-0 overflow-y-auto pt-pageTop pl-12 pr-12 ${bottomPadding}`}>
           <div className="max-w-xl">
