@@ -187,7 +187,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
       ? 'w-full min-w-0 min-h-[50vh] overflow-y-auto pt-6 px-6 pb-12'
       : `w-2/5 min-w-0 flex flex-col ${showAdminActions ? 'pb-0' : ''}`}>
       {readHeader}
-      <div className={isMobile ? '' : 'flex-1 min-h-0 overflow-y-auto'} style={isMobile ? undefined : { padding: '48px 48px 24px' }}>
+      <div className={isMobile ? '' : 'flex-1 min-h-0 overflow-y-auto'} style={isMobile ? undefined : { padding: showAdminActions ? '48px 48px 96px' : '48px 48px 24px' }}>
       <div className="max-w-xl">
         {!isMobile && isEditing ? (
               <div className="space-y-4">
@@ -298,7 +298,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
       {galleryRightBar}
       <div className={isMobile ? '' : 'flex-1 min-h-0 overflow-y-auto'}>
           {!isMobile && isEditing ? (
-            <div className="space-y-4 px-6 py-6">
+            <div className="space-y-4 px-6 pt-6 pb-24">
               <div>
                 <p className="font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Cover</p>
                 {project.imageUrl ? (
