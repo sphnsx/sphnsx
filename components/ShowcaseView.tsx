@@ -1,486 +1,690 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import ThreeColumnLayout from './ThreeColumnLayout';
-import ModularSection from './ModularSection';
-import AboutMePreview from './AboutMePreview';
-import LeftIndexColumn from './LeftIndexColumn';
-import { PortfolioData, Project } from '../types';
+import { PortfolioData, Project, ContactMethod } from '../types';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
-import { reorderProjects } from '../services/storageService';
-import { PALETTE } from '../constants';
 import { useIsMobile } from '../hooks/useMediaQuery';
+import { PALETTE, HUES, hueForYear, INITIAL_DATA } from '../constants';
 import { projectPath } from '../utils/slug';
+import Arrow from './Arrow';
+import TopRibbon from './optc/TopRibbon';
+import Footer from './optc/Footer';
+import CapV2 from './optc/CapV2';
+import ChipV2 from './optc/ChipV2';
+import TagPillV2 from './optc/TagPillV2';
+import YearMarkV2 from './optc/YearMarkV2';
+import MarkerTitleV2 from './optc/MarkerTitleV2';
 
-const STORAGE_KEYS = { left: 'sphnsx_left_heights', middle: 'sphnsx_middle_heights', right: 'sphnsx_right_heights' };
+interface ShowcaseProps {
+  data: PortfolioData;
+  onRefresh?: (updatedData?: PortfolioData) => void;
+}
 
-const SECTION_HOVER_ACCENT = PALETTE.accent;
+/** Convert HTML or plain text to a plain string. */
+function htmlToPlain(input: string): string {
+  if (!input) return '';
+  const stripped = input.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  return stripped.replace(/\s+/g, ' ').trim();
+}
 
-/** Parse project year for sort; non-numeric or empty returns -1 so it sorts last. */
-function numericYear(p: Project): number {
-  const n = parseInt(p.year.trim(), 10);
+/** Split plain text into rough paragraphs (by double newline in raw, or single sentence chunks). */
+function paragraphs(raw: string): string[] {
+  if (!raw) return [];
+  const hasTags = /<[a-z][\s\S]*>/i.test(raw);
+  if (hasTags) {
+    const matches = raw.match(/<p[^>]*>([\s\S]*?)<\/p>/gi);
+    if (matches?.length) return matches.map((m) => htmlToPlain(m)).filter(Boolean);
+    return [htmlToPlain(raw)].filter(Boolean);
+  }
+  return raw.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+}
+
+/**
+ * Derive contact methods from data; falls back to legacy `contact` shape, then
+ * to `INITIAL_DATA.contactMethods` (the hard-coded sphnsx@aol.com + instagram
+ * defaults). The fallback matches pre-Option-C behaviour where Supabase rows
+ * without contact fields still rendered the defaults on the live site.
+ */
+export function getContactMethods(data: PortfolioData): ContactMethod[] {
+  if (data.contactMethods?.length) return data.contactMethods;
+  if (data.contact) {
+    const list: ContactMethod[] = [{ label: 'Email', value: data.contact.email }];
+    if (data.contact.instagramUrl) list.push({ label: 'Instagram', value: data.contact.instagramUrl });
+    return list;
+  }
+  return INITIAL_DATA.contactMethods ?? [];
+}
+
+function yearNum(y: string): number {
+  const n = parseInt(y.trim(), 10);
   return Number.isNaN(n) ? -1 : n;
 }
 
-function equalSplit(n: number): number[] {
-  const pct = 100 / n;
-  return Array(n).fill(0).map((_, i) => (i === n - 1 ? 100 - pct * (n - 1) : pct));
+const CYCLE_HUES = [HUES.coral, HUES.mint, HUES.yellow];
+
+/* ─── Pieces shared between desktop + mobile ──────────────────── */
+
+interface HeroProps {
+  featured?: Project;
+  isAdmin: boolean;
+  mobile?: boolean;
 }
 
-/** Build height percentages from cover aspect ratios (width/height). Taller images get more height. */
-function heightsFromAspectRatios(ratios: number[], addSection: boolean): number[] {
-  const weights = ratios.map((r) => 1 / (r || 1));
-  if (addSection) {
-    const avg = weights.length ? weights.reduce((a, b) => a + b, 0) / weights.length : 1;
-    weights.push(avg);
+const HeroSection: React.FC<HeroProps> = ({ featured, isAdmin, mobile }) => {
+  const ink = PALETTE.textPrimary;
+  const muted = PALETTE.textSecondary;
+  const paper = PALETTE.backgroundMain;
+
+  if (!featured) {
+    if (!isAdmin) return null;
+    return (
+      <section
+        style={{
+          padding: mobile ? '32px 20px' : '48px 40px',
+          borderBottom: `1px solid ${ink}`,
+          background: paper,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+          flexWrap: 'wrap',
+        }}
+      >
+        <CapV2 size={11} color={muted}>No projects yet</CapV2>
+        <Link
+          to="/admin"
+          style={{
+            textDecoration: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '12px 16px',
+            background: ink,
+            color: paper,
+          }}
+        >
+          <CapV2 size={11} color={paper}>Create your first project</CapV2>
+        </Link>
+      </section>
+    );
   }
-  const sum = weights.reduce((a, b) => a + b, 0);
-  return weights.map((w) => (w / sum) * 100);
-}
 
-function loadHeights(leftLen: number, middleLen: number, rightLen: number) {
-  try {
-    const left = JSON.parse(localStorage.getItem(STORAGE_KEYS.left) ?? 'null');
-    const middle = JSON.parse(localStorage.getItem(STORAGE_KEYS.middle) ?? 'null');
-    const right = JSON.parse(localStorage.getItem(STORAGE_KEYS.right) ?? 'null');
-    if (
-      Array.isArray(left) && left.length === leftLen &&
-      Array.isArray(middle) && middle.length === middleLen &&
-      Array.isArray(right) && right.length === rightLen
-    ) {
-      return { left, middle, right };
-    }
-  } catch {}
-  return null;
-}
+  const hue = hueForYear(featured.year);
+  const plates = featured.gallery.length;
+  const place = featured.locations?.length ? featured.locations.join(' · ') : '';
+  const platesStr = plates > 0 ? `${String(plates).padStart(2, '0')} in series` : '';
 
-function saveColumnHeights(column: 'left' | 'middle' | 'right', heights: number[]) {
-  try {
-    localStorage.setItem(STORAGE_KEYS[column], JSON.stringify(heights));
-  } catch {}
-}
+  const meta: Array<[string, string]> = [];
+  if (featured.year) meta.push(['Year', featured.year]);
+  if (featured.medium) meta.push(['Medium', featured.medium]);
+  if (platesStr) meta.push(['Plates', platesStr]);
+  if (place) meta.push(['Place', place]);
 
-const ProjectPreview: React.FC<{
-  project: Project;
-  hoverColor?: string;
-  dragDisabled?: boolean;
-  forceHovered?: boolean;
-  onHoverChange?: (hovered: boolean) => void;
-}> = ({ project, hoverColor, dragDisabled, forceHovered, onHoverChange }) => (
-  <ModularSection
-    to={projectPath(project)}
-    title={project.title}
-    year={project.year}
-    hoverColor={hoverColor}
-    draggable={!dragDisabled}
-    forceHovered={forceHovered}
-    onHoverChange={onHoverChange}
-    hoverLabel="View"
-    preview={
-      project.imageUrl ? (
-        <img
-          src={project.imageUrl}
-          alt={project.title}
-          className="w-full h-full object-contain"
-          onContextMenu={(e) => e.preventDefault()}
-          onDragStart={(e) => e.preventDefault()}
-          style={{ pointerEvents: 'none' }}
-        />
-      ) : (
-        <div className="w-full h-full bg-bgMain" aria-hidden />
-      )
-    }
-  />
-);
+  if (mobile) {
+    return (
+      <section style={{ padding: '20px 20px 28px', borderBottom: `1px solid ${ink}` }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 18,
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <CapV2 size={10}>01 / 01</CapV2>
+            <CapV2 size={10} color={muted}>Featured · {featured.year}</CapV2>
+          </div>
+          <TagPillV2 hue={hue} label={`${featured.year} · ${featured.title}`} size={10} chip={10} />
+        </div>
 
-const DraggableProjectRow: React.FC<{
-  projectId: string;
-  children: React.ReactNode;
-  onReorder: (draggedId: string, targetId: string) => void;
-}> = ({ projectId, children, onReorder }) => {
-  const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData('text/plain', projectId);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const draggedId = e.dataTransfer.getData('text/plain');
-    if (draggedId && draggedId !== projectId) onReorder(draggedId, projectId);
-  };
+        {featured.imageUrl ? (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 220, marginBottom: 22 }}>
+            <img
+              src={featured.imageUrl}
+              alt={`${featured.title} cover`}
+              style={{ maxWidth: '100%', maxHeight: 340, width: 'auto', height: 'auto', display: 'block' }}
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+            />
+          </div>
+        ) : null}
+
+        <MarkerTitleV2 title={featured.title} hue={hue} size={64} washHeight={0.5} />
+
+        {meta.length > 0 && (
+          <div style={{ marginTop: 22, display: 'grid', gridTemplateColumns: '72px 1fr', rowGap: 10, columnGap: 12 }}>
+            {meta.map(([k, v], i) => (
+              <React.Fragment key={i}>
+                <CapV2 size={9} color={muted}>{k}</CapV2>
+                <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 13, color: ink, lineHeight: 1.3 }}>{v}</span>
+              </React.Fragment>
+            ))}
+          </div>
+        )}
+
+        {plates > 0 && (
+          <Link
+            to={projectPath(featured)}
+            style={{
+              marginTop: 22,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '12px 14px',
+              background: ink,
+              color: paper,
+              textDecoration: 'none',
+            }}
+          >
+            <CapV2 size={10} color={paper}>View {String(plates).padStart(2, '0')} plates</CapV2>
+            <Arrow dir="right" size={14} strokeWidth={1.5} stroke={paper} />
+          </Link>
+        )}
+      </section>
+    );
+  }
+
   return (
-    <div className="h-full w-full" draggable onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={handleDrop}>
-      {children}
-    </div>
+    <section
+      style={{ background: paper, borderBottom: `1px solid ${ink}`, padding: '32px 40px 48px' }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <CapV2 size={11}>01 / 01</CapV2>
+          <CapV2 size={11} color={muted}>Featured · {featured.year} cover plate</CapV2>
+        </div>
+        <TagPillV2 hue={hue} label={`${featured.year} · ${featured.title}`} />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', alignItems: 'stretch', gap: 0 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: 600,
+            paddingRight: 40,
+          }}
+        >
+          {featured.imageUrl ? (
+            <img
+              src={featured.imageUrl}
+              alt={`${featured.title} cover plate`}
+              style={{ maxWidth: '100%', maxHeight: 600, width: 'auto', height: 'auto', display: 'block' }}
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+            />
+          ) : (
+            <div
+              style={{
+                width: '100%',
+                aspectRatio: '4 / 3',
+                background: PALETTE.greySoft,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <CapV2 size={11} color={muted}>No cover</CapV2>
+            </div>
+          )}
+        </div>
+
+        <div style={{ padding: '0 0 0 40px', display: 'flex', flexDirection: 'column' }}>
+          <MarkerTitleV2 title={featured.title} hue={hue} size={104} washHeight={0.5} />
+          {meta.length > 0 && (
+            <div style={{ marginTop: 36, display: 'grid', gridTemplateColumns: '100px 1fr', rowGap: 16, columnGap: 16 }}>
+              {meta.map(([k, v], i) => (
+                <React.Fragment key={i}>
+                  <CapV2 size={10} color={muted}>{k}</CapV2>
+                  <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 15, color: ink, lineHeight: 1.3 }}>{v}</span>
+                </React.Fragment>
+              ))}
+            </div>
+          )}
+          {plates > 0 && (
+            <Link
+              to={projectPath(featured)}
+              style={{
+                marginTop: 36,
+                alignSelf: 'flex-start',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '14px 18px',
+                background: ink,
+                color: paper,
+                textDecoration: 'none',
+              }}
+            >
+              <CapV2 size={11} color={paper}>View {String(plates).padStart(2, '0')} plates</CapV2>
+              <Arrow dir="right" size={16} strokeWidth={1.5} stroke={paper} />
+            </Link>
+          )}
+        </div>
+      </div>
+    </section>
   );
 };
 
-const AddProjectSection: React.FC<{ hoverColor: string }> = ({ hoverColor }) => (
-  <ModularSection
-    key="add-project"
-    to="/project/new"
-    title="Add project"
-    hoverColor={hoverColor}
-    preview={
-      <div className="pl-6 pr-4 mt-4">
-        <span className="font-mono text-xs text-textSecondary uppercase tracking-wider">
-          New project
-        </span>
-      </div>
-    }
-  />
-);
+interface ConceptProps {
+  description: string;
+  mobile?: boolean;
+}
 
-const MobileHomeLayout: React.FC<{
-  data: PortfolioData;
-  projectsByYear: Project[];
-}> = ({ data, projectsByYear }) => {
-  // Derive year range from projects
-  const years = data.projects.map((p) => parseInt(p.year, 10)).filter((n) => !Number.isNaN(n));
-  const minYear = years.length ? Math.min(...years) : null;
-  const maxYear = years.length ? Math.max(...years) : null;
-  const yearRange = minYear && maxYear ? (minYear === maxYear ? String(maxYear) : `${minYear}–${String(maxYear).slice(2)}`) : null;
+const ConceptSection: React.FC<ConceptProps> = ({ description, mobile }) => {
+  const ink = PALETTE.textPrimary;
+  const paras = paragraphs(description);
+  if (!paras.length) return null;
 
-  // Group by year for index section
-  const byYear = new Map<string, Project[]>();
-  for (const p of projectsByYear) {
-    const bucket = byYear.get(p.year) ?? [];
-    bucket.push(p);
-    byYear.set(p.year, bucket);
+  // First paragraph: split first sentence as quote.
+  const first = paras[0];
+  const sentenceEnd = first.search(/[.!?]\s/);
+  let quote = first;
+  let restFirst = '';
+  if (sentenceEnd > 0 && sentenceEnd < 200) {
+    quote = first.slice(0, sentenceEnd + 1);
+    restFirst = first.slice(sentenceEnd + 1).trim();
+  } else if (first.length > 100) {
+    const cut = first.lastIndexOf(' ', 100);
+    quote = first.slice(0, cut > 40 ? cut : 100);
+    restFirst = first.slice(cut > 40 ? cut : 100).trim();
   }
-  const yearKeys = Array.from(byYear.keys());
 
-  const P = PALETTE;
+  const bodyParas = restFirst ? [restFirst, ...paras.slice(1)] : paras.slice(1);
+
+  if (mobile) {
+    return (
+      <section style={{ borderBottom: `1px solid ${ink}` }}>
+        <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '18px 20px' }}>
+          <TagPillV2 hue={HUES.yellow} label="Concept" size={10} chip={10} />
+        </header>
+        <div style={{ padding: '20px 20px 0', borderBottom: `1px solid ${ink}` }}>
+          <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 44, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>{quote}</h2>
+        </div>
+        {bodyParas.length > 0 && (
+          <div style={{ padding: '20px 20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {bodyParas.map((p, i) => (
+              <p key={i} style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>{p}</p>
+            ))}
+          </div>
+        )}
+      </section>
+    );
+  }
 
   return (
-    <div className="h-screen w-full flex flex-col overflow-hidden bg-bgMain text-textPrimary">
-      {/* Scrollable content — pushed below fixed 48px MobileHeader */}
-      <div
-        style={{
-          position: 'fixed', top: 48, left: 0, right: 0, bottom: 0, zIndex: 1,
-          overflowY: 'auto', background: P.backgroundMain, scrollbarWidth: 'none',
-        }}
-      >
-        {/* Masthead */}
-        <div style={{ padding: '22px 18px 18px', borderBottom: `1px solid ${P.border}` }}>
-          {yearRange && (
-            <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.18em', color: P.textSecondary, marginBottom: 10 }}>
-              Portfolio · {yearRange}
-            </div>
-          )}
-          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 32, fontWeight: 700, lineHeight: 1.02, letterSpacing: '-0.01em' }}>
-            sphnsx
-          </div>
-          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 15, lineHeight: 1.45, color: P.textPrimary, marginTop: 10, maxWidth: 300 }}>
-            Silvia, London-based fine art photographer.
-          </div>
+    <section style={{ borderBottom: `1px solid ${ink}` }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '32px 40px', gap: 20 }}>
+        <TagPillV2 hue={HUES.yellow} label="Concept" />
+      </header>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'stretch' }}>
+        <div style={{ padding: '8px 40px 48px', display: 'flex', alignItems: 'flex-start' }}>
+          <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 72, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1.02 }}>{quote}</h2>
         </div>
+        <div style={{ padding: '14px 40px 48px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {bodyParas.map((p, i) => (
+            <p key={i} style={{ margin: 0, fontSize: 16, lineHeight: 1.6 }}>{p}</p>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
 
-        {/* About me row */}
-        <Link
-          to="/about"
-          style={{
-            textDecoration: 'none', color: P.textPrimary,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '16px 18px', borderBottom: `1px solid ${P.border}`,
-          }}
-        >
-          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', whiteSpace: 'nowrap' }}>About me</span>
-          <svg width="16" height="16" viewBox="0 0 40 40" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
-            <line x1="4" y1="20" x2="36" y2="20" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
-            <line x1="36" y1="20" x2="24" y2="10" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
-            <line x1="36" y1="20" x2="24" y2="30" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
-          </svg>
-        </Link>
+interface IndexProps {
+  years: string[];
+  byYear: Map<string, Project[]>;
+  mobile?: boolean;
+}
 
-        {/* Year index */}
-        <div style={{ padding: '18px 18px 8px', borderBottom: `1px solid ${P.border}` }}>
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.14em', color: P.textSecondary, marginBottom: 14 }}>
-            Projects — Index
-          </div>
-          {yearKeys.map((y) => (
-            <div key={y} style={{ marginBottom: 16 }}>
-              <div style={{ borderBottom: `1px solid ${P.border}`, paddingBottom: 4, marginBottom: 6, fontFamily: 'JetBrains Mono, monospace', fontSize: 12, letterSpacing: '0.12em' }}>{y}</div>
-              {byYear.get(y)!.map((p) => (
+const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
+  const ink = PALETTE.textPrimary;
+  const muted = PALETTE.textSecondary;
+
+  if (years.length === 0) return null;
+
+  if (mobile) {
+    return (
+      <section id="works" style={{ borderBottom: `1px solid ${ink}`, scrollMarginTop: 16 }}>
+        <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '18px 20px' }}>
+          <TagPillV2 hue={HUES.yellow} label="All works" size={10} chip={10} to="#works" />
+        </header>
+        {years.map((y, gi) => {
+          const rows = byYear.get(y) ?? [];
+          const hue = hueForYear(y);
+          return (
+            <div key={y} style={{ borderBottom: gi < years.length - 1 ? `1px solid ${ink}` : 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 8px' }}>
+                <YearMarkV2 year={y} hue={hue} size={36} barW={32} barH={8} />
+                <CapV2 size={10} color={muted}>
+                  {String(rows.length).padStart(2, '0')} / {String(rows.length).padStart(2, '0')}
+                </CapV2>
+              </div>
+              {rows.map((p) => {
+                const slash: string[] = [];
+                if (p.medium) slash.push(p.medium);
+                if (p.gallery.length > 0) slash.push(`${String(p.gallery.length).padStart(2, '0')} plates`);
+                if (p.locations?.length) slash.push(p.locations.join(' · '));
+                return (
+                  <Link
+                    key={p.id}
+                    to={projectPath(p)}
+                    style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '4px 20px 20px', textDecoration: 'none', color: ink }}
+                  >
+                    <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 28, fontWeight: 500, letterSpacing: '-0.03em', lineHeight: 0.98 }}>
+                      {p.title}
+                    </span>
+                    {slash.length > 0 && <CapV2 size={9} color={muted}>{slash.join(' · ')}</CapV2>}
+                  </Link>
+                );
+              })}
+            </div>
+          );
+        })}
+      </section>
+    );
+  }
+
+  return (
+    <section id="works" style={{ borderBottom: `1px solid ${ink}`, scrollMarginTop: 16 }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '32px 40px', gap: 20 }}>
+        <TagPillV2 hue={HUES.yellow} label="All works" to="#works" />
+      </header>
+      {years.map((y, gi) => {
+        const rows = byYear.get(y) ?? [];
+        const hue = hueForYear(y);
+        return (
+          <div key={y} style={{ borderBottom: gi < years.length - 1 ? `1px solid ${ink}` : 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '28px 40px 16px' }}>
+              <YearMarkV2 year={y} hue={hue} size={72} barW={56} barH={12} />
+              <CapV2 size={11} color={muted}>
+                {String(rows.length).padStart(2, '0')} / {String(rows.length).padStart(2, '0')}
+              </CapV2>
+            </div>
+            {rows.map((p, ri) => {
+              const slash: string[] = [];
+              if (p.medium) slash.push(p.medium);
+              if (p.gallery.length > 0) slash.push(`${String(p.gallery.length).padStart(2, '0')} plates`);
+              if (p.locations?.length) slash.push(p.locations.join(' · '));
+              return (
                 <Link
                   key={p.id}
                   to={projectPath(p)}
                   style={{
-                    textDecoration: 'none', color: P.textPrimary,
-                    display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
-                    padding: '6px 0', fontFamily: 'Inter, sans-serif', fontSize: 14,
+                    display: 'grid',
+                    gridTemplateColumns: '160px 1fr 320px 60px',
+                    alignItems: 'baseline',
+                    padding: '14px 40px 32px',
+                    gap: 20,
+                    textDecoration: 'none',
+                    color: ink,
                   }}
                 >
-                  <span>{p.title}</span>
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: P.textSecondary, letterSpacing: '0.12em' }}>↗</span>
+                  <CapV2 size={10} color={muted}>
+                    {String(ri + 1).padStart(2, '0')} / {String(rows.length).padStart(2, '0')}
+                  </CapV2>
+                  <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 56, fontWeight: 500, letterSpacing: '-0.04em', lineHeight: 0.95 }}>
+                    {p.title}
+                  </span>
+                  <CapV2 size={10} color={muted}>{slash.join(' · ')}</CapV2>
+                  <span style={{ textAlign: 'right' }}>
+                    <Arrow dir="right" size={22} strokeWidth={1.5} stroke={ink} />
+                  </span>
                 </Link>
-              ))}
-            </div>
-          ))}
+              );
+            })}
+          </div>
+        );
+      })}
+    </section>
+  );
+};
+
+interface AboutTeaserProps {
+  aboutMe: string;
+  mobile?: boolean;
+}
+
+const AboutTeaser: React.FC<AboutTeaserProps> = ({ aboutMe, mobile }) => {
+  const ink = PALETTE.textPrimary;
+  const paper = PALETTE.backgroundMain;
+  const paras = paragraphs(aboutMe);
+  if (!paras.length) return null;
+  // Fixed teaser line — the full bio lives at /about.
+  const intro = 'London-based fine art photographer (b. 1999) working in film, at the intersection of memory, fragility, and the quietly perceived.';
+
+  if (mobile) {
+    return (
+      <section style={{ borderBottom: `1px solid ${ink}` }}>
+        <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '18px 20px' }}>
+          <TagPillV2 hue={HUES.mint} label="About" size={10} chip={10} to="/about" />
+        </header>
+        <div style={{ padding: '20px 20px 0', borderBottom: `1px solid ${ink}` }}>
+          <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 80, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 1 }}>Silvia.</h2>
         </div>
-
-        {/* Covers — numbered title bar above image */}
-        <div>
-          {data.projects.map((p, i, arr) => (
-            <Link
-              key={p.id}
-              to={projectPath(p)}
-              style={{
-                display: 'block', textDecoration: 'none', color: P.textPrimary,
-                borderBottom: i < arr.length - 1 ? `1px solid ${P.border}` : 'none',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '14px 18px 10px' }}>
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
-                  <span style={{ color: P.textSecondary, marginRight: 8 }}>{String(i + 1).padStart(2, '0')}</span>
-                  {p.title}
-                </span>
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, color: P.textSecondary, letterSpacing: '0.12em' }}>{p.year}</span>
-              </div>
-              {p.imageUrl && (
-                <div style={{ padding: '0 18px 18px' }}>
-                  <img
-                    src={p.imageUrl}
-                    alt={p.title}
-                    style={{ width: '100%', display: 'block' }}
-                    onContextMenu={(e) => e.preventDefault()}
-                    onDragStart={(e) => e.preventDefault()}
-                  />
-                </div>
-              )}
-            </Link>
-          ))}
+        <div style={{ padding: '20px 20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>{intro}</p>
+          <Link
+            to="/about"
+            style={{
+              alignSelf: 'flex-start',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '11px 14px',
+              background: ink,
+              color: paper,
+              textDecoration: 'none',
+            }}
+          >
+            <CapV2 size={10} color={paper}>Read full bio</CapV2>
+            <Arrow dir="right" size={14} strokeWidth={1.5} stroke={paper} />
+          </Link>
         </div>
+      </section>
+    );
+  }
 
-        {/* Grey Contact footer */}
-        <Link
-          to="/contact"
-          style={{
-            textDecoration: 'none', color: P.textPrimary,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '16px 18px', background: P.greySoft, borderTop: `1px solid ${P.border}`,
-          }}
-        >
-          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', whiteSpace: 'nowrap' }}>Contact</span>
-          <svg width="16" height="16" viewBox="0 0 40 40" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
-            <line x1="4" y1="20" x2="36" y2="20" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
-            <line x1="36" y1="20" x2="24" y2="10" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
-            <line x1="36" y1="20" x2="24" y2="30" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
-          </svg>
-        </Link>
-
-        <div style={{ height: 28 }} aria-hidden />
+  return (
+    <section style={{ borderBottom: `1px solid ${ink}` }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '32px 40px', gap: 20 }}>
+        <TagPillV2 hue={HUES.mint} label="About" to="/about" />
+      </header>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'start' }}>
+        <div style={{ padding: '0 40px 48px', display: 'flex', alignItems: 'flex-start' }}>
+          <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 144, fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 1 }}>Silvia.</h2>
+        </div>
+        {/* Body text top-aligned with the cap height of "Silvia." (~22% of the 144px line). */}
+        <div style={{ padding: '32px 40px 48px', display: 'flex', flexDirection: 'column', gap: 22 }}>
+          <p style={{ margin: 0, fontSize: 18, lineHeight: 1.55, maxWidth: 520 }}>{intro}</p>
+          <Link
+            to="/about"
+            style={{
+              alignSelf: 'flex-start',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '12px 16px',
+              background: ink,
+              color: paper,
+              textDecoration: 'none',
+            }}
+          >
+            <CapV2 size={11} color={paper}>Read full bio</CapV2>
+            <Arrow dir="right" size={16} strokeWidth={1.5} stroke={paper} />
+          </Link>
+        </div>
       </div>
+    </section>
+  );
+};
+
+interface ContactSectionProps {
+  methods: ContactMethod[];
+  mobile?: boolean;
+}
+
+export const ContactRows: React.FC<ContactSectionProps> = ({ methods, mobile }) => {
+  const ink = PALETTE.textPrimary;
+  const muted = PALETTE.textSecondary;
+
+  if (!methods.length) return null;
+
+  if (mobile) {
+    return (
+      <div style={{ padding: '20px 20px 24px' }}>
+        {methods.map((c, idx) => {
+          const hue = CYCLE_HUES[idx % CYCLE_HUES.length];
+          const isEmail = c.value.includes('@') && !c.value.startsWith('http');
+          const href = isEmail ? `mailto:${c.value}` : c.value;
+          return (
+            <a
+              key={idx}
+              href={href}
+              target={isEmail ? undefined : '_blank'}
+              rel={isEmail ? undefined : 'noopener noreferrer'}
+              style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '18px 0', textDecoration: 'none', color: ink }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <ChipV2 color={hue} size={10} />
+                <CapV2 size={9} color={muted}>{String(idx + 1).padStart(2, '0')}</CapV2>
+                <CapV2 size={10}>{c.label}</CapV2>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 20, fontWeight: 500, letterSpacing: '-0.02em', wordBreak: 'break-all' }}>{c.value}</span>
+                <Arrow dir="right" size={18} strokeWidth={1.5} stroke={ink} />
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '0 40px 48px' }}>
+      {methods.map((c, idx) => {
+        const hue = CYCLE_HUES[idx % CYCLE_HUES.length];
+        const isEmail = c.value.includes('@') && !c.value.startsWith('http');
+        const href = isEmail ? `mailto:${c.value}` : c.value;
+        return (
+          <a
+            key={idx}
+            href={href}
+            target={isEmail ? undefined : '_blank'}
+            rel={isEmail ? undefined : 'noopener noreferrer'}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '40px 60px 180px 1fr 40px',
+              alignItems: 'baseline',
+              gap: 20,
+              padding: '26px 0',
+              textDecoration: 'none',
+              color: ink,
+            }}
+          >
+            <ChipV2 color={hue} size={14} />
+            <CapV2 size={10} color={muted}>{String(idx + 1).padStart(2, '0')}</CapV2>
+            <CapV2 size={11}>{c.label}</CapV2>
+            <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 36, fontWeight: 500, letterSpacing: '-0.025em' }}>{c.value}</span>
+            <span style={{ textAlign: 'right' }}>
+              <Arrow dir="right" size={22} strokeWidth={1.5} stroke={ink} />
+            </span>
+          </a>
+        );
+      })}
     </div>
   );
 };
 
-const ShowcaseView: React.FC<{ data: PortfolioData; onRefresh?: (updatedData?: PortfolioData) => void }> = ({ data, onRefresh }) => {
-  const isMobile = useIsMobile();
-  const { isAdmin } = useAdminAuth();
-  const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);
-  const mid = Math.ceil(data.projects.length / 2);
-  const middleProjects = data.projects.slice(0, mid);
-  const rightProjects = data.projects.slice(mid);
+/**
+ * Home Contact section: headline only + CTA to /contact. The actual contact
+ * details (email/instagram) are rendered only on the dedicated /contact page.
+ */
+const ContactSection: React.FC<{ mobile?: boolean }> = ({ mobile }) => {
+  const ink = PALETTE.textPrimary;
+  const paper = PALETTE.backgroundMain;
 
-  const addProjectInMiddle = isAdmin && middleProjects.length <= rightProjects.length;
-  const addProjectInRight = !addProjectInMiddle && isAdmin;
-  const leftLen = 2;
-  const middleLen = middleProjects.length + (addProjectInMiddle ? 1 : 0);
-  const rightLen = rightProjects.length + (addProjectInRight ? 1 : 0);
-  const totalSections = leftLen + middleLen + rightLen;
-
-  const { leftColors, middleColors, rightColors } = useMemo(
-    () => ({
-      leftColors: Array.from({ length: leftLen }, () => SECTION_HOVER_ACCENT),
-      middleColors: Array.from({ length: middleLen }, () => SECTION_HOVER_ACCENT),
-      rightColors: Array.from({ length: rightLen }, () => SECTION_HOVER_ACCENT),
-    }),
-    [leftLen, middleLen, rightLen]
+  const cta = (
+    <Link
+      to="/contact"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: mobile ? 8 : 10,
+        padding: mobile ? '12px 14px' : '14px 18px',
+        background: ink,
+        color: paper,
+        textDecoration: 'none',
+      }}
+    >
+      <CapV2 size={mobile ? 10 : 11} color={paper}>Send a message</CapV2>
+      <Arrow dir="right" size={mobile ? 14 : 16} strokeWidth={1.5} stroke={paper} />
+    </Link>
   );
 
-  const saved = useMemo(
-    () => loadHeights(leftLen, middleLen, rightLen),
-    [leftLen, middleLen, rightLen]
-  );
-
-  const [leftHeights, setLeftHeights] = useState<number[]>(() => {
-    const s = loadHeights(leftLen, middleLen, rightLen);
-    return s?.left ?? equalSplit(leftLen);
-  });
-  const [middleHeights, setMiddleHeights] = useState<number[]>(() => {
-    const s = loadHeights(leftLen, middleLen, rightLen);
-    if (s?.middle) return s.middle;
-    return heightsFromAspectRatios(
-      middleProjects.map((p) => p.coverAspectRatio ?? 1),
-      addProjectInMiddle
+  if (mobile) {
+    return (
+      <section style={{ borderBottom: `1px solid ${ink}` }}>
+        <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '18px 20px' }}>
+          <TagPillV2 hue={HUES.coral} label="Contact" size={10} chip={10} to="/contact" />
+        </header>
+        <div style={{ padding: '20px 20px 0' }}>
+          <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 80, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 1, textAlign: 'right' }}>Get in touch.</h2>
+        </div>
+        <div style={{ padding: '20px 20px 24px', display: 'flex', justifyContent: 'flex-end' }}>{cta}</div>
+      </section>
     );
-  });
-  const [rightHeights, setRightHeights] = useState<number[]>(() => {
-    const s = loadHeights(leftLen, middleLen, rightLen);
-    if (s?.right) return s.right;
-    return heightsFromAspectRatios(
-      rightProjects.map((p) => p.coverAspectRatio ?? 1),
-      addProjectInRight
-    );
-  });
-
-  useEffect(() => {
-    if (leftHeights.length !== leftLen) {
-      const s = loadHeights(leftLen, middleLen, rightLen);
-      setLeftHeights(s?.left ?? equalSplit(leftLen));
-    }
-    if (middleHeights.length !== middleLen) {
-      const s = loadHeights(leftLen, middleLen, rightLen);
-      setMiddleHeights(s?.middle ?? heightsFromAspectRatios(middleProjects.map((p) => p.coverAspectRatio ?? 1), addProjectInMiddle));
-    }
-    if (rightHeights.length !== rightLen) {
-      const s = loadHeights(leftLen, middleLen, rightLen);
-      setRightHeights(s?.right ?? heightsFromAspectRatios(rightProjects.map((p) => p.coverAspectRatio ?? 1), addProjectInRight));
-    }
-  }, [leftLen, middleLen, rightLen, middleProjects, rightProjects, addProjectInMiddle, addProjectInRight]);
-
-  const onLeftHeightsChange = useCallback((h: number[]) => {
-    setLeftHeights(h);
-    saveColumnHeights('left', h);
-  }, []);
-  const onMiddleHeightsChange = useCallback((h: number[]) => {
-    setMiddleHeights(h);
-    saveColumnHeights('middle', h);
-  }, []);
-  const onRightHeightsChange = useCallback((h: number[]) => {
-    setRightHeights(h);
-    saveColumnHeights('right', h);
-  }, []);
-
-  const allProjectIds = useMemo(
-    () => middleProjects.map((p) => p.id).concat(rightProjects.map((p) => p.id)),
-    [middleProjects, rightProjects]
-  );
-
-  const handleReorder = useCallback(
-    async (draggedId: string, targetId: string) => {
-      const newOrder = allProjectIds.filter((id) => id !== draggedId);
-      const idx = newOrder.indexOf(targetId);
-      if (idx === -1) return;
-      newOrder.splice(idx, 0, draggedId);
-      const updatedData = await reorderProjects(newOrder);
-      onRefresh?.(updatedData);
-    },
-    [allProjectIds, onRefresh]
-  );
-
-  const leftRows = useMemo(
-    () => [
-      <ModularSection
-        key="about"
-        to="/about"
-        title="About me"
-        hoverColor={leftColors[0]}
-        preview={<AboutMePreview text={data.aboutMe} />}
-      />,
-      <ModularSection
-        key="contact"
-        to="/contact"
-        title="Contact"
-        hoverColor={leftColors[1]}
-        background={PALETTE.greySoft}
-        preview={
-          <div className="pl-6 pr-4 mt-4">
-            <span className="font-mono text-xs text-textSecondary uppercase tracking-wider">
-              Get in touch
-            </span>
-          </div>
-        }
-      />,
-    ],
-    [data, leftColors]
-  );
-
-  const middleRows = useMemo(
-    () => [
-      ...middleProjects.map((project, i) => {
-        const preview = (
-          <ProjectPreview
-            project={project}
-            hoverColor={middleColors[i]}
-            dragDisabled={isAdmin}
-            forceHovered={hoveredProjectId === project.id}
-            onHoverChange={(h) => setHoveredProjectId(h ? project.id : null)}
-          />
-        );
-        return isAdmin ? (
-          <DraggableProjectRow key={project.id} projectId={project.id} onReorder={handleReorder}>
-            {preview}
-          </DraggableProjectRow>
-        ) : (
-          <React.Fragment key={project.id}>{preview}</React.Fragment>
-        );
-      }),
-      ...(addProjectInMiddle ? [<AddProjectSection key="add-project" hoverColor={middleColors[middleProjects.length]} />] : []),
-    ],
-    [data, middleProjects, middleColors, addProjectInMiddle, isAdmin, handleReorder, hoveredProjectId]
-  );
-
-  const rightRows = useMemo(
-    () => [
-      ...rightProjects.map((project, i) => {
-        const preview = (
-          <ProjectPreview
-            project={project}
-            hoverColor={rightColors[i]}
-            dragDisabled={isAdmin}
-            forceHovered={hoveredProjectId === project.id}
-            onHoverChange={(h) => setHoveredProjectId(h ? project.id : null)}
-          />
-        );
-        return isAdmin ? (
-          <DraggableProjectRow key={project.id} projectId={project.id} onReorder={handleReorder}>
-            {preview}
-          </DraggableProjectRow>
-        ) : (
-          <React.Fragment key={project.id}>{preview}</React.Fragment>
-        );
-      }),
-      ...(addProjectInRight ? [<AddProjectSection key="add-project" hoverColor={rightColors[rightProjects.length]} />] : []),
-    ],
-    [data, rightProjects, rightColors, addProjectInRight, isAdmin, handleReorder, hoveredProjectId]
-  );
-
-  const projectsByYear = useMemo(
-    () => [...data.projects].sort((a, b) => numericYear(b) - numericYear(a)),
-    [data.projects]
-  );
-
-  if (isMobile) {
-    return <MobileHomeLayout data={data} projectsByYear={projectsByYear} />;
   }
 
   return (
-    <ThreeColumnLayout
-      leftRows={leftRows}
-      middleRows={middleRows}
-      rightRows={rightRows}
-      leftHeights={leftHeights}
-      middleHeights={middleHeights}
-      rightHeights={rightHeights}
-      leftColors={leftColors}
-      middleColors={middleColors}
-      rightColors={rightColors}
-      onLeftHeightsChange={onLeftHeightsChange}
-      onMiddleHeightsChange={onMiddleHeightsChange}
-      onRightHeightsChange={onRightHeightsChange}
-      leftOverride={
-        <LeftIndexColumn
-          aboutHeadline="Silvia, London-based fine art photographer."
-          projects={data.projects}
-          hoveredProjectId={hoveredProjectId}
-          onHoverProject={setHoveredProjectId}
-        />
-      }
-    />
+    <section style={{ borderBottom: `1px solid ${ink}` }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '32px 40px', gap: 20 }}>
+        <TagPillV2 hue={HUES.coral} label="Contact" to="/contact" />
+      </header>
+      <div style={{ padding: '32px 40px 0' }}>
+        <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 168, fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 1, textAlign: 'right' }}>Get in touch.</h2>
+      </div>
+      <div style={{ padding: '32px 40px 48px', display: 'flex', justifyContent: 'flex-end' }}>{cta}</div>
+    </section>
+  );
+};
+
+/* ─── Component ───────────────────────────────────────────────── */
+
+const ShowcaseView: React.FC<ShowcaseProps> = ({ data }) => {
+  const isMobile = useIsMobile();
+  const { isAdmin } = useAdminAuth();
+
+  const { years, byYear } = useMemo(() => {
+    const map = new Map<string, Project[]>();
+    for (const p of data.projects) {
+      const list = map.get(p.year) ?? [];
+      list.push(p);
+      map.set(p.year, list);
+    }
+    const ys = Array.from(map.keys()).sort((a, b) => yearNum(b) - yearNum(a));
+    return { years: ys, byYear: map };
+  }, [data.projects]);
+
+  const featured = data.projects[0];
+  const methods = getContactMethods(data);
+
+  const paper = PALETTE.backgroundMain;
+  const ink = PALETTE.textPrimary;
+
+  return (
+    <div
+      className="fixed inset-0 flex flex-col overflow-y-auto"
+      style={{ background: paper, color: ink, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif' }}
+    >
+      <TopRibbon active="works" />
+      <WorksIndex years={years} byYear={byYear} mobile={isMobile} />
+      <AboutTeaser aboutMe={data.aboutMe} mobile={isMobile} />
+      <ContactSection mobile={isMobile} />
+      <Footer />
+    </div>
   );
 };
 

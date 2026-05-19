@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Default body type = Sukhumvit Set (sans). Serif is now an opt-in via
+ * inline `fontFamily: '"Source Serif 4", …'` on display headings, pull quotes,
+ * year marks, and the marker-title wash.
+ *
+ * Source Serif 4 is a variable font with an `opsz` axis (8…60); the "Subhead"
+ * optical size sits around 24. We pin `opsz: 24` site-wide so wherever serif
+ * renders, it uses the Subhead variant (sans fonts ignore the setting). The
+ * property inherits, so display headings inherit it from html automatically.
+ */
+html, body {
+  font-family: 'Sukhumvit Set', -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif;
+  font-optical-sizing: auto;
+  font-variation-settings: 'opsz' 24;
+}

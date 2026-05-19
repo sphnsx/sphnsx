@@ -6,54 +6,49 @@ import { updateProject, deleteProject } from '../services/storageService';
 import { compressImageDataUrl, getImageAspectRatio } from '../utils/imageCompress';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import RichTextEditor from './RichTextEditor';
-import SafeHtml from './SafeHtml';
 import { PortfolioData, Project } from '../types';
-import { DetailBreadcrumb, DetailGreyFooter, DetailHeading, DetailMetaRow, DetailRightBar } from './detailPrimitives';
 import { projectPath } from '../utils/slug';
-import AdminButton from './admin/AdminButton';
-
-const FullScreenDetail: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAdmin } = useAdminAuth();
-  const isMobile = useIsMobile();
-  const liftForAdminBar = isAdmin && !isMobile;
-  return (
-    <div
-      className="fixed left-0 right-0 top-0 bg-bgMain flex flex-col overflow-hidden"
-      style={{ bottom: liftForAdminBar ? 48 : 0 }}
-    >
-      {children}
-    </div>
-  );
-};
-
-const ProtectedImage: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
-  const bgClass = 'bg-bgMain';
-  if (!src) return (
-    <div className={`w-full aspect-[4/5] border border-dashed border-paletteBorder ${bgClass}`} aria-hidden />
-  );
-  return (
-    <div className={`relative w-full h-full overflow-hidden ${bgClass}`}>
-      <img
-        src={src}
-        alt={alt}
-        className={className ? `${className} w-full h-full object-contain` : 'w-full h-full object-contain'}
-        onContextMenu={(e) => e.preventDefault()}
-        onDragStart={(e) => e.preventDefault()}
-        style={{ pointerEvents: 'none' }}
-      />
-      <div className="absolute inset-0 z-10 bg-transparent" onContextMenu={(e) => e.preventDefault()} />
-    </div>
-  );
-};
+import { PALETTE, HUES, hueForYear } from '../constants';
+import Arrow from './Arrow';
+import TopRibbon from './optc/TopRibbon';
+import Footer from './optc/Footer';
+import CapV2 from './optc/CapV2';
+import TagPillV2 from './optc/TagPillV2';
+import MarkerTitleV2 from './optc/MarkerTitleV2';
+import AdminBtn from './optc/admin/AdminBtn';
 
 interface ProjectDetailPageProps {
   project: Project;
   onRefresh: (updatedData?: PortfolioData) => void;
-  /** Next project in navigation order (for the grey footer link). */
   nextProject?: Project;
+  /** 0-based index of this project in the full data.projects list. */
+  index?: number;
+  /** Total number of projects (for the `NN / NN` counter in the breadcrumb strip). */
+  total?: number;
 }
 
-const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialProject, onRefresh, nextProject }) => {
+/** Convert HTML/plain to paragraphs of plain text. */
+function paragraphs(raw: string): string[] {
+  if (!raw) return [];
+  const hasTags = /<[a-z][\s\S]*>/i.test(raw);
+  if (hasTags) {
+    const matches = raw.match(/<p[^>]*>([\s\S]*?)<\/p>/gi);
+    const stripTag = (s: string) =>
+      s.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, ' ').trim();
+    if (matches?.length) return matches.map(stripTag).filter(Boolean);
+    return [stripTag(raw)].filter(Boolean);
+  }
+  return raw.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+}
+
+const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
+  project: initialProject,
+  onRefresh,
+  nextProject,
+  index = 0,
+  total = 1,
+}) => {
+  const positionLabel = `${String(index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
   const isMobile = useIsMobile();
   const { isAdmin } = useAdminAuth();
   const navigate = useNavigate();
@@ -65,6 +60,9 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
   const [isDeleting, setIsDeleting] = useState(false);
 
   const project = isEditing ? editProject : initialProject;
+  const hue = hueForYear(project.year);
+  const plates = project.gallery.length;
+  const place = project.locations?.length ? project.locations.join(' · ') : '';
 
   const handleCoverFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -80,16 +78,6 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
     setEditProject((p) => ({ ...p, imageUrl: compressed, coverAspectRatio: ratio }));
   }, []);
 
-  const setCoverFromGallery = useCallback((index: number) => {
-    const img = editProject.gallery[index];
-    if (!img) return;
-    getImageAspectRatio(img).then((ratio) => {
-      setEditProject((p) => ({ ...p, imageUrl: img, coverAspectRatio: ratio }));
-    }).catch(() => {
-      setEditProject((p) => ({ ...p, imageUrl: img }));
-    });
-  }, [editProject.gallery]);
-
   const handleEditGalleryFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;
@@ -103,7 +91,11 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
       });
       loaded.push(await compressImageDataUrl(base64));
     }
-    setEditProject((p) => ({ ...p, gallery: [...p.gallery, ...loaded], imageUrl: p.imageUrl || loaded[0] }));
+    setEditProject((p) => ({
+      ...p,
+      gallery: [...p.gallery, ...loaded],
+      imageUrl: p.imageUrl || loaded[0],
+    }));
     setIsEditUploading(false);
   };
 
@@ -111,27 +103,6 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
     if (editProject.gallery.length <= 1) return;
     const next = editProject.gallery.filter((_, i) => i !== index);
     setEditProject((p) => ({ ...p, gallery: next, imageUrl: next[0] ?? p.imageUrl }));
-  };
-
-  const handleReplaceImage = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = '';
-    setIsEditUploading(true);
-    const base64 = await new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.readAsDataURL(file);
-    });
-    const compressed = await compressImageDataUrl(base64);
-    const next = [...editProject.gallery];
-    next[index] = compressed;
-    setEditProject((p) => ({
-      ...p,
-      gallery: next,
-      imageUrl: index === 0 ? compressed : p.imageUrl,
-    }));
-    setIsEditUploading(false);
   };
 
   const handleSave = async () => {
@@ -147,16 +118,21 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
       setIsSaving(true);
       const compressed = await Promise.all(editProject.gallery.map((url) => compressImageDataUrl(url)));
       const coverIndex = editProject.gallery.findIndex((u) => u === editProject.imageUrl);
-      const toSave = { ...editProject, gallery: compressed, imageUrl: coverIndex >= 0 ? compressed[coverIndex] : compressed[0] };
+      const toSave = {
+        ...editProject,
+        gallery: compressed,
+        imageUrl: coverIndex >= 0 ? compressed[coverIndex] : compressed[0],
+      };
       await updateProject(toSave.id, toSave);
       onRefresh();
       setIsEditing(false);
+      toast.success('Project saved');
     } catch (err) {
       console.error(err);
       if (err instanceof DOMException && err.name === 'QuotaExceededError') {
-        alert('Storage limit reached (browser limit). Try fewer images, smaller file sizes, or remove images from other projects.');
+        toast.error('Storage limit reached.');
       } else {
-        alert('Failed to update project.');
+        toast.error(err instanceof Error ? err.message : 'Failed to update project.');
       }
     } finally {
       setIsSaving(false);
@@ -176,343 +152,380 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ project: initialP
     }
   };
 
-  const readHeader = !isMobile && !isEditing ? (
-    <>
-      <div style={{ height: 48 }} aria-hidden />
-      <DetailBreadcrumb trail={['SPHNSX', 'WORKS', project.title]} />
-    </>
-  ) : null;
+  const ink = PALETTE.textPrimary;
+  const muted = PALETTE.textSecondary;
+  const paper = PALETTE.backgroundMain;
 
-  const readFooter = !isMobile && !isEditing && nextProject ? (
-    <DetailGreyFooter
-      to={projectPath(nextProject)}
-      label={`Next · ${nextProject.title}`}
-    />
-  ) : null;
+  const meta: Array<[string, string]> = [];
+  if (project.year) meta.push(['Year', project.year]);
+  if (project.medium) meta.push(['Medium', project.medium]);
+  if (plates > 0) meta.push(['Plates', `${String(plates).padStart(2, '0')} in series`]);
+  if (place) meta.push(['Place', place]);
 
-  const textBlock = (
-    <div className={isMobile
-      ? 'w-full min-w-0 min-h-[50vh] overflow-y-auto pt-6 px-6 pb-12'
-      : `w-2/5 min-w-0 flex flex-col ${showAdminActions ? 'pb-0' : ''}`}>
-      {readHeader}
-      <div className={isMobile ? '' : 'flex-1 min-h-0 overflow-y-auto'} style={isMobile ? undefined : { padding: showAdminActions ? '48px 48px 96px' : '48px 48px 24px' }}>
-      <div className="max-w-xl">
-        {!isMobile && isEditing ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="block font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Title</label>
-                  <input
-                    type="text"
-                    className="w-full p-3 border border-paletteBorder bg-transparent font-mono text-sm focus:outline-none"
-                    value={editProject.title}
-                    onChange={(e) => setEditProject((p) => ({ ...p, title: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="block font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Year</label>
-                  <input
-                    type="text"
-                    className="w-full p-3 border border-paletteBorder bg-transparent font-mono text-sm focus:outline-none"
-                    value={editProject.year}
-                    onChange={(e) => setEditProject((p) => ({ ...p, year: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="block font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Description</label>
-                  <RichTextEditor
-                    value={editProject.description}
-                    onChange={(html) => setEditProject((p) => ({ ...p, description: html }))}
-                    placeholder="Project description…"
-                    minHeight="10rem"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <AdminButton type="button" variant="primary" size="md" onClick={handleSave} disabled={isSaving}>
-                    {isSaving ? 'Saving…' : 'Save'}
-                  </AdminButton>
-                  <AdminButton type="button" size="md" onClick={() => { setIsEditing(false); setEditProject(initialProject); }}>
-                    Cancel
-                  </AdminButton>
-                </div>
-              </div>
-            ) : (
-              <>
-                {isMobile ? (
-                  <>
-                    <p className="font-mono text-xs uppercase tracking-wider text-textSecondary mb-2">{[project.year, ...(project.locations ?? [])].filter(Boolean).join(' · ')}</p>
-                    <h1 className="text-3xl font-bold mb-6">{project.title}</h1>
-                  </>
-                ) : (
-                  <>
-                    <DetailHeading title={project.title} />
-                    <DetailMetaRow
-                      items={[
-                        { label: 'Year', value: project.year },
-                        ...((project.locations ?? []).length
-                          ? [{
-                              label: (project.locations ?? []).length > 1 ? 'Places' : 'Place',
-                              value: (project.locations ?? []).join(' · '),
-                            }]
-                          : []),
-                      ]}
-                    />
-                  </>
-                )}
-                <div className="text-base leading-relaxed text-textPrimary [&_p]:mb-8 [&_p:last-child]:mb-0">
-                  <SafeHtml html={project.description} />
-                </div>
-                {showAdminActions && (
-                  <div className="flex gap-2 mt-6">
-                    <AdminButton
-                      type="button"
-                      size="sm"
-                      onClick={() => { setEditProject(initialProject); setIsEditing(true); }}
-                    >
-                      Edit
-                    </AdminButton>
-                    <AdminButton
-                      type="button"
-                      size="sm"
-                      variant="ghost-destructive"
-                      onClick={handleDelete}
-                      disabled={isDeleting}
-                    >
-                      {isDeleting ? 'Deleting…' : 'Delete project'}
-                    </AdminButton>
-                  </div>
-                )}
-              </>
-            )}
-      </div>
-      </div>
-      {readFooter}
-    </div>
-  );
+  // Pull quote = the entire first paragraph of the description (verbatim).
+  // Body = every paragraph after it.
+  const allParas = paragraphs(project.description);
+  const pullQuote = allParas[0] ?? '';
+  const bodyParas: string[] = allParas.slice(1);
 
-  const galleryRightBar = !isMobile && !isEditing ? (
-    <>
-      <div style={{ height: 48 }} aria-hidden />
-      <DetailRightBar
-        left={`Plates · ${String(project.gallery.length).padStart(2, '0')} total`}
-        right={<>Scroll {'\u2193'}</>}
-      />
-    </>
-  ) : null;
-
-  const galleryBlock = (
-    <div className={isMobile
-      ? 'w-full min-w-0 min-h-[70vh] max-h-[70vh] overflow-y-auto pt-6 px-6 pb-6'
-      : 'w-3/5 min-w-0 flex flex-col'}>
-      {galleryRightBar}
-      <div className={isMobile ? '' : 'flex-1 min-h-0 overflow-y-auto'}>
-          {!isMobile && isEditing ? (
-            <div className="space-y-4 px-6 pt-6 pb-24">
-              <div>
-                <p className="font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Cover</p>
-                {project.imageUrl ? (
-                  <img src={project.imageUrl} alt="Cover" className="max-h-64 w-auto border border-paletteBorder" />
-                ) : (
-                  <div className="max-h-64 h-64 border border-paletteBorder flex items-center justify-center font-mono text-xs text-textSecondary">No cover</div>
-                )}
-                <div className="mt-2 flex gap-2">
-                  <AdminButton size="sm" asLabel>
-                    Change cover
-                    <input type="file" accept="image/*" className="hidden" onChange={handleCoverFile} />
-                  </AdminButton>
-                </div>
-              </div>
-              <div>
-                <p className="font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Gallery layout</p>
-                <div className="flex gap-4 mb-2">
-                  <label className="flex items-center gap-2 font-mono text-sm cursor-pointer">
-                    <input
-                      type="radio"
-                      name="galleryColumns"
-                      checked={(editProject.galleryColumns ?? 1) === 1}
-                      onChange={() => setEditProject((p) => ({ ...p, galleryColumns: 1 }))}
-                      className="border border-paletteBorder"
-                    />
-                    One column
-                  </label>
-                  <label className="flex items-center gap-2 font-mono text-sm cursor-pointer">
-                    <input
-                      type="radio"
-                      name="galleryColumns"
-                      checked={editProject.galleryColumns === 2}
-                      onChange={() => setEditProject((p) => ({ ...p, galleryColumns: 2 }))}
-                      className="border border-paletteBorder"
-                    />
-                    Two columns
-                  </label>
-                  <label className="flex items-center gap-2 font-mono text-sm cursor-pointer">
-                    <input
-                      type="radio"
-                      name="galleryColumns"
-                      checked={editProject.galleryColumns === 3}
-                      onChange={() => setEditProject((p) => ({ ...p, galleryColumns: 3 }))}
-                      className="border border-paletteBorder"
-                    />
-                    Three columns
-                  </label>
-                </div>
-                <p className="font-mono text-xs uppercase tracking-wider text-textPrimary mb-2">Gallery</p>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="block w-full text-sm font-mono file:mr-4 file:py-2 file:px-4 file:border file:border-paletteBorder file:bg-bgMain file:font-mono file:text-xs file:uppercase file:tracking-wider file:text-textPrimary file:hover:bg-neutral-800 file:hover:text-white file:transition-colors file:duration-150 file:rounded-sm mb-2"
-                  onChange={handleEditGalleryFiles}
-                />
-                <div className="flex flex-wrap gap-4">
-                  {project.gallery.map((img, i) => (
-                    <div key={i} className="flex flex-col">
-                      <img src={img} alt="" className="max-h-24 w-auto object-contain border border-paletteBorder" />
-                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <button
-                          type="button"
-                          onClick={() => setCoverFromGallery(i)}
-                          className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white transition-colors duration-150 rounded-sm"
-                        >
-                          Set as cover
-                        </button>
-                        <label className="font-mono text-xs uppercase tracking-wider px-2 py-1 border border-paletteBorder bg-bgMain text-textPrimary hover:bg-neutral-800 hover:text-white cursor-pointer transition-colors duration-150 rounded-sm">
-                          Replace
-                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleReplaceImage(i, e)} />
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(i)}
-                          disabled={project.gallery.length <= 1}
-                          className="font-mono text-xs uppercase tracking-wider px-2 py-1 bg-destructive text-white hover:opacity-90 disabled:opacity-50 transition-opacity duration-150 rounded-sm"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              {project.gallery && project.gallery.length > 0 ? (
-                <>
-                  <div className="h-6 shrink-0" aria-hidden />
-                  <div className={`grid gap-0 w-full items-start ${project.galleryColumns === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : project.galleryColumns === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
-                  {project.gallery.map((img, index) => (
-                    <div key={index} className="w-full min-w-0">
-                      <div className="relative w-full">
-                        <img
-                          src={img}
-                          alt={`${project.title} ${index + 1}`}
-                          className="w-full block"
-                          onContextMenu={(e) => e.preventDefault()}
-                          onDragStart={(e) => e.preventDefault()}
-                          style={{ pointerEvents: 'none' }}
-                        />
-                        <div className="absolute inset-0 z-10 bg-transparent" onContextMenu={(e) => e.preventDefault()} aria-hidden />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                </>
-              ) : null}
-            </>
-          )}
-      </div>
-    </div>
-  );
-
+  // ── Mobile path ────────────────────────────────────────────────
   if (isMobile) {
-    const P = { border: '#333333', bgMain: '#FAFAFA', greySoft: '#E8E8E8', textPrimary: '#1a1a1a', textSecondary: '#737373' };
     return (
-      <FullScreenDetail>
-        <div className="flex flex-col" style={{ paddingTop: 48, height: '100%' }}>
-          <DetailBreadcrumb compact trail={['SPHNSX', 'WORKS', project.title]} />
+      <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: paper, color: ink }}>
+        <TopRibbon active="works" />
+        <div style={{ padding: '12px 20px', borderBottom: `1px solid ${ink}`, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <Arrow dir="left" size={11} stroke={muted} />
+            <CapV2 size={9} color={muted}>Works</CapV2>
+          </Link>
+          <CapV2 size={9} color={muted}>/</CapV2>
+          <CapV2 size={9} color={muted}>{project.year}</CapV2>
+          <CapV2 size={9} color={muted}>/</CapV2>
+          <CapV2 size={9}>{project.title}</CapV2>
+        </div>
 
-          {/* Scrollable content */}
-          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: P.bgMain, scrollbarWidth: 'none' as const }}>
-            {/* Hero image */}
-            {project.gallery[0] && (
+        {/* HERO */}
+        <section style={{ padding: '20px 20px 28px', borderBottom: `1px solid ${ink}` }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+            <TagPillV2 hue={hue} label={project.year} size={10} chip={10} />
+          </div>
+          {project.imageUrl ? (
+            <div style={{ display: 'flex', justifyContent: 'center', minHeight: 220, marginBottom: 22 }}>
               <img
-                src={project.gallery[0]}
-                alt={project.title}
+                src={project.imageUrl}
+                alt={`${project.title} cover plate`}
+                style={{ maxWidth: '100%', maxHeight: 320, width: 'auto', height: 'auto', display: 'block' }}
+                onContextMenu={(e) => e.preventDefault()}
+                onDragStart={(e) => e.preventDefault()}
+              />
+            </div>
+          ) : null}
+          <MarkerTitleV2 title={project.title} hue={hue} size={64} washHeight={0.5} />
+          {meta.length > 0 && (
+            <div style={{ marginTop: 22, display: 'grid', gridTemplateColumns: '72px 1fr', rowGap: 10, columnGap: 12 }}>
+              {meta.map(([k, v], i) => (
+                <React.Fragment key={i}>
+                  <CapV2 size={9} color={muted}>{k}</CapV2>
+                  <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 13, color: ink, lineHeight: 1.3 }}>{v}</span>
+                </React.Fragment>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* STATEMENT */}
+        {allParas.length > 0 && (
+          <section style={{ borderBottom: `1px solid ${ink}` }}>
+            <header style={{ display: 'flex', justifyContent: 'flex-end', padding: '18px 20px' }}>
+              <TagPillV2 hue={HUES.yellow} label="Statement" size={10} chip={10} />
+            </header>
+            <div style={{ padding: '8px 20px 0', borderBottom: `1px solid ${ink}` }}>
+              <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 32, fontWeight: 400, fontStyle: 'italic', letterSpacing: '-0.02em', lineHeight: 1.2 }}>{pullQuote}</h2>
+            </div>
+            <div style={{ padding: '20px 20px 28px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {bodyParas.map((p, i) => (
+                <p key={i} style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>{p}</p>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* PLATES */}
+        <section style={{ borderBottom: `1px solid ${ink}` }} id="plates">
+          <header style={{ display: 'flex', justifyContent: 'flex-end', padding: '18px 20px' }}>
+            <TagPillV2 hue={HUES.coral} label="Plates" size={10} chip={10} />
+          </header>
+          {project.gallery.length > 0 ? (
+            project.gallery.map((src, i) => (
+              <img
+                key={i}
+                src={src}
+                alt={`${project.title} plate ${i + 1}`}
                 style={{ width: '100%', display: 'block' }}
                 onContextMenu={(e) => e.preventDefault()}
                 onDragStart={(e) => e.preventDefault()}
               />
-            )}
-
-            {/* Title + meta */}
-            <div style={{ padding: '22px 18px 10px' }}>
-              <h1 style={{ fontFamily: 'Inter, sans-serif', fontSize: 30, fontWeight: 700, lineHeight: 1.05, letterSpacing: '-0.01em', margin: '0 0 14px', color: P.textPrimary }}>{project.title}</h1>
-              <div style={{ borderTop: `1px solid ${P.border}`, borderBottom: '1px solid #e4e4e4', padding: '8px 0', display: 'flex', flexWrap: 'wrap', gap: 14, fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
-                <span><span style={{ color: P.textSecondary }}>Year </span>{project.year}</span>
-                {(project.locations ?? []).length > 0 && (
-                  <span><span style={{ color: P.textSecondary }}>{(project.locations ?? []).length > 1 ? 'Places ' : 'Place '}</span>{(project.locations ?? []).join(' · ')}</span>
-                )}
-              </div>
+            ))
+          ) : isAdmin ? (
+            <div style={{ padding: '20px', textAlign: 'center' }}>
+              <CapV2 size={10} color={muted}>Upload plates via Admin</CapV2>
             </div>
+          ) : null}
+        </section>
 
-            {/* Description */}
-            <div style={{ padding: '14px 18px 26px', fontSize: 15, lineHeight: 1.6, color: P.textPrimary }}>
-              <SafeHtml html={project.description} />
-            </div>
+        {/* Bottom nav */}
+        <section style={{ padding: '20px', borderBottom: `1px solid ${ink}` }}>
+          <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
+            <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 18, fontWeight: 500 }}>{"<"} All works</span>
+          </Link>
+        </section>
 
-            {/* Plates bar */}
-            {project.gallery.length > 0 && (
-              <div style={{ padding: '12px 18px', borderTop: `1px solid ${P.border}`, borderBottom: `1px solid ${P.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: P.textSecondary }}>
-                  Plates · {String(project.gallery.length).padStart(2, '0')} total
-                </span>
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.12em', color: P.textSecondary }}>Scroll ↓</span>
-              </div>
-            )}
-
-            {/* Gallery plates — edge-to-edge, no gaps */}
-            <div>
-              {project.gallery.map((src, i) => (
-                <img
-                  key={i}
-                  src={src}
-                  alt={`${project.title} ${i + 1}`}
-                  style={{ width: '100%', display: 'block' }}
-                  onContextMenu={(e) => e.preventDefault()}
-                  onDragStart={(e) => e.preventDefault()}
-                />
-              ))}
-            </div>
-
-            <div style={{ height: 28 }} aria-hidden />
-          </div>
-
-          {/* Grey Next footer */}
-          {nextProject && (
-            <Link
-              to={projectPath(nextProject)}
-              style={{ textDecoration: 'none', color: P.textPrimary, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: P.greySoft, borderTop: `1px solid ${P.border}`, flexShrink: 0 }}
-            >
-              <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', whiteSpace: 'nowrap' }}>Next · {nextProject.title}</span>
-              <svg width="16" height="16" viewBox="0 0 40 40" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
-                <line x1="4" y1="20" x2="36" y2="20" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
-                <line x1="36" y1="20" x2="24" y2="10" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
-                <line x1="36" y1="20" x2="24" y2="30" stroke={P.textPrimary} strokeWidth="1.5" strokeLinecap="square" />
-              </svg>
-            </Link>
-          )}
-        </div>
-      </FullScreenDetail>
+        <Footer />
+      </div>
     );
   }
 
+  // ── Desktop path ───────────────────────────────────────────────
+
+  // Editing inline edit view (preserve existing flow, gated)
+  if (showAdminActions && isEditing) {
+    return (
+      <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: paper, color: ink }}>
+        <TopRibbon active="works" />
+        <section style={{ padding: '32px 40px', borderBottom: `1px solid ${ink}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <CapV2 size={10} color={muted}>Editing project</CapV2>
+            <h1 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>{editProject.title || initialProject.title}.</h1>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <AdminBtn danger onClick={handleDelete} disabled={isDeleting}>{isDeleting ? 'Deleting…' : 'Delete'}</AdminBtn>
+            <AdminBtn onClick={() => { setIsEditing(false); setEditProject(initialProject); }}>Discard</AdminBtn>
+            <AdminBtn primary onClick={handleSave} disabled={isSaving}>{isSaving ? 'Saving…' : 'Save & publish'}</AdminBtn>
+          </div>
+        </section>
+        <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr' }}>
+          <div style={{ borderRight: `1px solid ${ink}`, padding: '32px 32px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+            {([
+              ['Title', editProject.title, (v: string) => setEditProject((p) => ({ ...p, title: v }))],
+              ['Year', editProject.year, (v: string) => setEditProject((p) => ({ ...p, year: v }))],
+              ['Medium', editProject.medium ?? '', (v: string) => setEditProject((p) => ({ ...p, medium: v }))],
+            ] as const).map(([label, value, setter]) => (
+              <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <CapV2 size={10} color={muted}>{label}</CapV2>
+                <input
+                  value={value}
+                  onChange={(e) => setter(e.target.value)}
+                  style={{
+                    fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif',
+                    fontSize: 18,
+                    padding: '12px 14px',
+                    background: paper,
+                    border: `1px solid ${ink}`,
+                    color: ink,
+                    outline: 'none',
+                    borderRadius: 0,
+                  }}
+                />
+              </div>
+            ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <CapV2 size={10} color={muted}>Statement</CapV2>
+              <RichTextEditor
+                value={editProject.description}
+                onChange={(html) => setEditProject((p) => ({ ...p, description: html }))}
+                placeholder="Project description…"
+                minHeight="12rem"
+              />
+            </div>
+          </div>
+          <div style={{ padding: '32px 32px 40px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+              <CapV2 size={10}>Plates · {String(editProject.gallery.length).padStart(2, '0')}</CapV2>
+              <label style={{ cursor: 'pointer' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 14px', border: `1px solid ${ink}`, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', color: ink }}>+ Upload</span>
+                <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleEditGalleryFiles} />
+              </label>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {editProject.gallery.map((src, i) => (
+                <div key={i} style={{ position: 'relative', border: `1px solid ${ink}`, aspectRatio: '4/5', overflow: 'hidden' }}>
+                  <img src={src} alt={`Plate ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  <div style={{ position: 'absolute', top: 8, left: 8 }}>
+                    <CapV2 size={9} color={paper}>{String(i + 1).padStart(2, '0')}</CapV2>
+                  </div>
+                  <div style={{ position: 'absolute', bottom: 8, right: 8, display: 'flex', gap: 4 }}>
+                    <button
+                      type="button"
+                      onClick={() => setEditProject((p) => ({ ...p, imageUrl: src }))}
+                      style={{ background: paper, border: `1px solid ${ink}`, padding: '4px 8px', fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', cursor: 'pointer' }}
+                    >
+                      {editProject.imageUrl === src ? '★' : 'Cover'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(i)}
+                      style={{ background: paper, border: `1px solid ${PALETTE.destructive}`, padding: '4px 8px', fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: PALETTE.destructive, cursor: 'pointer' }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <label style={{ cursor: 'pointer', aspectRatio: '4/5', border: `1px dashed ${ink}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, color: muted, background: 'rgba(0,0,0,0.02)' }}>
+                <span style={{ fontSize: 32, fontWeight: 300 }}>+</span>
+                <CapV2 size={9} color={muted}>Drop image</CapV2>
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverFile} />
+              </label>
+            </div>
+            {isEditUploading && (
+              <div style={{ marginTop: 12 }}>
+                <CapV2 size={10} color={muted}>Uploading…</CapV2>
+              </div>
+            )}
+          </div>
+        </section>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Default desktop public view
   return (
-    <FullScreenDetail>
-      <main className="flex-1 min-h-0 flex overflow-hidden">
-        {textBlock}
-        <div className="w-px shrink-0 bg-paletteBorder" aria-hidden />
-        {galleryBlock}
-      </main>
-    </FullScreenDetail>
+    <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: paper, color: ink }}>
+      <TopRibbon active="works" />
+
+      {/* Breadcrumb */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '16px 40px',
+          borderBottom: `1px solid ${ink}`,
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <Arrow dir="left" size={13} stroke={muted} />
+            <CapV2 size={11} color={muted}>Works</CapV2>
+          </Link>
+          <CapV2 size={11} color={muted}>/</CapV2>
+          <CapV2 size={11} color={muted}>{project.year}</CapV2>
+          <CapV2 size={11} color={muted}>/</CapV2>
+          <CapV2 size={11}>{project.title}</CapV2>
+        </div>
+        {showAdminActions ? (
+          <button
+            type="button"
+            onClick={() => { setEditProject(initialProject); setIsEditing(true); }}
+            style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', color: ink, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <CapV2 size={11}>Edit</CapV2>
+            <Arrow dir="right" size={13} stroke={ink} />
+          </button>
+        ) : (
+          <CapV2 size={11} color={muted}>{positionLabel}</CapV2>
+        )}
+      </div>
+
+      {/* HERO — title + meta only (cover plate image + counter removed per request) */}
+      <section style={{ background: paper, borderBottom: `1px solid ${ink}`, padding: '40px 40px 56px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 32 }}>
+          <TagPillV2 hue={hue} label={project.year} />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <MarkerTitleV2 title={project.title} hue={hue} size={120} washHeight={0.5} />
+          {meta.length > 0 && (
+            <div style={{ marginTop: 36, display: 'grid', gridTemplateColumns: '100px 1fr', rowGap: 16, columnGap: 16, maxWidth: 520 }}>
+              {meta.map(([k, v], i) => (
+                <React.Fragment key={i}>
+                  <CapV2 size={10} color={muted}>{k}</CapV2>
+                  <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 15, color: ink, lineHeight: 1.3 }}>{v}</span>
+                </React.Fragment>
+              ))}
+            </div>
+          )}
+          {plates > 0 && (
+            <a
+              href="#plates"
+              style={{
+                marginTop: 36,
+                alignSelf: 'flex-start',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '14px 18px',
+                background: ink,
+                color: paper,
+                textDecoration: 'none',
+              }}
+            >
+              <CapV2 size={11} color={paper}>Browse all {String(plates).padStart(2, '0')} plates</CapV2>
+              <Arrow dir="right" size={13} stroke={paper} />
+            </a>
+          )}
+        </div>
+      </section>
+
+      {/* STATEMENT + PLATES — merged 2-col: left 2/5 statement text, right 3/5 stacked plates */}
+      {(allParas.length > 0 || project.gallery.length > 0) && (
+        <section style={{ borderBottom: `1px solid ${ink}` }} id="plates">
+          {allParas.length > 0 && (
+            <>
+              <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '32px 40px', gap: 20 }}>
+                <TagPillV2 hue={HUES.yellow} label="Statement" />
+              </header>
+              <div style={{ padding: '32px 40px 32px', borderBottom: `1px solid ${ink}` }}>
+                {/* Editorial pull quote: lighter weight, italic, generous leading — easier to read for long sentences. */}
+                <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 68, fontWeight: 400, fontStyle: 'italic', letterSpacing: '-0.025em', lineHeight: 1.18, maxWidth: 1100 }}>{pullQuote}</h2>
+              </div>
+            </>
+          )}
+          {/*
+            Section height is driven by the left column (statement text).
+            The right column is positioned absolutely so it doesn't push the
+            section taller; it scrolls internally to access the full gallery.
+          */}
+          <div style={{ position: 'relative' }}>
+            {/* Left 2/5 — all body paragraphs stacked (sets section height) */}
+            <div style={{ width: '40%', padding: '32px 40px', borderRight: `1px solid ${ink}`, display: 'flex', flexDirection: 'column', gap: 18, boxSizing: 'border-box' }}>
+              {bodyParas.map((p, i) => (
+                <p key={i} style={{ margin: 0, fontSize: 16, lineHeight: 1.65 }}>{p}</p>
+              ))}
+            </div>
+            {/* Right 3/5 — plates stacked, independently scrollable */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                bottom: 0,
+                width: '60%',
+                overflowY: 'auto',
+              }}
+            >
+              {project.gallery.length > 0 ? (
+                project.gallery.map((src, i) => (
+                  <img
+                    key={i}
+                    src={src}
+                    alt={`${project.title} plate ${i + 1}`}
+                    style={{ width: '100%', display: 'block' }}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                  />
+                ))
+              ) : isAdmin ? (
+                <div style={{ padding: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <CapV2 size={11} color={muted}>Upload plates via Admin</CapV2>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Bottom nav — both sides share the same chevron+label layout */}
+      <section style={{ borderBottom: `1px solid ${ink}`, padding: '32px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+          <Arrow dir="left" size={22} stroke={ink} />
+          <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em' }}>All works</span>
+        </Link>
+        {nextProject ? (
+          <Link
+            to={projectPath(nextProject)}
+            style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}
+          >
+            <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Next</span>
+            <Arrow dir="right" size={22} stroke={ink} />
+          </Link>
+        ) : null}
+      </section>
+
+      <Footer />
+    </div>
   );
 };
 

@@ -1,47 +1,190 @@
 import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
-import { useIsMobile } from '../hooks/useMediaQuery';
-import { addProject } from '../services/storageService';
+import { addProject, reorderProjects } from '../services/storageService';
 import { compressImageDataUrl, getImageAspectRatio } from '../utils/imageCompress';
+import Arrow from './Arrow';
+import toast from 'react-hot-toast';
 import RichTextEditor from './RichTextEditor';
-import Breadcrumb from './Breadcrumb';
-import AdminButton from './admin/AdminButton';
-import AdminInput from './admin/AdminInput';
 import LocationsField from './admin/LocationsField';
 import { PortfolioData, Project } from '../types';
 import { isReservedSlug, projectPath, slugify } from '../utils/slug';
+import { PALETTE, HUES } from '../constants';
+import AdminTop from './optc/admin/AdminTop';
+import AdminBtn from './optc/admin/AdminBtn';
+import CapV2 from './optc/CapV2';
+import ChipV2 from './optc/ChipV2';
+import Footer from './optc/Footer';
 
 interface NewProjectPageProps {
   data: PortfolioData;
   onRefresh: (updatedData?: PortfolioData) => void;
 }
 
-const DragHandle: React.FC = () => (
-  <svg width="10" height="14" viewBox="0 0 10 14" className="text-textSecondary cursor-grab" aria-hidden>
-    <g fill="currentColor">
-      <circle cx="2" cy="2" r="1" />
-      <circle cx="8" cy="2" r="1" />
-      <circle cx="2" cy="7" r="1" />
-      <circle cx="8" cy="7" r="1" />
-      <circle cx="2" cy="12" r="1" />
-      <circle cx="8" cy="12" r="1" />
-    </g>
-  </svg>
-);
+interface PageProps {
+  data: PortfolioData;
+  onRefresh: (updatedData?: PortfolioData) => void;
+}
+
+/* ───────────────────── Admin Project List ─────────────────────── */
+
+export const AdminProjectListPage: React.FC<PageProps> = ({ data, onRefresh }) => {
+  const { isAdmin } = useAdminAuth();
+  const navigate = useNavigate();
+  const [isReordering, setIsReordering] = useState(false);
+  const [reorderList, setReorderList] = useState<Project[]>(data.projects);
+
+  React.useEffect(() => {
+    if (!isAdmin) navigate('/admin');
+  }, [isAdmin, navigate]);
+
+  React.useEffect(() => {
+    setReorderList(data.projects);
+  }, [data.projects]);
+
+  if (!isAdmin) return null;
+
+  const ink = PALETTE.textPrimary;
+  const paper = PALETTE.backgroundMain;
+  const muted = PALETTE.textSecondary;
+
+  const moveUp = (idx: number) => {
+    if (idx <= 0) return;
+    setReorderList((prev) => {
+      const next = [...prev];
+      [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+      return next;
+    });
+  };
+  const moveDown = (idx: number) => {
+    setReorderList((prev) => {
+      if (idx >= prev.length - 1) return prev;
+      const next = [...prev];
+      [next[idx + 1], next[idx]] = [next[idx], next[idx + 1]];
+      return next;
+    });
+  };
+
+  const saveReorder = async () => {
+    const updated = await reorderProjects(reorderList.map((p) => p.id));
+    onRefresh(updated);
+    setIsReordering(false);
+  };
+
+  return (
+    <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: paper, color: ink, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif' }}>
+      <AdminTop trail={['Admin', 'Projects']} />
+
+      <section style={{ borderBottom: `1px solid ${ink}`, padding: '24px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <h1 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>Projects.</h1>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {isReordering ? (
+            <>
+              <AdminBtn onClick={() => { setIsReordering(false); setReorderList(data.projects); }}>Cancel</AdminBtn>
+              <AdminBtn primary onClick={saveReorder}>Save order</AdminBtn>
+            </>
+          ) : (
+            <>
+              {data.projects.length > 1 && <AdminBtn onClick={() => setIsReordering(true)}>Reorder</AdminBtn>}
+              <AdminBtn primary onClick={() => navigate('/project/new')}>+ New project</AdminBtn>
+            </>
+          )}
+        </div>
+      </section>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 100px 80px 120px 100px', alignItems: 'center', padding: '14px 32px', borderBottom: `1px solid ${ink}`, background: 'rgba(0,0,0,0.04)' }}>
+        {['', 'Title', 'Year', 'Plates', 'Status', ''].map((c, i) => (
+          <CapV2 key={i} size={10} color={muted}>{c}</CapV2>
+        ))}
+      </div>
+
+      {(isReordering ? reorderList : data.projects).map((p, i) => {
+        const isLive = p.gallery.length > 0;
+        return (
+          <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '80px 1fr 100px 80px 120px 100px', alignItems: 'center', padding: '20px 32px', borderBottom: `1px solid ${ink}`, color: isLive ? ink : muted }}>
+            <CapV2 size={10} color={muted}>{String(i + 1).padStart(2, '0')}</CapV2>
+            <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 28, fontWeight: 500, letterSpacing: '-0.02em' }}>{p.title || '[ untitled ]'}</span>
+            <CapV2 size={11} color={muted}>{p.year}</CapV2>
+            <CapV2 size={11} color={muted}>{String(p.gallery.length).padStart(2, '0')}</CapV2>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 8, height: 8, background: isLive ? HUES.mint : HUES.yellow }} />
+              <CapV2 size={10}>{isLive ? 'Live' : 'Draft'}</CapV2>
+            </span>
+            <span style={{ textAlign: 'right' }}>
+              {isReordering ? (
+                <span style={{ display: 'inline-flex', gap: 6 }}>
+                  <button type="button" onClick={() => moveUp(i)} style={{ background: 'transparent', border: `1px solid ${ink}`, cursor: 'pointer', padding: '4px 8px' }}>↑</button>
+                  <button type="button" onClick={() => moveDown(i)} style={{ background: 'transparent', border: `1px solid ${ink}`, cursor: 'pointer', padding: '4px 8px' }}>↓</button>
+                </span>
+              ) : (
+                <Link to={projectPath(p)} style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <CapV2 size={10}>Edit</CapV2>
+                  <Arrow dir="right" size={12} stroke={ink} />
+                </Link>
+              )}
+            </span>
+          </div>
+        );
+      })}
+
+      {data.projects.length === 0 && (
+        <div style={{ padding: '40px 32px', background: 'rgba(0,0,0,0.04)' }}>
+          <CapV2 size={11} color={muted}>No projects yet. Use “+ New project” to create one.</CapV2>
+        </div>
+      )}
+
+      <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
+        {[
+          { label: 'About', sub: 'Edit bio + portrait', hue: HUES.mint, to: '/about' },
+          { label: 'Contact', sub: 'Email + socials', hue: HUES.yellow, to: '/contact' },
+          { label: 'Deployment', sub: 'Publish · domain', hue: HUES.coral, to: '/admin/deployment' },
+        ].map((s, i) => (
+          <Link
+            key={i}
+            to={s.to}
+            style={{
+              textDecoration: 'none',
+              color: ink,
+              padding: '32px',
+              borderRight: i < 2 ? `1px solid ${ink}` : 'none',
+              borderTop: `1px solid ${ink}`,
+              borderBottom: `1px solid ${ink}`,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 14,
+            }}
+          >
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+              <ChipV2 color={s.hue} size={14} />
+              <CapV2 size={10}>{s.label}</CapV2>
+            </span>
+            <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 36, fontWeight: 600, letterSpacing: '-0.025em', lineHeight: 1 }}>{s.sub}</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <CapV2 size={10} color={muted}>Open</CapV2>
+              <Arrow dir="right" size={12} stroke={muted} />
+            </span>
+          </Link>
+        ))}
+      </section>
+
+      <Footer />
+    </div>
+  );
+};
+
+/* ───────────────────── New Project form ───────────────────────── */
 
 const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
   const { isAdmin } = useAdminAuth();
-  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [medium, setMedium] = useState('');
   const [locations, setLocations] = useState<string[]>([]);
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [coverAspectRatio, setCoverAspectRatio] = useState<number | undefined>(undefined);
   const [gallery, setGallery] = useState<string[]>([]);
-  const [galleryColumns, setGalleryColumns] = useState<1 | 2 | 3>(1);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -96,39 +239,8 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
     }
   };
 
-  const setCoverFromGallery = useCallback((index: number) => {
-    const img = gallery[index];
-    if (!img) return;
-    setImageUrl(img);
-    getImageAspectRatio(img).then(setCoverAspectRatio).catch(() => setCoverAspectRatio(undefined));
-  }, [gallery]);
-
-  const handleReplaceImage = useCallback(async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = '';
-    setIsUploading(true);
-    const base64 = await new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.readAsDataURL(file);
-    });
-    const compressed = await compressImageDataUrl(base64);
-    setGallery((prev) => {
-      const next = [...prev];
-      next[index] = compressed;
-      return next;
-    });
-    if (imageUrl && gallery[index] === imageUrl) {
-      setImageUrl(compressed);
-      const ratio = await getImageAspectRatio(compressed).catch(() => undefined);
-      setCoverAspectRatio(ratio);
-    }
-    setIsUploading(false);
-  }, [gallery, imageUrl]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
       alert('Please provide a project title.');
@@ -159,19 +271,20 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
         description: description.trim() || '',
         imageUrl: cover,
         gallery,
-        galleryColumns,
         coverAspectRatio: ratio,
         locations: locations.length ? locations : undefined,
+        medium: medium.trim() || undefined,
       };
       const updatedData = await addProject(newProject);
       onRefresh(updatedData);
+      toast.success('Project created');
       navigate(projectPath(newProject));
     } catch (err) {
       console.error(err);
       if (err instanceof DOMException && err.name === 'QuotaExceededError') {
-        alert('Storage limit reached (browser limit). Try fewer images, smaller file sizes, or remove images from other projects.');
+        toast.error('Storage limit reached.');
       } else {
-        alert('Failed to create project.');
+        toast.error(err instanceof Error ? err.message : 'Failed to create project.');
       }
     } finally {
       setIsSaving(false);
@@ -180,191 +293,117 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
 
   if (!isAdmin) return null;
 
-  const bottomPadding = isAdmin && !isMobile ? 'pb-24' : 'pb-12';
-  const liftForAdminBar = isAdmin && !isMobile;
+  const ink = PALETTE.textPrimary;
+  const paper = PALETTE.backgroundMain;
+  const muted = PALETTE.textSecondary;
+
+  const inputStyle: React.CSSProperties = {
+    fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif',
+    fontSize: 18,
+    padding: '12px 14px',
+    background: paper,
+    border: `1px solid ${ink}`,
+    color: ink,
+    outline: 'none',
+    borderRadius: 0,
+    width: '100%',
+  };
 
   return (
-    <div
-      className="fixed left-0 right-0 top-0 bg-bgMain flex flex-col overflow-hidden"
-      style={{ bottom: liftForAdminBar ? 48 : 0 }}
-    >
-      <main className="flex-1 min-h-0 flex">
-        <div className={`w-2/5 min-w-0 overflow-y-auto pt-pageTop pl-12 pr-12 ${bottomPadding}`}>
-          <div className="max-w-xl">
-            <Breadcrumb trail={['SPHNSX', 'Admin', 'Create']} className="mb-9" />
-            <div className="mb-9">
-              <span className="block font-mono text-[11px] uppercase tracking-wider text-textSecondary mb-2">
-                Create
-              </span>
-              <h1 className="font-sans text-[40px] font-bold leading-[1.05] tracking-[-0.01em] text-textPrimary">
-                New project
-              </h1>
+    <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: paper, color: ink, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif' }}>
+      <AdminTop trail={['Admin', 'Projects', 'New']} />
+
+      <section style={{ padding: '24px 32px', borderBottom: `1px solid ${ink}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <CapV2 size={10} color={muted}>New project</CapV2>
+          <h1 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>
+            {title.trim() || 'Untitled'}.
+          </h1>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <AdminBtn onClick={() => navigate('/admin/projects')}>Cancel</AdminBtn>
+          <AdminBtn primary onClick={() => handleSubmit()} disabled={isUploading || isSaving}>
+            {isSaving ? 'Saving…' : 'Save & publish'}
+          </AdminBtn>
+        </div>
+      </section>
+
+      <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr' }}>
+        {/* LEFT — meta + statement */}
+        <div style={{ borderRight: `1px solid ${ink}`, padding: '32px 32px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {([
+            ['Title', title, setTitle],
+            ['Year', year, setYear],
+            ['Medium', medium, setMedium],
+          ] as const).map(([label, value, setter]) => (
+            <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <CapV2 size={10} color={muted}>{label}</CapV2>
+              <input value={value} onChange={(e) => setter(e.target.value)} style={inputStyle} />
             </div>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-              <AdminInput
-                label="Title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-              />
-              <AdminInput
-                label="Year"
-                type="text"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-                required
-              />
-              <LocationsField value={locations} onChange={setLocations} />
-              <div className="flex flex-col gap-2">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-textPrimary">
-                  Description
-                </span>
-                <RichTextEditor
-                  value={description}
-                  onChange={setDescription}
-                  placeholder="Project description…"
-                  minHeight="10rem"
-                />
-              </div>
-              <div className="flex gap-2 pt-2">
-                <AdminButton type="submit" variant="primary" size="md" disabled={isUploading || isSaving}>
-                  {isSaving ? 'Processing…' : isUploading ? 'Processing…' : 'Create project'}
-                </AdminButton>
-              </div>
-            </form>
+          ))}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <CapV2 size={10} color={muted}>Place</CapV2>
+            <LocationsField value={locations} onChange={setLocations} />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <CapV2 size={10} color={muted}>Statement</CapV2>
+            <RichTextEditor value={description} onChange={setDescription} placeholder="Project description…" minHeight="12rem" />
           </div>
         </div>
-        <div className="w-px shrink-0 bg-paletteBorder" aria-hidden />
-        <div className={`w-3/5 min-w-0 overflow-y-auto pt-pageTop px-12 ${bottomPadding}`}>
-          <div className="flex flex-col gap-7">
-            <div>
-              <p className="font-mono text-[11px] uppercase tracking-wider text-textPrimary mb-2.5">
-                Cover
-              </p>
-              {imageUrl ? (
-                <img
-                  src={imageUrl}
-                  alt="Cover"
-                  className="max-h-64 w-auto border border-paletteBorder"
-                />
-              ) : (
-                <div className="max-h-64 h-64 border border-dashed border-paletteBorder flex items-center justify-center font-mono text-[11px] uppercase tracking-wider text-textSecondary">
-                  No cover
-                </div>
-              )}
-              <div className="mt-2.5 flex gap-2">
-                <AdminButton size="sm" asLabel>
-                  Change cover
-                  <input type="file" accept="image/*" className="hidden" onChange={handleCoverFile} />
-                </AdminButton>
-              </div>
-            </div>
 
-            <div className="flex flex-col gap-3.5">
-              <span className="font-mono text-[11px] uppercase tracking-wider text-textPrimary">
-                Gallery layout
-              </span>
-              <div className="flex border border-paletteBorder">
-                {[1, 2, 3].map((n) => {
-                  const active = galleryColumns === n;
-                  return (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => setGalleryColumns(n as 1 | 2 | 3)}
-                      className={`flex-1 py-2.5 px-3.5 font-mono text-[11px] uppercase tracking-wider rounded-none ${n > 1 ? 'border-l border-paletteBorder' : ''} ${active ? 'bg-textPrimary text-white' : 'bg-transparent text-textPrimary hover:bg-accent'}`}
-                    >
-                      {['One', 'Two', 'Three'][n - 1]} column{n > 1 ? 's' : ''}
+        {/* RIGHT — gallery */}
+        <div style={{ padding: '32px 32px 40px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+            <CapV2 size={10}>Plates · {String(gallery.length).padStart(2, '0')}</CapV2>
+            <label style={{ cursor: 'pointer' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 14px', border: `1px solid ${ink}`, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', color: ink }}>+ Upload</span>
+              <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleGalleryFiles} />
+            </label>
+          </div>
+
+          {gallery.length === 0 ? (
+            <label style={{ cursor: 'pointer', aspectRatio: '4/5', border: `1px dashed ${ink}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, color: muted, background: 'rgba(0,0,0,0.02)' }}>
+              <span style={{ fontSize: 32, fontWeight: 300 }}>+</span>
+              <CapV2 size={9} color={muted}>Drop images</CapV2>
+              <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleGalleryFiles} />
+            </label>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {gallery.map((src, i) => (
+                <div key={i} style={{ position: 'relative', border: `1px solid ${ink}`, aspectRatio: '4/5', overflow: 'hidden' }}>
+                  <img src={src} alt={`Plate ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  <div style={{ position: 'absolute', top: 8, left: 8 }}>
+                    <CapV2 size={9} color={paper}>{String(i + 1).padStart(2, '0')}</CapV2>
+                  </div>
+                  <div style={{ position: 'absolute', bottom: 8, right: 8, display: 'flex', gap: 4 }}>
+                    <button type="button" onClick={() => setImageUrl(src)} style={{ background: paper, border: `1px solid ${ink}`, padding: '4px 8px', fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      {imageUrl === src ? '★' : 'Cover'}
                     </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-3.5">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-textPrimary">
-                  Gallery
-                </span>
-                <AdminButton size="sm" asLabel>
-                  Add images
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={handleGalleryFiles}
-                  />
-                </AdminButton>
-              </div>
-              {gallery.length === 0 ? (
-                <div className="border border-dashed border-paletteBorder p-8 text-center font-mono text-[11px] uppercase tracking-wider text-textSecondary">
-                  Drop images here, or use “Add images”
+                    <button type="button" onClick={() => removeGalleryImage(i)} style={{ background: paper, border: `1px solid ${PALETTE.destructive}`, padding: '4px 8px', fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: PALETTE.destructive, cursor: 'pointer' }}>
+                      ×
+                    </button>
+                  </div>
                 </div>
-              ) : (
-                <table className="w-full border-collapse font-mono text-[11px]">
-                  <thead>
-                    <tr className="border-b border-paletteBorder text-textSecondary uppercase tracking-wider">
-                      <th className="text-left py-2.5 px-2 w-20">Plate</th>
-                      <th className="text-left py-2.5 px-2">Image</th>
-                      <th className="text-right py-2.5 px-2 w-[300px]">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {gallery.map((src, i) => (
-                      <tr key={i} className="border-b border-neutral-200">
-                        <td className="py-3 px-2 align-middle text-textSecondary">
-                          <span className="inline-flex items-center gap-2">
-                            <DragHandle /> {String(i + 1).padStart(2, '0')}
-                          </span>
-                        </td>
-                        <td className="py-3 px-2 align-middle">
-                          <div className="flex items-center gap-3.5">
-                            <img
-                              src={src}
-                              alt=""
-                              className="w-24 h-[72px] object-cover border border-paletteBorder block"
-                            />
-                            <span className="font-sans text-[13px] text-textPrimary">
-                              plate-{String(i + 1).padStart(2, '0')}.jpg
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-2 align-middle text-right">
-                          <div className="inline-flex gap-1.5">
-                            <AdminButton size="sm" type="button" onClick={() => setCoverFromGallery(i)}>
-                              Set as cover
-                            </AdminButton>
-                            <AdminButton size="sm" asLabel>
-                              Replace
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => handleReplaceImage(i, e)}
-                              />
-                            </AdminButton>
-                            <AdminButton
-                              size="sm"
-                              type="button"
-                              variant="ghost-destructive"
-                              onClick={() => removeGalleryImage(i)}
-                              disabled={gallery.length <= 1}
-                            >
-                              Remove
-                            </AdminButton>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+              ))}
+              <label style={{ cursor: 'pointer', aspectRatio: '4/5', border: `1px dashed ${ink}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, color: muted, background: 'rgba(0,0,0,0.02)' }}>
+                <span style={{ fontSize: 32, fontWeight: 300 }}>+</span>
+                <CapV2 size={9} color={muted}>Drop image</CapV2>
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverFile} />
+              </label>
             </div>
-          </div>
+          )}
+
+          {isUploading && (
+            <div style={{ marginTop: 12 }}>
+              <CapV2 size={10} color={muted}>Uploading…</CapV2>
+            </div>
+          )}
         </div>
-      </main>
+      </form>
+
+      <Footer />
     </div>
   );
 };

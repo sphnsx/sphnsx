@@ -68,18 +68,24 @@ function isAuthOrRlsUpsertError(err: { message?: string; code?: string } | null)
   );
 }
 
-/** Publish portfolio to Supabase (requires a session with JWT). Prefer getSession(); refresh + retry once on auth/RLS upsert errors (expired JWT). */
+/**
+ * Publish portfolio to Supabase (requires a session with JWT).
+ *
+ * THROWS on failure so callers can surface the error to the user. Previously
+ * this swallowed errors with console.warn, which made saves look successful
+ * (the local cache updated) but the live DB never received the change.
+ */
 export async function publishPortfolioToSupabase(data: PortfolioData): Promise<void> {
   const supabase = getClient();
-  if (!supabase) return;
+  if (!supabase) throw new Error('Supabase not configured');
   const run = async (): Promise<void> => {
     let { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) throw new Error('Not signed in to Supabase. Sign in under Admin → Deployment → Live publish.');
       ({ data: { session } } = await supabase.auth.getSession());
     }
-    if (!session?.access_token) return;
+    if (!session?.access_token) throw new Error('No Supabase access token. Sign in again.');
     const attemptUpsert = async () =>
       supabase.from(TABLE).upsert({ id: ROW_ID, data }, { onConflict: 'id' });
 
@@ -89,17 +95,11 @@ export async function publishPortfolioToSupabase(data: PortfolioData): Promise<v
       await supabase.auth.refreshSession();
       const second = await attemptUpsert();
       if (!second.error) return;
-      throw new Error(second.error.message);
+      throw new Error(`Live publish blocked: ${second.error.message}`);
     }
-    throw new Error(error.message);
+    throw new Error(`Live publish failed: ${error.message}`);
   };
-  try {
-    await withRetry(run);
-  } catch (e) {
-    if (typeof console !== 'undefined' && console.warn) {
-      console.warn('Live publish to Supabase failed:', e instanceof Error ? e.message : e);
-    }
-  }
+  await withRetry(run);
 }
 
 function isNetworkError(error: { message?: string; status?: number } | null): boolean {

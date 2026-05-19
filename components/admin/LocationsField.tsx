@@ -62,7 +62,7 @@ export const LocationsField: React.FC<Props> = ({ value, onChange }) => {
 };
 
 const LocationChip: React.FC<{ label: string; onRemove: () => void }> = ({ label, onRemove }) => (
-  <span className="group inline-flex items-center gap-2 border border-paletteBorder px-2.5 py-1.5 bg-bgMain hover:bg-accent">
+  <span className="group inline-flex items-center gap-2 border border-paletteBorder px-2.5 py-1.5 bg-bgMain hover:bg-greySoft">
     <span className="font-mono text-[11px] uppercase tracking-wider text-textPrimary">{label}</span>
     <button
       type="button"

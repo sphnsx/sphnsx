@@ -1,5 +1,5 @@
 
-import { PortfolioData, Project, ContactMethod } from '../types';
+import { PortfolioData, Project, ContactMethod, Exhibition, Award } from '../types';
 import { INITIAL_DATA } from '../constants';
 import { isSupabaseConfigured, getPortfolioFromSupabase, publishPortfolioToSupabase } from './supabase';
 
@@ -301,6 +301,20 @@ export async function updateContact(contact: PortfolioData['contact']): Promise<
 export async function updateContactMethods(methods: ContactMethod[]): Promise<PortfolioData> {
   const data = await getPortfolioDataAsync();
   data.contactMethods = methods;
+  await writePortfolioData(data);
+  return data;
+}
+
+export async function updateExhibitions(list: Exhibition[]): Promise<PortfolioData> {
+  const data = await getPortfolioDataAsync();
+  data.exhibitions = list;
+  await writePortfolioData(data);
+  return data;
+}
+
+export async function updateAwards(list: Award[]): Promise<PortfolioData> {
+  const data = await getPortfolioDataAsync();
+  data.awards = list;
   await writePortfolioData(data);
   return data;
 }

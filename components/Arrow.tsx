@@ -4,34 +4,48 @@ type Dir = 'right' | 'left' | 'up' | 'down';
 
 interface ArrowProps {
   dir?: Dir;
+  /** Pixel size driving the glyph's font-size (text chevron). */
   size?: number;
+  /** Colour (currentColor by default — inherits from parent). */
   stroke?: string;
+  /** Kept for back-compat; unused (text chevron weight is set by the font). */
   strokeWidth?: number;
   className?: string;
 }
 
-const ROT: Record<Dir, number> = { right: 0, left: 180, up: -90, down: 90 };
+const GLYPH: Record<Dir, string> = {
+  right: '>',
+  left: '<',
+  // Up/down fall back to forward chevron since the design only uses `>` and `<`.
+  up: '>',
+  down: '>',
+};
 
-/** Chunky editorial arrow glyph (fotohof absorption). Square-cap lines, no fill. */
+/**
+ * Text chevron arrow. Renders `>` or `<` at `size` px so callers can drop us in
+ * inline next to text. Replaces the prior SVG arrow per design direction.
+ */
 const Arrow: React.FC<ArrowProps> = ({
   dir = 'right',
-  size = 32,
+  size = 16,
   stroke = 'currentColor',
-  strokeWidth = 2,
   className,
 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 40 40"
-    className={className}
-    style={{ transform: `rotate(${ROT[dir]}deg)`, display: 'inline-block', verticalAlign: 'middle' }}
+  <span
     aria-hidden
+    className={className}
+    style={{
+      display: 'inline-block',
+      fontFamily: '"Source Serif 4", ui-serif, Georgia, serif',
+      fontSize: size,
+      fontWeight: 700,
+      lineHeight: 1,
+      color: stroke,
+      verticalAlign: 'baseline',
+    }}
   >
-    <line x1="4" y1="20" x2="36" y2="20" stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="square" />
-    <line x1="36" y1="20" x2="24" y2="10" stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="square" />
-    <line x1="36" y1="20" x2="24" y2="30" stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="square" />
-  </svg>
+    {GLYPH[dir]}
+  </span>
 );
 
 export default Arrow;

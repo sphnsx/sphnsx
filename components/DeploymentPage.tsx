@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { exportPortfolioJson } from '../services/storageService';
 import {
   isSupabaseConfigured,
@@ -9,10 +8,11 @@ import {
   getSupabaseUser,
 } from '../services/supabase';
 import type { User } from '@supabase/supabase-js';
-import Breadcrumb from './Breadcrumb';
-import AdminButton from './admin/AdminButton';
-import AdminInput from './admin/AdminInput';
-import AdminSectionCard from './admin/AdminSectionCard';
+import { PALETTE, HUES } from '../constants';
+import AdminTop from './optc/admin/AdminTop';
+import AdminBtn from './optc/admin/AdminBtn';
+import CapV2 from './optc/CapV2';
+import Footer from './optc/Footer';
 
 const DeploymentPage: React.FC = () => {
   const [exporting, setExporting] = useState(false);
@@ -21,10 +21,6 @@ const DeploymentPage: React.FC = () => {
   const [supabasePassword, setSupabasePassword] = useState('');
   const [supabaseLoading, setSupabaseLoading] = useState(false);
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
 
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
@@ -48,6 +44,14 @@ const DeploymentPage: React.FC = () => {
     }
   };
 
+  const handleViewRawData = async () => {
+    const json = await exportPortfolioJson();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  };
+
   const handleSupabaseSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setSupabaseError(null);
@@ -64,119 +68,97 @@ const DeploymentPage: React.FC = () => {
     setSupabaseError(null);
   };
 
+  const ink = PALETTE.textPrimary;
+  const paper = PALETTE.backgroundMain;
+  const muted = PALETTE.textSecondary;
+
+  const inputStyle: React.CSSProperties = {
+    fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif',
+    fontSize: 16,
+    padding: '12px 14px',
+    background: paper,
+    border: `1px solid ${ink}`,
+    color: ink,
+    outline: 'none',
+    borderRadius: 0,
+    width: '100%',
+  };
+
   return (
-    <div className="min-h-screen bg-bgMain text-textPrimary pb-24">
-      <div className="px-12 pt-12">
-        <Breadcrumb trail={['SPHNSX', 'Admin', 'Deployment']} />
-      </div>
-      <div className="px-12 pt-9 pb-16 max-w-[760px]">
-        <span className="block font-mono text-[11px] uppercase tracking-wider text-textSecondary mb-2">
-          Site operations
-        </span>
-        <h1 className="font-sans text-[40px] font-bold leading-[1.05] tracking-[-0.01em] text-textPrimary mb-9">
-          Deployment
-        </h1>
+    <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: paper, color: ink, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif' }}>
+      <AdminTop trail={['Admin', 'Deployment']} />
 
-        <div className="flex flex-col gap-6">
-          {isSupabaseConfigured() && (
-            <AdminSectionCard
-              heading="01 · Live publish (automatic)"
-              sub="When signed in, every save in Admin (projects, about, contact) updates the live site instantly. No download or file steps."
-            >
-              {supabaseUser ? (
-                <div className="flex flex-col gap-3.5">
-                  <p className="font-mono text-xs text-textPrimary flex items-center gap-2.5">
-                    <span className="inline-block w-2 h-2 bg-accent" aria-hidden />
-                    Signed in. Saves will update the live site.
-                  </p>
-                  <div>
-                    <AdminButton size="sm" onClick={handleSupabaseSignOut}>
-                      Sign out
-                    </AdminButton>
-                  </div>
+      <section style={{ padding: '32px 32px 24px', borderBottom: `1px solid ${ink}` }}>
+        <CapV2 size={10} color={muted}>Site operations</CapV2>
+        <h1 style={{ margin: '12px 0 0', fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>Deployment.</h1>
+        <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.55, color: muted, maxWidth: 720 }}>
+          Publishing, backups and domain configuration. Changes here affect the live site.
+        </p>
+      </section>
+
+      <section style={{ padding: '32px 32px 48px', display: 'flex', flexDirection: 'column', gap: 32 }}>
+        {isSupabaseConfigured() && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <CapV2 size={10} color={muted}>01 · Live publish (automatic)</CapV2>
+            <p style={{ margin: '0 0 12px', fontSize: 14, color: muted, lineHeight: 1.55, maxWidth: 720 }}>
+              When signed in, every save in Admin updates the live site instantly.
+            </p>
+            {supabaseUser ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', border: `1px solid ${ink}`, background: PALETTE.greySoft, gap: 16, flexWrap: 'wrap' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ width: 8, height: 8, background: HUES.mint }} />
+                  <CapV2 size={11}>Signed in · saves update the live site</CapV2>
+                </span>
+                <span style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  {supabaseUser.email && <CapV2 size={10} color={muted}>{supabaseUser.email}</CapV2>}
+                  <AdminBtn onClick={handleSupabaseSignOut}>Sign out</AdminBtn>
+                </span>
+              </div>
+            ) : (
+              <form onSubmit={handleSupabaseSignIn} style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 460 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <CapV2 size={10} color={muted}>Email</CapV2>
+                  <input type="email" placeholder="you@example.com" value={supabaseEmail} onChange={(e) => setSupabaseEmail(e.target.value)} required style={inputStyle} />
                 </div>
-              ) : (
-                <form onSubmit={handleSupabaseSignIn} className="flex flex-col gap-3.5">
-                  <AdminInput
-                    label="Email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={supabaseEmail}
-                    onChange={(e) => setSupabaseEmail(e.target.value)}
-                    required
-                  />
-                  <AdminInput
-                    label="Password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={supabasePassword}
-                    onChange={(e) => setSupabasePassword(e.target.value)}
-                    required
-                  />
-                  {supabaseError && (
-                    <p className="font-mono text-xs text-destructive">{supabaseError}</p>
-                  )}
-                  <div>
-                    <AdminButton type="submit" variant="primary" size="md" disabled={supabaseLoading}>
-                      {supabaseLoading ? 'Signing in…' : 'Sign in to enable live publish'}
-                    </AdminButton>
-                  </div>
-                </form>
-              )}
-            </AdminSectionCard>
-          )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <CapV2 size={10} color={muted}>Password</CapV2>
+                  <input type="password" placeholder="••••••••" value={supabasePassword} onChange={(e) => setSupabasePassword(e.target.value)} required style={inputStyle} />
+                </div>
+                {supabaseError && (
+                  <CapV2 size={10} color={PALETTE.destructive}>{supabaseError}</CapV2>
+                )}
+                <div>
+                  <AdminBtn type="submit" primary disabled={supabaseLoading}>
+                    {supabaseLoading ? 'Signing in…' : 'Sign in to enable live publish'}
+                  </AdminBtn>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
 
-          <AdminSectionCard
-            heading="02 · Manual publish (optional)"
-            sub={
-              <>
-                Or publish via a static file: download{' '}
-                <code className="bg-bgSidebar px-1">portfolio.json</code>, add to{' '}
-                <code className="bg-bgSidebar px-1">docs/</code>, build with{' '}
-                <code className="bg-bgSidebar px-1">VITE_PORTFOLIO_URL</code>, then deploy.
-              </>
-            }
-          >
-            <div>
-              <AdminButton size="sm" onClick={handleExportPortfolio} disabled={exporting}>
-                {exporting ? 'Preparing…' : 'Download portfolio.json'}
-              </AdminButton>
-            </div>
-          </AdminSectionCard>
-
-          <AdminSectionCard heading="03 · Domain setup">
-            <div className="flex flex-col gap-4">
-              <div>
-                <span className="block font-mono text-[11px] uppercase tracking-wider text-textPrimary mb-2">
-                  1. Naked domain (A record)
-                </span>
-                <p className="font-sans text-sm leading-relaxed text-textSecondary">
-                  Add an A record for your root domain (@) pointing to your host IP.
-                </p>
-              </div>
-              <div className="h-px bg-neutral-200" />
-              <div>
-                <span className="block font-mono text-[11px] uppercase tracking-wider text-textPrimary mb-2">
-                  2. Redirect
-                </span>
-                <p className="font-sans text-sm leading-relaxed text-textSecondary">
-                  Set domain forwarding from your root domain to https://www.yourdomain.com (301
-                  redirect).
-                </p>
-              </div>
-            </div>
-          </AdminSectionCard>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <CapV2 size={10} color={muted}>02 · Manual publish (fallback)</CapV2>
+          <p style={{ margin: '0 0 12px', fontSize: 14, color: muted, lineHeight: 1.55, maxWidth: 720 }}>
+            If live publish is offline, download portfolio.json and drop it into the public/ folder of the static site.
+          </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <AdminBtn onClick={handleExportPortfolio} disabled={exporting}>
+              {exporting ? 'Preparing…' : 'Download portfolio.json'}
+            </AdminBtn>
+            <AdminBtn onClick={handleViewRawData}>View raw data</AdminBtn>
+          </div>
         </div>
 
-        <div className="mt-9">
-          <Link
-            to="/"
-            className="font-mono text-[11px] uppercase tracking-wider text-textPrimary hover:bg-accent px-1.5 -mx-1.5 py-0.5"
-          >
-            Back to home
-          </Link>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <CapV2 size={10} color={muted}>03 · Domain setup</CapV2>
+          <p style={{ margin: 0, fontSize: 14, color: muted, lineHeight: 1.55, maxWidth: 720 }}>
+            Configure your custom domain at your DNS provider. DNS changes can take 24–48 hours to propagate globally.
+          </p>
         </div>
-      </div>
+      </section>
+
+      <Footer />
     </div>
   );
 };
