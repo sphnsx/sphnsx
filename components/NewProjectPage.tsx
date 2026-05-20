@@ -168,7 +168,7 @@ export const AdminProjectListPage: React.FC<PageProps> = ({ data, onRefresh }) =
         ))}
       </section>
 
-      <Footer />
+      <Footer floatToBottom />
     </div>
   );
 };
@@ -415,7 +415,7 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
         </div>
       </form>
 
-      <Footer />
+      <Footer floatToBottom />
     </div>
   );
 };

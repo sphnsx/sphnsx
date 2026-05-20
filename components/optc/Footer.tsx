@@ -2,12 +2,18 @@ import React from 'react';
 import { PALETTE } from '../../constants';
 import CapV2 from './CapV2';
 
-/**
- * Black plinth at the bottom of each public page. `marginTop: auto` makes it
- * stick to the bottom of the (flex-column) page wrapper when the content is
- * shorter than the viewport — any spare space falls above the footer.
- */
-const Footer: React.FC = () => (
+interface FooterProps {
+  /**
+   * When true, the footer claims the spare vertical space (margin-top: auto) so
+   * it pins to the viewport bottom. Use only on pages with NO trailing bottom-nav
+   * (e.g. home) — on pages that have a bottom-nav, the nav owns the spacer instead
+   * so the nav + footer stay glued together. Two auto-margins would split the gap.
+   */
+  floatToBottom?: boolean;
+}
+
+/** Black plinth at the bottom of each public page. */
+const Footer: React.FC<FooterProps> = ({ floatToBottom = false }) => (
   <div
     style={{
       padding: '20px 40px',
@@ -17,7 +23,7 @@ const Footer: React.FC = () => (
       justifyContent: 'space-between',
       alignItems: 'center',
       flexShrink: 0,
-      marginTop: 'auto',
+      marginTop: floatToBottom ? 'auto' : undefined,
     }}
   >
     <CapV2 size={10} color="rgba(250,250,250,0.55)">

@@ -84,7 +84,7 @@ const AdminLoginPage: React.FC = () => {
         </form>
       </div>
 
-      <Footer />
+      <Footer floatToBottom />
     </div>
   );
 };

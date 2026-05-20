@@ -257,7 +257,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
         )}
 
         {/* Bottom nav — back to All works + Next project */}
-        <section style={{ padding: '20px', borderBottom: `1px solid ${ink}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <section style={{ padding: '20px', borderBottom: `1px solid ${ink}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 'auto' }}>
           <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             <Arrow dir="left" size={18} stroke={ink} />
             <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 18, fontWeight: 500 }}>All works</span>
@@ -382,7 +382,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
             )}
           </div>
         </section>
-        <Footer />
+        <Footer floatToBottom />
       </div>
     );
   }
@@ -526,7 +526,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
       )}
 
       {/* Bottom nav — both sides share the same chevron+label layout */}
-      <section style={{ borderBottom: `1px solid ${ink}`, padding: '32px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <section style={{ borderBottom: `1px solid ${ink}`, padding: '32px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
         <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
           <Arrow dir="left" size={22} stroke={ink} />
           <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em' }}>All works</span>

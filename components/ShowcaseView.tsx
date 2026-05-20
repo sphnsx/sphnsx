@@ -693,7 +693,7 @@ const ShowcaseView: React.FC<ShowcaseProps> = ({ data }) => {
       <WorksIndex years={years} byYear={byYear} mobile={isMobile} />
       <AboutTeaser aboutMe={data.aboutMe} mobile={isMobile} />
       <ContactSection mobile={isMobile} />
-      <Footer />
+      <Footer floatToBottom />
     </div>
   );
 };

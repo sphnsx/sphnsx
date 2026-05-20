@@ -199,7 +199,7 @@ const DeploymentPage: React.FC = () => {
         </div>
       </section>
 
-      <Footer />
+      <Footer floatToBottom />
     </div>
   );
 };
