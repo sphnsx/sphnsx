@@ -6,6 +6,7 @@ import { updateProject, deleteProject } from '../services/storageService';
 import { compressImageDataUrl, getImageAspectRatio } from '../utils/imageCompress';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import RichTextEditor from './RichTextEditor';
+import LocationsField from './admin/LocationsField';
 import { PortfolioData, Project } from '../types';
 import { projectPath } from '../utils/slug';
 import { PALETTE, HUES, hueForYear } from '../constants';
@@ -184,42 +185,31 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
           <CapV2 size={9}>{project.title}</CapV2>
         </div>
 
-        {/* HERO */}
+        {/* HERO — title + meta only (cover plate image removed per request) */}
         <section style={{ padding: '20px 20px 28px', borderBottom: `1px solid ${ink}` }}>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
             <TagPillV2 hue={hue} label={project.year} size={10} chip={10} />
           </div>
-          {project.imageUrl ? (
-            <div style={{ display: 'flex', justifyContent: 'center', minHeight: 220, marginBottom: 22 }}>
-              <img
-                src={project.imageUrl}
-                alt={`${project.title} cover plate`}
-                style={{ maxWidth: '100%', maxHeight: 320, width: 'auto', height: 'auto', display: 'block' }}
-                onContextMenu={(e) => e.preventDefault()}
-                onDragStart={(e) => e.preventDefault()}
-              />
-            </div>
-          ) : null}
           <MarkerTitleV2 title={project.title} hue={hue} size={64} washHeight={0.5} />
           {meta.length > 0 && (
             <div style={{ marginTop: 22, display: 'grid', gridTemplateColumns: '72px 1fr', rowGap: 10, columnGap: 12 }}>
               {meta.map(([k, v], i) => (
                 <React.Fragment key={i}>
                   <CapV2 size={9} color={muted}>{k}</CapV2>
-                  <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 13, color: ink, lineHeight: 1.3 }}>{v}</span>
+                  <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 13, color: ink, lineHeight: 1.3 }}>{v}</span>
                 </React.Fragment>
               ))}
             </div>
           )}
         </section>
 
-        {/* STATEMENT */}
+        {/* STATEMENT — pull quote + body (no second horizontal divider) */}
         {allParas.length > 0 && (
           <section style={{ borderBottom: `1px solid ${ink}` }}>
             <header style={{ display: 'flex', justifyContent: 'flex-end', padding: '18px 20px' }}>
               <TagPillV2 hue={HUES.yellow} label="Statement" size={10} chip={10} />
             </header>
-            <div style={{ padding: '8px 20px 0', borderBottom: `1px solid ${ink}` }}>
+            <div style={{ padding: '8px 20px 0' }}>
               <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 32, fontWeight: 400, fontStyle: 'italic', letterSpacing: '-0.02em', lineHeight: 1.2 }}>{pullQuote}</h2>
             </div>
             <div style={{ padding: '20px 20px 28px', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -230,34 +220,43 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
           </section>
         )}
 
-        {/* PLATES */}
-        <section style={{ borderBottom: `1px solid ${ink}` }} id="plates">
-          <header style={{ display: 'flex', justifyContent: 'flex-end', padding: '18px 20px' }}>
-            <TagPillV2 hue={HUES.coral} label="Plates" size={10} chip={10} />
-          </header>
-          {project.gallery.length > 0 ? (
-            project.gallery.map((src, i) => (
-              <img
-                key={i}
-                src={src}
-                alt={`${project.title} plate ${i + 1}`}
-                style={{ width: '100%', display: 'block' }}
-                onContextMenu={(e) => e.preventDefault()}
-                onDragStart={(e) => e.preventDefault()}
-              />
-            ))
-          ) : isAdmin ? (
-            <div style={{ padding: '20px', textAlign: 'center' }}>
-              <CapV2 size={10} color={muted}>Upload plates via Admin</CapV2>
-            </div>
-          ) : null}
-        </section>
+        {/* PLATES — full-bleed stack, no pill header */}
+        {(project.gallery.length > 0 || isAdmin) && (
+          <section style={{ borderBottom: `1px solid ${ink}` }} id="plates">
+            {project.gallery.length > 0 ? (
+              project.gallery.map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt={`${project.title} plate ${i + 1}`}
+                  style={{ width: '100%', display: 'block' }}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onDragStart={(e) => e.preventDefault()}
+                />
+              ))
+            ) : (
+              <div style={{ padding: '20px', textAlign: 'center' }}>
+                <CapV2 size={10} color={muted}>Upload plates via Admin</CapV2>
+              </div>
+            )}
+          </section>
+        )}
 
-        {/* Bottom nav */}
-        <section style={{ padding: '20px', borderBottom: `1px solid ${ink}` }}>
-          <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 18, fontWeight: 500 }}>{"<"} All works</span>
+        {/* Bottom nav — back to All works + Next project */}
+        <section style={{ padding: '20px', borderBottom: `1px solid ${ink}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <Arrow dir="left" size={18} stroke={ink} />
+            <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 18, fontWeight: 500 }}>All works</span>
           </Link>
+          {nextProject ? (
+            <Link
+              to={projectPath(nextProject)}
+              style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 8 }}
+            >
+              <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 18, fontWeight: 500 }}>Next</span>
+              <Arrow dir="right" size={18} stroke={ink} />
+            </Link>
+          ) : null}
         </section>
 
         <Footer />
@@ -308,6 +307,11 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
                 />
               </div>
             ))}
+            {/* Locations — city + country chips */}
+            <LocationsField
+              value={editProject.locations ?? []}
+              onChange={(next) => setEditProject((p) => ({ ...p, locations: next.length ? next : undefined }))}
+            />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <CapV2 size={10} color={muted}>Statement</CapV2>
               <RichTextEditor
@@ -422,7 +426,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
               {meta.map(([k, v], i) => (
                 <React.Fragment key={i}>
                   <CapV2 size={10} color={muted}>{k}</CapV2>
-                  <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 15, color: ink, lineHeight: 1.3 }}>{v}</span>
+                  <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 15, color: ink, lineHeight: 1.3 }}>{v}</span>
                 </React.Fragment>
               ))}
             </div>
@@ -511,14 +515,14 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
       <section style={{ borderBottom: `1px solid ${ink}`, padding: '32px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
           <Arrow dir="left" size={22} stroke={ink} />
-          <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em' }}>All works</span>
+          <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em' }}>All works</span>
         </Link>
         {nextProject ? (
           <Link
             to={projectPath(nextProject)}
             style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}
           >
-            <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Next</span>
+            <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Next</span>
             <Arrow dir="right" size={22} stroke={ink} />
           </Link>
         ) : null}

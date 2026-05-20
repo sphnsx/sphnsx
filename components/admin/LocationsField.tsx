@@ -20,8 +20,9 @@ export const LocationsField: React.FC<Props> = ({ value, onChange }) => {
   };
   const remove = (i: number) => onChange(value.filter((_, idx) => idx !== i));
 
+  // Separator is `;` (not `,`) because entries themselves contain a comma between City and Country.
   const onKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
+    if (e.key === 'Enter' || e.key === ';') {
       e.preventDefault();
       add(draft);
     } else if (e.key === 'Backspace' && !draft && value.length) {
@@ -48,14 +49,16 @@ export const LocationsField: React.FC<Props> = ({ value, onChange }) => {
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={onKey}
           onBlur={() => add(draft)}
-          placeholder={value.length === 0 ? 'e.g. London, Salzburg, Lisbon' : 'Add location'}
+          placeholder={value.length === 0 ? 'e.g. London, UK' : 'City, Country'}
           className="flex-1 min-w-[140px] border-0 outline-none bg-transparent py-1.5 px-1 font-mono text-xs uppercase tracking-wider text-textPrimary placeholder:text-textSecondary"
         />
       </div>
       <span className="font-sans text-xs text-textSecondary leading-relaxed">
-        Press <strong className="font-medium">Enter</strong> or{' '}
-        <strong className="font-medium">,</strong> to add. Locations appear in order on the project
-        page.
+        Format <strong className="font-medium">City, Country</strong> (e.g.{' '}
+        <span className="font-mono uppercase tracking-wider">London, UK</span>). Press{' '}
+        <strong className="font-medium">Enter</strong> or{' '}
+        <strong className="font-medium">;</strong> to add — note: use a semicolon between entries
+        since commas are part of the city/country format.
       </span>
     </div>
   );

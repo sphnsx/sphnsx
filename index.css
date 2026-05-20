@@ -3,17 +3,19 @@
 @tailwind utilities;
 
 /*
- * Default body type = Sukhumvit Set (sans). Serif is now an opt-in via
- * inline `fontFamily: '"Source Serif 4", …'` on display headings, pull quotes,
- * year marks, and the marker-title wash.
+ * Default body type = Source Serif 4 (Subhead optical size). The serif carries
+ * all reading-heavy text by default: paragraphs, bios, statements, big
+ * editorial headings, project titles. Sans (Sukhumvit Set) is scoped to UI
+ * chrome only — caps labels, breadcrumbs, nav pills, button text, meta
+ * captions, footer microcopy — via explicit `fontFamily` on those primitives
+ * (`CapV2`, `AdminBtn`, etc.) and the `font-mono` Tailwind utility.
  *
- * Source Serif 4 is a variable font with an `opsz` axis (8…60); the "Subhead"
- * optical size sits around 24. We pin `opsz: 24` site-wide so wherever serif
- * renders, it uses the Subhead variant (sans fonts ignore the setting). The
- * property inherits, so display headings inherit it from html automatically.
+ * Source Serif 4 is variable with an `opsz` axis (8…60); "Subhead" sits around
+ * 24. We pin `opsz: 24` so the serif always renders in its Subhead optical
+ * size (sans fonts ignore the property).
  */
 html, body {
-  font-family: 'Sukhumvit Set', -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif;
+  font-family: 'Source Serif 4', ui-serif, Georgia, serif;
   font-optical-sizing: auto;
   font-variation-settings: 'opsz' 24;
 }

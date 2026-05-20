@@ -159,7 +159,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
   const padX = isMobile ? 20 : 40;
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: paper, color: ink, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif' }}>
+    <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: paper, color: ink, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif' }}>
       <TopRibbon active="about" />
 
       {/* HERO */}
@@ -273,7 +273,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                 }}
               >
                 <CapV2 size={10} color={muted}>{k}</CapV2>
-                <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: isMobile ? 15 : 18, fontWeight: 500, letterSpacing: '-0.01em', lineHeight: 1.3 }}>{v}</span>
+                <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: isMobile ? 15 : 18, fontWeight: 500, letterSpacing: '-0.01em', lineHeight: 1.3 }}>{v}</span>
               </div>
             ))}
           </div>
@@ -357,7 +357,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                         flexShrink: 0,
                       }}
                     />
-                    <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: isMobile ? 18 : 24, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{row.venue}</span>
+                    <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 24, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{row.venue}</span>
                     {!isMobile && <CapV2 size={10} color={muted}>{row.kind ?? ''}</CapV2>}
                     {!isMobile && <span />}
                   </div>
@@ -467,7 +467,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                         flexShrink: 0,
                       }}
                     />
-                    <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: isMobile ? 18 : 24, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{row.title}</span>
+                    <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 24, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{row.title}</span>
                     {!isMobile && <CapV2 size={10} color={muted}>{row.kind ?? ''}</CapV2>}
                     {!isMobile && <span />}
                   </div>
@@ -495,10 +495,10 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
       <section style={{ borderBottom: `1px solid ${ink}`, padding: `32px ${padX}px`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
           <Arrow dir="left" size={isMobile ? 18 : 22} stroke={ink} />
-          <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Works</span>
+          <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Works</span>
         </Link>
         <Link to="/contact" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Contact</span>
+          <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Contact</span>
           <Arrow dir="right" size={isMobile ? 18 : 22} stroke={ink} />
         </Link>
       </section>
@@ -545,7 +545,7 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
   const titleSize = isMobile ? 80 : 168;
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: paper, color: ink, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif' }}>
+    <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: paper, color: ink, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif' }}>
       <TopRibbon active="contact" />
 
       <section style={{ borderBottom: `1px solid ${ink}` }}>
@@ -594,10 +594,10 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
       <section style={{ borderBottom: `1px solid ${ink}`, padding: `32px ${padX}px`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
           <Arrow dir="left" size={isMobile ? 18 : 22} stroke={ink} />
-          <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Works</span>
+          <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Works</span>
         </Link>
         <Link to="/about" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>About</span>
+          <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>About</span>
           <Arrow dir="right" size={isMobile ? 18 : 22} stroke={ink} />
         </Link>
       </section>
@@ -651,7 +651,7 @@ const HomeRouteWrapper: React.FC<{ data: PortfolioData; onRefresh: () => void }>
 };
 
 const LoadingScreen: React.FC = () => (
-  <div className="min-h-screen bg-bgMain text-textPrimary flex items-center justify-center" style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif' }}>
+  <div className="min-h-screen bg-bgMain text-textPrimary flex items-center justify-center" style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif' }}>
     <p
       className="text-sm uppercase tracking-wider text-textSecondary"
       style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif' }}

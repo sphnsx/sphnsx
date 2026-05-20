@@ -12,11 +12,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        // Default body type — Sukhumvit Set (Apple-bundled Thai/Latin sans).
-        sans: ['Sukhumvit Set', '-apple-system', 'BlinkMacSystemFont', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        // Display opt-in — Source Serif 4 variable (Subhead opsz pinned via index.css).
+        // Default body type — Source Serif 4 (reading + display).
+        sans: ['Source Serif 4', 'ui-serif', 'Georgia', 'serif'],
+        // Same as `sans` for any explicit `font-serif` Tailwind references.
         serif: ['Source Serif 4', 'ui-serif', 'Georgia', 'serif'],
-        // Alias for legacy `font-mono` utility — same sans stack.
+        // UI / caps-label stack — Sukhumvit Set (Apple-bundled, system fallback elsewhere).
         mono: ['Sukhumvit Set', '-apple-system', 'BlinkMacSystemFont', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       spacing: {
