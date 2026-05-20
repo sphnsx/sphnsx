@@ -470,7 +470,7 @@ const AboutTeaser: React.FC<AboutTeaserProps> = ({ aboutMe, mobile }) => {
         <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '18px 20px' }}>
           <TagPillV2 hue={HUES.mint} label="About" size={10} chip={10} to="/about" />
         </header>
-        <div style={{ padding: '20px 20px 0', borderBottom: `1px solid ${ink}` }}>
+        <div style={{ padding: '20px 20px 0' }}>
           <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 80, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 1 }}>Silvia.</h2>
         </div>
         <div style={{ padding: '20px 20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>

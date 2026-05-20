@@ -292,15 +292,15 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                 <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', padding: 14, border: `1px solid ${ink}`, flexWrap: 'wrap' }}>
                   <div style={{ width: 120 }}>
                     <CapV2 size={10} color={muted}>Year</CapV2>
-                    <input value={e.year} onChange={(ev) => updateExhibition(i, 'year', ev.target.value)} placeholder="2024" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
+                    <input value={e.year} onChange={(ev) => updateExhibition(i, 'year', ev.target.value)} placeholder="2024" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                   </div>
                   <div style={{ flex: 2, minWidth: 200 }}>
                     <CapV2 size={10} color={muted}>Venue</CapV2>
-                    <input value={e.venue} onChange={(ev) => updateExhibition(i, 'venue', ev.target.value)} placeholder="Venue, City" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
+                    <input value={e.venue} onChange={(ev) => updateExhibition(i, 'venue', ev.target.value)} placeholder="Venue, City" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 140 }}>
                     <CapV2 size={10} color={muted}>Kind</CapV2>
-                    <input value={e.kind ?? ''} onChange={(ev) => updateExhibition(i, 'kind', ev.target.value)} placeholder="Solo / Group" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
+                    <input value={e.kind ?? ''} onChange={(ev) => updateExhibition(i, 'kind', ev.target.value)} placeholder="Solo / Group" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                   </div>
                   <AdminBtn danger onClick={() => removeExhibition(i)}>Remove</AdminBtn>
                 </div>
@@ -393,15 +393,15 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                 <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', padding: 14, border: `1px solid ${ink}`, flexWrap: 'wrap' }}>
                   <div style={{ width: 120 }}>
                     <CapV2 size={10} color={muted}>Year</CapV2>
-                    <input value={a.year} onChange={(ev) => setEditAwards((prev) => prev.map((x, idx) => idx === i ? { ...x, year: ev.target.value } : x))} placeholder="2025" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
+                    <input value={a.year} onChange={(ev) => setEditAwards((prev) => prev.map((x, idx) => idx === i ? { ...x, year: ev.target.value } : x))} placeholder="2025" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                   </div>
                   <div style={{ flex: 2, minWidth: 200 }}>
                     <CapV2 size={10} color={muted}>Title</CapV2>
-                    <input value={a.title} onChange={(ev) => setEditAwards((prev) => prev.map((x, idx) => idx === i ? { ...x, title: ev.target.value } : x))} placeholder="Award title" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
+                    <input value={a.title} onChange={(ev) => setEditAwards((prev) => prev.map((x, idx) => idx === i ? { ...x, title: ev.target.value } : x))} placeholder="Award title" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 140 }}>
                     <CapV2 size={10} color={muted}>Kind</CapV2>
-                    <input value={a.kind ?? ''} onChange={(ev) => setEditAwards((prev) => prev.map((x, idx) => idx === i ? { ...x, kind: ev.target.value } : x))} placeholder="Finalist / Honourable Mention" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
+                    <input value={a.kind ?? ''} onChange={(ev) => setEditAwards((prev) => prev.map((x, idx) => idx === i ? { ...x, kind: ev.target.value } : x))} placeholder="Finalist / Honourable Mention" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                   </div>
                   <AdminBtn danger onClick={() => setEditAwards((prev) => prev.filter((_, idx) => idx !== i))}>Remove</AdminBtn>
                 </div>
@@ -552,7 +552,7 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
         <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: `32px ${padX}px`, gap: 20 }}>
           <TagPillV2 hue={HUES.coral} label="Contact" size={isMobile ? 10 : 12} chip={isMobile ? 10 : 14} />
         </header>
-        <div style={{ padding: `${isMobile ? '20px' : '32px'} ${padX}px 0`, borderBottom: isMobile ? `1px solid ${ink}` : 'none' }}>
+        <div style={{ padding: `${isMobile ? '20px' : '32px'} ${padX}px 0` }}>
           <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: titleSize, fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 1, textAlign: 'right' }}>
             Get in touch.
           </h2>
@@ -564,11 +564,11 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
               <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', padding: 14, border: `1px solid ${ink}`, flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: 160 }}>
                   <CapV2 size={10} color={muted}>Label</CapV2>
-                  <input value={m.label} onChange={(e) => updateMethod(i, 'label', e.target.value)} placeholder="e.g. Email" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
+                  <input value={m.label} onChange={(e) => updateMethod(i, 'label', e.target.value)} placeholder="e.g. Email" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                 </div>
                 <div style={{ flex: 2, minWidth: 200 }}>
                   <CapV2 size={10} color={muted}>Value</CapV2>
-                  <input value={m.value} onChange={(e) => updateMethod(i, 'value', e.target.value)} placeholder="URL or email" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
+                  <input value={m.value} onChange={(e) => updateMethod(i, 'value', e.target.value)} placeholder="URL or email" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                 </div>
                 <AdminBtn danger onClick={() => removeMethod(i)}>Remove</AdminBtn>
               </div>

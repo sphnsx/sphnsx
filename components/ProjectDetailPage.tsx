@@ -288,7 +288,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
         <section style={{ padding: '32px 40px', borderBottom: `1px solid ${ink}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <CapV2 size={10} color={muted}>Editing project</CapV2>
-            <h1 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>{editProject.title || initialProject.title}.</h1>
+            <h1 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>{editProject.title || initialProject.title}</h1>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <AdminBtn danger onClick={handleDelete} disabled={isDeleting}>{isDeleting ? 'Deleting…' : 'Delete'}</AdminBtn>

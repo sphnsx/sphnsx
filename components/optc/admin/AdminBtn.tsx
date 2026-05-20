@@ -48,6 +48,9 @@ const AdminBtn: React.FC<AdminBtnProps> = ({
         fontSize: 11,
         textTransform: 'uppercase',
         letterSpacing: '0.14em',
+        lineHeight: 1,
+        // Pull content right by half the trailing tracking so centred labels read centred.
+        textIndent: '0.14em',
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.5 : 1,
         borderRadius: 0,
