@@ -46,7 +46,17 @@ const TagPillV2: React.FC<TagPillV2Props> = ({
     <>
       <span
         aria-hidden="true"
-        style={{ display: 'block', width: chip, height: chip, background: hue, flexShrink: 0 }}
+        style={{
+          display: 'block',
+          width: chip,
+          height: chip,
+          background: hue,
+          flexShrink: 0,
+          // Uppercase glyphs sit in the upper part of their line box, so their
+          // optical centre is above the box centre. A small bottom margin on a
+          // centre-aligned flex row lifts the square ~1px to match the caps.
+          marginBottom: '2px',
+        }}
       />
       <span
         style={{
@@ -54,9 +64,8 @@ const TagPillV2: React.FC<TagPillV2Props> = ({
           fontSize: size,
           textTransform: 'uppercase',
           letterSpacing: '0.14em',
-          // line-height 1 trims the cap text box so it centres against the square chip;
-          // the negative right margin cancels the trailing letter-spacing so the label
-          // sits with equal optical padding on both sides.
+          // line-height 1 trims the cap text box; negative right margin cancels
+          // the trailing letter-spacing so padding looks equal on both sides.
           lineHeight: 1,
           marginRight: '-0.14em',
           color: fg,

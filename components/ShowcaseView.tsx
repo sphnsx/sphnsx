@@ -587,7 +587,7 @@ export const ContactRows: React.FC<ContactSectionProps> = ({ methods, mobile }) 
             style={{
               display: 'grid',
               gridTemplateColumns: '40px 60px 180px 1fr 40px',
-              alignItems: 'baseline',
+              alignItems: 'center',
               gap: 20,
               padding: '26px 0',
               textDecoration: 'none',
@@ -597,7 +597,7 @@ export const ContactRows: React.FC<ContactSectionProps> = ({ methods, mobile }) 
             <ChipV2 color={hue} size={14} />
             <CapV2 size={10} color={muted}>{String(idx + 1).padStart(2, '0')}</CapV2>
             <CapV2 size={11}>{c.label}</CapV2>
-            <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 36, fontWeight: 500, letterSpacing: '-0.025em' }}>{c.value}</span>
+            <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 36, fontWeight: 500, letterSpacing: '-0.025em', lineHeight: 1 }}>{c.value}</span>
             <span style={{ textAlign: 'right' }}>
               <Arrow dir="right" size={22} strokeWidth={1.5} stroke={ink} />
             </span>
