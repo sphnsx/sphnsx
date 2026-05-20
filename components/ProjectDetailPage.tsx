@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { updateProject, deleteProject } from '../services/storageService';
 import { compressImageDataUrl, getImageAspectRatio } from '../utils/imageCompress';
+import { isStorageUrl, uploadImageToStorage } from '../services/supabase';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import RichTextEditor from './RichTextEditor';
 import LocationsField from './admin/LocationsField';
@@ -117,12 +118,25 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
     }
     try {
       setIsSaving(true);
-      const compressed = await Promise.all(editProject.gallery.map((url) => compressImageDataUrl(url)));
+      // For each gallery image:
+      //   - If it's already a Storage URL, keep it (no-op).
+      //   - If it's a base64 data URL, compress then upload → use the Storage URL.
+      // This keeps the JSON row tiny so the upsert never hits the statement timeout.
+      const uploadedGallery = await Promise.all(
+        editProject.gallery.map(async (url) => {
+          if (isStorageUrl(url)) return url;
+          const compressed = await compressImageDataUrl(url);
+          return uploadImageToStorage(compressed, editProject.id);
+        })
+      );
       const coverIndex = editProject.gallery.findIndex((u) => u === editProject.imageUrl);
+      const nextCover = isStorageUrl(editProject.imageUrl)
+        ? editProject.imageUrl
+        : (coverIndex >= 0 ? uploadedGallery[coverIndex] : uploadedGallery[0]);
       const toSave = {
         ...editProject,
-        gallery: compressed,
-        imageUrl: coverIndex >= 0 ? compressed[coverIndex] : compressed[0],
+        gallery: uploadedGallery,
+        imageUrl: nextCover,
       };
       await updateProject(toSave.id, toSave);
       onRefresh();

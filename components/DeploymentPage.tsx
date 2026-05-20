@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { exportPortfolioJson } from '../services/storageService';
+import toast from 'react-hot-toast';
+import { exportPortfolioJson, migrateImagesToStorage } from '../services/storageService';
 import {
   isSupabaseConfigured,
   signInWithSupabase,
@@ -21,6 +22,24 @@ const DeploymentPage: React.FC = () => {
   const [supabasePassword, setSupabasePassword] = useState('');
   const [supabaseLoading, setSupabaseLoading] = useState(false);
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
+  const [migrating, setMigrating] = useState<{ done: number; total: number } | null>(null);
+
+  const handleMigrate = async () => {
+    if (!supabaseUser) {
+      toast.error('Sign in below first so the migration can write to Storage.');
+      return;
+    }
+    if (!confirm('Migrate all inline base64 images to Supabase Storage? This may take a minute.')) return;
+    setMigrating({ done: 0, total: 0 });
+    try {
+      const summary = await migrateImagesToStorage((done, total) => setMigrating({ done, total }));
+      toast.success(`Migrated ${summary.uploaded} image${summary.uploaded === 1 ? '' : 's'} (${summary.skipped} already in Storage).`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Migration failed');
+    } finally {
+      setMigrating(null);
+    }
+  };
 
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
@@ -150,8 +169,30 @@ const DeploymentPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Storage migration — run once to move base64 plates out of the JSON row. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <CapV2 size={10} color={muted}>03 · Domain setup</CapV2>
+          <CapV2 size={10} color={muted}>03 · Image storage</CapV2>
+          <p style={{ margin: '0 0 12px', fontSize: 14, color: muted, lineHeight: 1.55, maxWidth: 720 }}>
+            Move existing inline base64 plate images to Supabase Storage. The JSON row drops from
+            many megabytes to a few KB so saves never hit the statement timeout. Re-runnable — only
+            images that aren't yet in Storage are uploaded.
+          </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <AdminBtn onClick={handleMigrate} disabled={Boolean(migrating)}>
+              {migrating
+                ? (migrating.total > 0 ? `Migrating ${migrating.done} / ${migrating.total}…` : 'Preparing…')
+                : 'Migrate images to Storage'}
+            </AdminBtn>
+            {migrating && migrating.total > 0 && (
+              <CapV2 size={10} color={muted}>
+                {Math.round((migrating.done / migrating.total) * 100)}%
+              </CapV2>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <CapV2 size={10} color={muted}>04 · Domain setup</CapV2>
           <p style={{ margin: 0, fontSize: 14, color: muted, lineHeight: 1.55, maxWidth: 720 }}>
             Configure your custom domain at your DNS provider. DNS changes can take 24–48 hours to propagate globally.
           </p>

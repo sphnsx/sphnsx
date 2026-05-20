@@ -1,7 +1,7 @@
 
 import { PortfolioData, Project, ContactMethod, Exhibition, Award } from '../types';
 import { INITIAL_DATA } from '../constants';
-import { isSupabaseConfigured, getPortfolioFromSupabase, publishPortfolioToSupabase } from './supabase';
+import { isSupabaseConfigured, getPortfolioFromSupabase, publishPortfolioToSupabase, isStorageUrl, uploadImageToStorage } from './supabase';
 
 export const STORAGE_KEY = 'silvia_jiang_portfolio_v1';
 
@@ -287,7 +287,12 @@ export async function updateAboutMe(text: string): Promise<void> {
 
 export async function updateAboutImage(imageDataUrl: string): Promise<PortfolioData> {
   const data = await getPortfolioDataAsync();
-  const updated = { ...data, aboutImage: imageDataUrl };
+  // Empty string = remove. Storage URL = keep verbatim. Base64 = upload first.
+  let value = imageDataUrl;
+  if (imageDataUrl && !isStorageUrl(imageDataUrl)) {
+    value = await uploadImageToStorage(imageDataUrl, 'about');
+  }
+  const updated = { ...data, aboutImage: value };
   await writePortfolioData(updated);
   return updated;
 }
@@ -317,6 +322,44 @@ export async function updateAwards(list: Award[]): Promise<PortfolioData> {
   data.awards = list;
   await writePortfolioData(data);
   return data;
+}
+
+/**
+ * One-time backfill: walk every project, find any base64 image still inline,
+ * upload it to Supabase Storage, swap the entry for the public URL, then save
+ * the (now tiny) row back. Designed to be re-runnable — already-uploaded URLs
+ * are skipped.
+ *
+ * Returns a summary the caller can show via toast.
+ */
+export async function migrateImagesToStorage(
+  onProgress?: (done: number, total: number) => void,
+): Promise<{ uploaded: number; skipped: number }> {
+  const data = await getPortfolioDataAsync();
+  let uploaded = 0;
+  let skipped = 0;
+  // Count totals up-front for progress reporting.
+  const total = data.projects.reduce((acc, p) => acc + (p.imageUrl ? 1 : 0) + (p.gallery?.length ?? 0), 0);
+  let done = 0;
+  const tick = () => { done += 1; onProgress?.(done, total); };
+
+  for (const project of data.projects) {
+    if (project.imageUrl) {
+      if (isStorageUrl(project.imageUrl)) { skipped += 1; }
+      else { project.imageUrl = await uploadImageToStorage(project.imageUrl, project.id); uploaded += 1; }
+      tick();
+    }
+    if (Array.isArray(project.gallery)) {
+      for (let i = 0; i < project.gallery.length; i++) {
+        const url = project.gallery[i];
+        if (isStorageUrl(url)) { skipped += 1; }
+        else { project.gallery[i] = await uploadImageToStorage(url, project.id); uploaded += 1; }
+        tick();
+      }
+    }
+  }
+  await writePortfolioData(data);
+  return { uploaded, skipped };
 }
 
 export async function addProject(project: Project): Promise<PortfolioData> {

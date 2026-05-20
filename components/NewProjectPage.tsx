@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { addProject, reorderProjects } from '../services/storageService';
 import { compressImageDataUrl, getImageAspectRatio } from '../utils/imageCompress';
+import { isStorageUrl, uploadImageToStorage } from '../services/supabase';
 import Arrow from './Arrow';
 import toast from 'react-hot-toast';
 import RichTextEditor from './RichTextEditor';
@@ -262,7 +263,18 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
     try {
       setIsSaving(true);
       const id = slug;
-      const cover = imageUrl || gallery[0] || '';
+      // Upload any inline base64 plates to Storage first so the row stays tiny.
+      const uploadedGallery = await Promise.all(
+        gallery.map((url) => (isStorageUrl(url) ? Promise.resolve(url) : uploadImageToStorage(url, id))),
+      );
+      const coverSource = imageUrl || gallery[0] || '';
+      const cover = coverSource
+        ? (isStorageUrl(coverSource)
+            ? coverSource
+            : (gallery.findIndex((u) => u === coverSource) >= 0
+                ? uploadedGallery[gallery.findIndex((u) => u === coverSource)]
+                : await uploadImageToStorage(coverSource, id)))
+        : '';
       const ratio = coverAspectRatio ?? (cover ? await getImageAspectRatio(cover).catch(() => undefined) : undefined);
       const newProject: Project = {
         id,
@@ -270,7 +282,7 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
         year: year.trim(),
         description: description.trim() || '',
         imageUrl: cover,
-        gallery,
+        gallery: uploadedGallery,
         coverAspectRatio: ratio,
         locations: locations.length ? locations : undefined,
         medium: medium.trim() || undefined,

@@ -6,6 +6,45 @@ const SUPABASE_ANON_KEY = import.meta.env?.VITE_SUPABASE_ANON_KEY?.trim() || '';
 
 const TABLE = 'portfolio';
 const ROW_ID = 1;
+const STORAGE_BUCKET = 'portfolio';
+
+/** True when `value` is already a Supabase Storage public URL (i.e., not a base64 data URL or empty). */
+export function isStorageUrl(value: string): boolean {
+  if (!value) return false;
+  if (value.startsWith('data:')) return false;
+  // Public Storage URLs look like https://<project-ref>.supabase.co/storage/v1/object/public/<bucket>/<path>
+  return /\/storage\/v1\/object\/public\//.test(value) || /^https?:\/\//.test(value);
+}
+
+/**
+ * Upload a base64 data URL (or a Blob) into the `portfolio` Storage bucket and
+ * return its public URL. Requires the caller to have an authenticated session.
+ */
+export async function uploadImageToStorage(dataUrl: string, projectId: string): Promise<string> {
+  const supabase = getClient();
+  if (!supabase) throw new Error('Supabase not configured');
+  // Block uploads when not signed in — Storage RLS would reject anyway.
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error('Not signed in to Supabase. Sign in under Admin → Deployment → Live publish.');
+
+  // Decode the data URL to a Blob.
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  const ext = blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : 'jpg';
+  const id = (globalThis.crypto && 'randomUUID' in globalThis.crypto) ? globalThis.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  const path = `${projectId || 'unsorted'}/${id}.${ext}`;
+
+  const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(path, blob, {
+    cacheControl: '31536000',
+    upsert: false,
+    contentType: blob.type || `image/${ext}`,
+  });
+  if (error) throw new Error(`Storage upload failed: ${error.message}`);
+
+  const { data: pub } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+  if (!pub?.publicUrl) throw new Error('Storage upload succeeded but no public URL was returned.');
+  return pub.publicUrl;
+}
 
 /** Retry once after a short delay to tolerate statement timeout / cold start on Supabase. */
 async function withRetry<T>(fn: () => Promise<T>, delayMs = 1500): Promise<T> {
