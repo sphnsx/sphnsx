@@ -54,7 +54,10 @@ const ProjectDetailsPage: React.FC<{ data: PortfolioData; onRefresh: () => void 
     );
   }
 
-  return <ProjectDetailPage project={project} onRefresh={onRefresh} nextProject={nextProject && nextProject.id !== project.id ? nextProject : undefined} index={idx} total={data.projects.length} />;
+  // Key on the project id so navigating project→project (e.g. "Next") remounts
+  // the page with fresh scroll containers, landing at the top instead of
+  // inheriting the previous page's scroll position (page + nested gallery).
+  return <ProjectDetailPage key={project.id} project={project} onRefresh={onRefresh} nextProject={nextProject && nextProject.id !== project.id ? nextProject : undefined} index={idx} total={data.projects.length} />;
 };
 
 function paragraphsOfPlain(raw: string): string[] {
