@@ -26,7 +26,7 @@ const YearMarkV2: React.FC<YearMarkV2Props> = ({
       display: 'inline-flex',
       alignItems: 'center',
       gap,
-      fontFamily: '"Source Serif 4", ui-serif, Georgia, serif',
+      fontFamily: '"abril-display", ui-serif, Georgia, serif',
       color,
       fontSize: size,
       fontWeight: 700,

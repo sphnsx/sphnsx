@@ -36,7 +36,7 @@ const Arrow: React.FC<ArrowProps> = ({
     className={className}
     style={{
       display: 'inline-block',
-      fontFamily: '"Source Serif 4", ui-serif, Georgia, serif',
+      fontFamily: '"abril-text", ui-serif, Georgia, serif',
       fontSize: size,
       fontWeight: 700,
       lineHeight: 1,

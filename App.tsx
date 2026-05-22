@@ -159,7 +159,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
   const padX = isMobile ? 20 : 40;
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: paper, color: ink, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif' }}>
+    <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: paper, color: ink, fontFamily: '"abril-text", ui-serif, Georgia, serif' }}>
       <TopRibbon active="about" />
 
       {/* HERO */}
@@ -175,7 +175,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
             gap: 40,
           }}
         >
-          <h1 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: titleSize, fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 0.95 }}>
+          <h1 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: titleSize, fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 0.95 }}>
             Silvia.
           </h1>
           {!isMobile && data.aboutImage && (
@@ -257,7 +257,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
           <TagPillV2 hue={HUES.coral} label="Practice" size={isMobile ? 10 : 12} chip={isMobile ? 10 : 14} />
         </header>
         <div style={{ padding: `8px ${padX}px 48px` }}>
-          <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: isMobile ? 56 : 96, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 1 }}>Working notes.</h2>
+          <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: isMobile ? 56 : 96, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 1 }}>Working notes.</h2>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(2, 1fr)', marginTop: 36 }}>
             {[
               ['Medium', 'Analogue film'],
@@ -273,7 +273,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                 }}
               >
                 <CapV2 size={10} color={muted}>{k}</CapV2>
-                <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: isMobile ? 15 : 18, fontWeight: 500, letterSpacing: '-0.01em', lineHeight: 1.3 }}>{v}</span>
+                <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: isMobile ? 15 : 18, fontWeight: 500, letterSpacing: '-0.01em', lineHeight: 1.3 }}>{v}</span>
               </div>
             ))}
           </div>
@@ -292,15 +292,15 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                 <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', padding: 14, border: `1px solid ${ink}`, flexWrap: 'wrap' }}>
                   <div style={{ width: 120 }}>
                     <CapV2 size={10} color={muted}>Year</CapV2>
-                    <input value={e.year} onChange={(ev) => updateExhibition(i, 'year', ev.target.value)} placeholder="2024" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
+                    <input value={e.year} onChange={(ev) => updateExhibition(i, 'year', ev.target.value)} placeholder="2024" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                   </div>
                   <div style={{ flex: 2, minWidth: 200 }}>
                     <CapV2 size={10} color={muted}>Venue</CapV2>
-                    <input value={e.venue} onChange={(ev) => updateExhibition(i, 'venue', ev.target.value)} placeholder="Venue, City" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
+                    <input value={e.venue} onChange={(ev) => updateExhibition(i, 'venue', ev.target.value)} placeholder="Venue, City" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 140 }}>
                     <CapV2 size={10} color={muted}>Kind</CapV2>
-                    <input value={e.kind ?? ''} onChange={(ev) => updateExhibition(i, 'kind', ev.target.value)} placeholder="Solo / Group" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
+                    <input value={e.kind ?? ''} onChange={(ev) => updateExhibition(i, 'kind', ev.target.value)} placeholder="Solo / Group" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                   </div>
                   <AdminBtn danger onClick={() => removeExhibition(i)}>Remove</AdminBtn>
                 </div>
@@ -334,7 +334,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                     {/* Year (own cell) — chevron + year, no bar */}
                     <span
                       style={{
-                        fontFamily: '"Source Serif 4", ui-serif, Georgia, serif',
+                        fontFamily: '"abril-text", ui-serif, Georgia, serif',
                         fontSize: isMobile ? 32 : 48,
                         fontWeight: 500,
                         letterSpacing: '-0.04em',
@@ -357,7 +357,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                         flexShrink: 0,
                       }}
                     />
-                    <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 24, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{row.venue}</span>
+                    <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 24, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{row.venue}</span>
                     {!isMobile && <CapV2 size={10} color={muted}>{row.kind ?? ''}</CapV2>}
                     {!isMobile && <span />}
                   </div>
@@ -393,15 +393,15 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                 <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', padding: 14, border: `1px solid ${ink}`, flexWrap: 'wrap' }}>
                   <div style={{ width: 120 }}>
                     <CapV2 size={10} color={muted}>Year</CapV2>
-                    <input value={a.year} onChange={(ev) => setEditAwards((prev) => prev.map((x, idx) => idx === i ? { ...x, year: ev.target.value } : x))} placeholder="2025" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
+                    <input value={a.year} onChange={(ev) => setEditAwards((prev) => prev.map((x, idx) => idx === i ? { ...x, year: ev.target.value } : x))} placeholder="2025" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                   </div>
                   <div style={{ flex: 2, minWidth: 200 }}>
                     <CapV2 size={10} color={muted}>Title</CapV2>
-                    <input value={a.title} onChange={(ev) => setEditAwards((prev) => prev.map((x, idx) => idx === i ? { ...x, title: ev.target.value } : x))} placeholder="Award title" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
+                    <input value={a.title} onChange={(ev) => setEditAwards((prev) => prev.map((x, idx) => idx === i ? { ...x, title: ev.target.value } : x))} placeholder="Award title" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 140 }}>
                     <CapV2 size={10} color={muted}>Kind</CapV2>
-                    <input value={a.kind ?? ''} onChange={(ev) => setEditAwards((prev) => prev.map((x, idx) => idx === i ? { ...x, kind: ev.target.value } : x))} placeholder="Finalist / Honourable Mention" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
+                    <input value={a.kind ?? ''} onChange={(ev) => setEditAwards((prev) => prev.map((x, idx) => idx === i ? { ...x, kind: ev.target.value } : x))} placeholder="Finalist / Honourable Mention" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                   </div>
                   <AdminBtn danger onClick={() => setEditAwards((prev) => prev.filter((_, idx) => idx !== i))}>Remove</AdminBtn>
                 </div>
@@ -444,7 +444,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                     {/* Year (own cell) — chevron + year, no bar */}
                     <span
                       style={{
-                        fontFamily: '"Source Serif 4", ui-serif, Georgia, serif',
+                        fontFamily: '"abril-text", ui-serif, Georgia, serif',
                         fontSize: isMobile ? 32 : 48,
                         fontWeight: 500,
                         letterSpacing: '-0.04em',
@@ -467,7 +467,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                         flexShrink: 0,
                       }}
                     />
-                    <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 24, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{row.title}</span>
+                    <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 24, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{row.title}</span>
                     {!isMobile && <CapV2 size={10} color={muted}>{row.kind ?? ''}</CapV2>}
                     {!isMobile && <span />}
                   </div>
@@ -492,13 +492,13 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
       )}
 
       {/* BOTTOM NAV */}
-      <section style={{ borderBottom: `1px solid ${ink}`, padding: `32px ${padX}px`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <section style={{ borderBottom: `1px solid ${ink}`, padding: `32px ${padX}px`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
         <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
           <Arrow dir="left" size={isMobile ? 18 : 22} stroke={ink} />
-          <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Works</span>
+          <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Works</span>
         </Link>
         <Link to="/contact" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Contact</span>
+          <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Contact</span>
           <Arrow dir="right" size={isMobile ? 18 : 22} stroke={ink} />
         </Link>
       </section>
@@ -545,7 +545,7 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
   const titleSize = isMobile ? 80 : 168;
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: paper, color: ink, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif' }}>
+    <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: paper, color: ink, fontFamily: '"abril-text", ui-serif, Georgia, serif' }}>
       <TopRibbon active="contact" />
 
       <section style={{ borderBottom: `1px solid ${ink}` }}>
@@ -553,7 +553,7 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
           <TagPillV2 hue={HUES.coral} label="Contact" size={isMobile ? 10 : 12} chip={isMobile ? 10 : 14} />
         </header>
         <div style={{ padding: `${isMobile ? '20px' : '32px'} ${padX}px 0` }}>
-          <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: titleSize, fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 1, textAlign: 'right' }}>
+          <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: titleSize, fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 1, textAlign: 'right' }}>
             Get in touch.
           </h2>
         </div>
@@ -564,11 +564,11 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
               <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', padding: 14, border: `1px solid ${ink}`, flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: 160 }}>
                   <CapV2 size={10} color={muted}>Label</CapV2>
-                  <input value={m.label} onChange={(e) => updateMethod(i, 'label', e.target.value)} placeholder="e.g. Email" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
+                  <input value={m.label} onChange={(e) => updateMethod(i, 'label', e.target.value)} placeholder="e.g. Email" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                 </div>
                 <div style={{ flex: 2, minWidth: 200 }}>
                   <CapV2 size={10} color={muted}>Value</CapV2>
-                  <input value={m.value} onChange={(e) => updateMethod(i, 'value', e.target.value)} placeholder="URL or email" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
+                  <input value={m.value} onChange={(e) => updateMethod(i, 'value', e.target.value)} placeholder="URL or email" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                 </div>
                 <AdminBtn danger onClick={() => removeMethod(i)}>Remove</AdminBtn>
               </div>
@@ -591,13 +591,13 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
         )}
       </section>
 
-      <section style={{ borderBottom: `1px solid ${ink}`, padding: `32px ${padX}px`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <section style={{ borderBottom: `1px solid ${ink}`, padding: `32px ${padX}px`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
         <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
           <Arrow dir="left" size={isMobile ? 18 : 22} stroke={ink} />
-          <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Works</span>
+          <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Works</span>
         </Link>
         <Link to="/about" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>About</span>
+          <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>About</span>
           <Arrow dir="right" size={isMobile ? 18 : 22} stroke={ink} />
         </Link>
       </section>
@@ -651,7 +651,7 @@ const HomeRouteWrapper: React.FC<{ data: PortfolioData; onRefresh: () => void }>
 };
 
 const LoadingScreen: React.FC = () => (
-  <div className="min-h-screen bg-bgMain text-textPrimary flex items-center justify-center" style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif' }}>
+  <div className="min-h-screen bg-bgMain text-textPrimary flex items-center justify-center" style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif' }}>
     <p
       className="text-sm uppercase tracking-wider text-textSecondary"
       style={{ fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif' }}

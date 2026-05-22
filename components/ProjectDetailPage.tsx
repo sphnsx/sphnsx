@@ -210,7 +210,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
               {meta.map(([k, v], i) => (
                 <React.Fragment key={i}>
                   <CapV2 size={9} color={muted}>{k}</CapV2>
-                  <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 13, color: ink, lineHeight: 1.3 }}>{v}</span>
+                  <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 13, color: ink, lineHeight: 1.3 }}>{v}</span>
                 </React.Fragment>
               ))}
             </div>
@@ -224,7 +224,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
               <TagPillV2 hue={HUES.yellow} label="Statement" size={10} chip={10} />
             </header>
             <div style={{ padding: '8px 20px 0' }}>
-              <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 32, fontWeight: 400, fontStyle: 'italic', letterSpacing: '-0.02em', lineHeight: 1.2 }}>{pullQuote}</h2>
+              <h2 style={{ margin: 0, fontFamily: '"sarvatrik-latin-variable", ui-serif, Georgia, serif', fontSize: 32, fontWeight: 400, fontStyle: 'italic', letterSpacing: '-0.02em', lineHeight: 1.2 }}>{pullQuote}</h2>
             </div>
             <div style={{ padding: '20px 20px 28px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               {bodyParas.map((p, i) => (
@@ -260,14 +260,14 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
         <section style={{ padding: '20px', borderBottom: `1px solid ${ink}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 'auto' }}>
           <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             <Arrow dir="left" size={18} stroke={ink} />
-            <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 18, fontWeight: 500 }}>All works</span>
+            <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 18, fontWeight: 500 }}>All works</span>
           </Link>
           {nextProject ? (
             <Link
               to={projectPath(nextProject)}
               style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 8 }}
             >
-              <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 18, fontWeight: 500 }}>Next</span>
+              <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 18, fontWeight: 500 }}>Next</span>
               <Arrow dir="right" size={18} stroke={ink} />
             </Link>
           ) : null}
@@ -288,7 +288,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
         <section style={{ padding: '32px 40px', borderBottom: `1px solid ${ink}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <CapV2 size={10} color={muted}>Editing project</CapV2>
-            <h1 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>{editProject.title || initialProject.title}</h1>
+            <h1 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>{editProject.title || initialProject.title}</h1>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <AdminBtn danger onClick={handleDelete} disabled={isDeleting}>{isDeleting ? 'Deleting…' : 'Delete'}</AdminBtn>
@@ -440,7 +440,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
               {meta.map(([k, v], i) => (
                 <React.Fragment key={i}>
                   <CapV2 size={10} color={muted}>{k}</CapV2>
-                  <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 15, color: ink, lineHeight: 1.3 }}>{v}</span>
+                  <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 15, color: ink, lineHeight: 1.3 }}>{v}</span>
                 </React.Fragment>
               ))}
             </div>
@@ -477,7 +477,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
               </header>
               <div style={{ padding: '32px 40px 32px', borderBottom: `1px solid ${ink}` }}>
                 {/* Editorial pull quote: lighter weight, italic, generous leading — easier to read for long sentences. */}
-                <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 68, fontWeight: 400, fontStyle: 'italic', letterSpacing: '-0.025em', lineHeight: 1.18, maxWidth: 1100 }}>{pullQuote}</h2>
+                <h2 style={{ margin: 0, fontFamily: '"sarvatrik-latin-variable", ui-serif, Georgia, serif', fontSize: 68, fontWeight: 400, fontStyle: 'italic', letterSpacing: '-0.025em', lineHeight: 1.18, maxWidth: 1100 }}>{pullQuote}</h2>
               </div>
             </>
           )}
@@ -529,14 +529,14 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
       <section style={{ borderBottom: `1px solid ${ink}`, padding: '32px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
         <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
           <Arrow dir="left" size={22} stroke={ink} />
-          <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em' }}>All works</span>
+          <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em' }}>All works</span>
         </Link>
         {nextProject ? (
           <Link
             to={projectPath(nextProject)}
             style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}
           >
-            <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Next</span>
+            <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Next</span>
             <Arrow dir="right" size={22} stroke={ink} />
           </Link>
         ) : null}

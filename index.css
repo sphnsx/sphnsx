@@ -3,19 +3,15 @@
 @tailwind utilities;
 
 /*
- * Default body type = Source Serif 4 (Subhead optical size). The serif carries
- * all reading-heavy text by default: paragraphs, bios, statements, big
- * editorial headings, project titles. Sans (Sukhumvit Set) is scoped to UI
- * chrome only — caps labels, breadcrumbs, nav pills, button text, meta
- * captions, footer microcopy — via explicit `fontFamily` on those primitives
- * (`CapV2`, `AdminBtn`, etc.) and the `font-mono` Tailwind utility.
- *
- * Source Serif 4 is variable with an `opsz` axis (8…60); "Subhead" sits around
- * 24. We pin `opsz: 24` so the serif always renders in its Subhead optical
- * size (sans fonts ignore the property).
+ * Default body type = Abril Text. The serif carries all reading-heavy text by
+ * default: paragraphs, bios, statements, meta. Large display headings use the
+ * Abril Display optical size (set via explicit `fontFamily` on those
+ * headings); italic pull-quotes use Sarvatrik Latin Variable. Sans (Sukhumvit
+ * Set) is scoped to UI chrome only — caps labels, breadcrumbs, nav pills,
+ * button text, footer microcopy — via explicit `fontFamily` on those
+ * primitives (`CapV2`, `AdminBtn`, etc.) and the `font-mono` Tailwind utility.
  */
 html, body {
-  font-family: 'Source Serif 4', ui-serif, Georgia, serif;
+  font-family: 'abril-text', ui-serif, Georgia, serif;
   font-optical-sizing: auto;
-  font-variation-settings: 'opsz' 24;
 }

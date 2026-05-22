@@ -76,7 +76,7 @@ const TopRibbon: React.FC<TopRibbonProps> = ({ active = null }) => {
     >
       <span
         style={{
-          fontFamily: '"Source Serif 4", ui-serif, Georgia, serif',
+          fontFamily: '"abril-text", ui-serif, Georgia, serif',
           fontSize: isMobile ? 20 : 22,
           fontStyle: 'italic',
           fontWeight: 500,

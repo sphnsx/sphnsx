@@ -48,7 +48,7 @@ const AdminLoginPage: React.FC = () => {
         <form onSubmit={handleSubmit} style={{ width: 460, maxWidth: '100%', display: 'flex', flexDirection: 'column', gap: 32 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <CapV2 size={11} color={muted}>Restricted access</CapV2>
-            <h1 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>
+            <h1 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>
               Admin login.
             </h1>
           </div>

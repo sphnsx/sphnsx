@@ -156,7 +156,7 @@ const HeroSection: React.FC<HeroProps> = ({ featured, isAdmin, mobile }) => {
             {meta.map(([k, v], i) => (
               <React.Fragment key={i}>
                 <CapV2 size={9} color={muted}>{k}</CapV2>
-                <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 13, color: ink, lineHeight: 1.3 }}>{v}</span>
+                <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 13, color: ink, lineHeight: 1.3 }}>{v}</span>
               </React.Fragment>
             ))}
           </div>
@@ -237,7 +237,7 @@ const HeroSection: React.FC<HeroProps> = ({ featured, isAdmin, mobile }) => {
               {meta.map(([k, v], i) => (
                 <React.Fragment key={i}>
                   <CapV2 size={10} color={muted}>{k}</CapV2>
-                  <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 15, color: ink, lineHeight: 1.3 }}>{v}</span>
+                  <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 15, color: ink, lineHeight: 1.3 }}>{v}</span>
                 </React.Fragment>
               ))}
             </div>
@@ -300,7 +300,7 @@ const ConceptSection: React.FC<ConceptProps> = ({ description, mobile }) => {
           <TagPillV2 hue={HUES.yellow} label="Concept" size={10} chip={10} />
         </header>
         <div style={{ padding: '20px 20px 0', borderBottom: `1px solid ${ink}` }}>
-          <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 44, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>{quote}</h2>
+          <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 44, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>{quote}</h2>
         </div>
         {bodyParas.length > 0 && (
           <div style={{ padding: '20px 20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -320,7 +320,7 @@ const ConceptSection: React.FC<ConceptProps> = ({ description, mobile }) => {
       </header>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'stretch' }}>
         <div style={{ padding: '8px 40px 48px', display: 'flex', alignItems: 'flex-start' }}>
-          <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 72, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1.02 }}>{quote}</h2>
+          <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 72, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1.02 }}>{quote}</h2>
         </div>
         <div style={{ padding: '14px 40px 48px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           {bodyParas.map((p, i) => (
@@ -378,7 +378,7 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
                     // Left padding 60 = 20 (section) + ~40 (width of `> ` at year size 36) so titles align with the `2` of `2025`.
                     style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '4px 20px 20px 60px', textDecoration: 'none', color: ink }}
                   >
-                    <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 0.98 }}>
+                    <span style={{ fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 0.98 }}>
                       {p.title}
                     </span>
                     {slash.length > 0 && <CapV2 size={9} color={muted}>{slash.join(' · ')}</CapV2>}
@@ -434,7 +434,7 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
                   <CapV2 size={10} color={muted}>
                     {String(ri + 1).padStart(2, '0')} / {String(rows.length).padStart(2, '0')}
                   </CapV2>
-                  <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 0.95 }}>
+                  <span style={{ fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 0.95 }}>
                     {p.title}
                   </span>
                   <CapV2 size={10} color={muted}>{slash.join(' · ')}</CapV2>
@@ -471,7 +471,7 @@ const AboutTeaser: React.FC<AboutTeaserProps> = ({ aboutMe, mobile }) => {
           <TagPillV2 hue={HUES.mint} label="About" size={10} chip={10} to="/about" />
         </header>
         <div style={{ padding: '20px 20px 0' }}>
-          <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 80, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 1 }}>Silvia.</h2>
+          <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 80, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 1 }}>Silvia.</h2>
         </div>
         <div style={{ padding: '20px 20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>{intro}</p>
@@ -503,7 +503,7 @@ const AboutTeaser: React.FC<AboutTeaserProps> = ({ aboutMe, mobile }) => {
       </header>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'start' }}>
         <div style={{ padding: '0 40px 48px', display: 'flex', alignItems: 'flex-start' }}>
-          <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 144, fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 1 }}>Silvia.</h2>
+          <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 144, fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 1 }}>Silvia.</h2>
         </div>
         {/* Body text top-aligned with the cap height of "Silvia." (~22% of the 144px line). */}
         <div style={{ padding: '32px 40px 48px', display: 'flex', flexDirection: 'column', gap: 22 }}>
@@ -562,7 +562,7 @@ export const ContactRows: React.FC<ContactSectionProps> = ({ methods, mobile }) 
                 <CapV2 size={10}>{c.label}</CapV2>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 20, fontWeight: 500, letterSpacing: '-0.02em', wordBreak: 'break-all' }}>{c.value}</span>
+                <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 20, fontWeight: 500, letterSpacing: '-0.02em', wordBreak: 'break-all' }}>{c.value}</span>
                 <Arrow dir="right" size={18} strokeWidth={1.5} stroke={ink} />
               </div>
             </a>
@@ -597,7 +597,7 @@ export const ContactRows: React.FC<ContactSectionProps> = ({ methods, mobile }) 
             <ChipV2 color={hue} size={14} />
             <CapV2 size={10} color={muted}>{String(idx + 1).padStart(2, '0')}</CapV2>
             <CapV2 size={11}>{c.label}</CapV2>
-            <span style={{ fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 36, fontWeight: 500, letterSpacing: '-0.025em', lineHeight: 1 }}>{c.value}</span>
+            <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 36, fontWeight: 500, letterSpacing: '-0.025em', lineHeight: 1 }}>{c.value}</span>
             <span style={{ textAlign: 'right' }}>
               <Arrow dir="right" size={22} strokeWidth={1.5} stroke={ink} />
             </span>
@@ -641,7 +641,7 @@ const ContactSection: React.FC<{ mobile?: boolean }> = ({ mobile }) => {
           <TagPillV2 hue={HUES.coral} label="Contact" size={10} chip={10} to="/contact" />
         </header>
         <div style={{ padding: '20px 20px 0' }}>
-          <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 80, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 1, textAlign: 'right' }}>Get in touch.</h2>
+          <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 80, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 1, textAlign: 'right' }}>Get in touch.</h2>
         </div>
         <div style={{ padding: '20px 20px 24px', display: 'flex', justifyContent: 'flex-end' }}>{cta}</div>
       </section>
@@ -654,7 +654,7 @@ const ContactSection: React.FC<{ mobile?: boolean }> = ({ mobile }) => {
         <TagPillV2 hue={HUES.coral} label="Contact" to="/contact" />
       </header>
       <div style={{ padding: '32px 40px 0' }}>
-        <h2 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 168, fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 1, textAlign: 'right' }}>Get in touch.</h2>
+        <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 168, fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 1, textAlign: 'right' }}>Get in touch.</h2>
       </div>
       <div style={{ padding: '32px 40px 48px', display: 'flex', justifyContent: 'flex-end' }}>{cta}</div>
     </section>
@@ -687,7 +687,7 @@ const ShowcaseView: React.FC<ShowcaseProps> = ({ data }) => {
   return (
     <div
       className="fixed inset-0 flex flex-col overflow-y-auto"
-      style={{ background: paper, color: ink, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif' }}
+      style={{ background: paper, color: ink, fontFamily: '"abril-text", ui-serif, Georgia, serif' }}
     >
       <TopRibbon active="works" />
       <WorksIndex years={years} byYear={byYear} mobile={isMobile} />

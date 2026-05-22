@@ -28,7 +28,7 @@ const MarkerTitleV2: React.FC<MarkerTitleV2Props> = ({
       style={{
         position: 'relative',
         display: 'inline-block',
-        fontFamily: '"Source Serif 4", ui-serif, Georgia, serif',
+        fontFamily: '"abril-display", ui-serif, Georgia, serif',
         fontWeight: 700,
         fontSize: size,
         lineHeight: 0.9,
@@ -56,7 +56,7 @@ const MarkerTitleV2: React.FC<MarkerTitleV2Props> = ({
           <span
             key={i}
             style={{
-              fontFamily: '"Source Serif 4", ui-serif, Georgia, serif',
+              fontFamily: '"abril-text", ui-serif, Georgia, serif',
               fontSize: 12,
               textTransform: 'uppercase',
               letterSpacing: '0.16em',

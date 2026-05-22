@@ -77,7 +77,7 @@ export const AdminProjectListPage: React.FC<PageProps> = ({ data, onRefresh }) =
       <AdminTop trail={['Admin', 'Projects']} />
 
       <section style={{ borderBottom: `1px solid ${ink}`, padding: '24px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <h1 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>Projects.</h1>
+        <h1 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>Projects.</h1>
         <div style={{ display: 'flex', gap: 8 }}>
           {isReordering ? (
             <>
@@ -328,7 +328,7 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
       <section style={{ padding: '24px 32px', borderBottom: `1px solid ${ink}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <CapV2 size={10} color={muted}>New project</CapV2>
-          <h1 style={{ margin: 0, fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>
+          <h1 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>
             {title.trim() || 'Untitled'}.
           </h1>
         </div>

@@ -109,7 +109,7 @@ const DeploymentPage: React.FC = () => {
 
       <section style={{ padding: '32px 32px 24px', borderBottom: `1px solid ${ink}` }}>
         <CapV2 size={10} color={muted}>Site operations</CapV2>
-        <h1 style={{ margin: '12px 0 0', fontFamily: '"Source Serif 4", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>Deployment.</h1>
+        <h1 style={{ margin: '12px 0 0', fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>Deployment.</h1>
         <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.55, color: muted, maxWidth: 720 }}>
           Publishing, backups and domain configuration. Changes here affect the live site.
         </p>

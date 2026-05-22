@@ -12,10 +12,12 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        // Default body type — Source Serif 4 (reading + display).
-        sans: ['Source Serif 4', 'ui-serif', 'Georgia', 'serif'],
+        // Default body type — Abril Text (reading).
+        sans: ['abril-text', 'ui-serif', 'Georgia', 'serif'],
         // Same as `sans` for any explicit `font-serif` Tailwind references.
-        serif: ['Source Serif 4', 'ui-serif', 'Georgia', 'serif'],
+        serif: ['abril-text', 'ui-serif', 'Georgia', 'serif'],
+        // Large editorial display headings — Abril Display optical size.
+        display: ['abril-display', 'ui-serif', 'Georgia', 'serif'],
         // UI / caps-label stack — Sukhumvit Set (Apple-bundled, system fallback elsewhere).
         mono: ['Sukhumvit Set', '-apple-system', 'BlinkMacSystemFont', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
