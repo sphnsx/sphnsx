@@ -85,7 +85,7 @@ const TopRibbon: React.FC<TopRibbonProps> = ({ active = null }) => {
           color: ink,
         }}
       >
-        sphnsx<span style={{ marginLeft: 4 }}>.com</span>
+        sphnsx.com
       </span>
     </Link>
   );
