@@ -60,6 +60,36 @@ const ProjectDetailsPage: React.FC<{ data: PortfolioData; onRefresh: () => void 
   return <ProjectDetailPage key={project.id} project={project} onRefresh={onRefresh} nextProject={nextProject && nextProject.id !== project.id ? nextProject : undefined} index={idx} total={data.projects.length} />;
 };
 
+/** Swap `idx` with its neighbour in `dir`; returns the list untouched at either end. */
+function moveInList<T>(list: T[], idx: number, dir: -1 | 1): T[] {
+  const target = idx + dir;
+  if (target < 0 || target >= list.length) return list;
+  const next = [...list];
+  [next[target], next[idx]] = [next[idx], next[target]];
+  return next;
+}
+
+/** ↑/↓ pair for admin list editors — matches the projects reorder chrome. */
+const ReorderBtns: React.FC<{ index: number; total: number; onMove: (dir: -1 | 1) => void }> = ({ index, total, onMove }) => {
+  const ink = PALETTE.textPrimary;
+  const btn = (disabled: boolean): React.CSSProperties => ({
+    background: 'transparent',
+    border: `1px solid ${ink}`,
+    color: ink,
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.35 : 1,
+    padding: '4px 8px',
+    lineHeight: 1,
+    borderRadius: 0,
+  });
+  return (
+    <span style={{ display: 'inline-flex', gap: 6 }}>
+      <button type="button" aria-label="Move up" disabled={index <= 0} onClick={() => onMove(-1)} style={btn(index <= 0)}>↑</button>
+      <button type="button" aria-label="Move down" disabled={index >= total - 1} onClick={() => onMove(1)} style={btn(index >= total - 1)}>↓</button>
+    </span>
+  );
+};
+
 function paragraphsOfPlain(raw: string): string[] {
   if (!raw) return [];
   const hasTags = /<[a-z][\s\S]*>/i.test(raw);
@@ -113,6 +143,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
 
   const addExhibition = () => setEditExhibitions((prev) => [...prev, { year: '', venue: '', kind: '' }]);
   const removeExhibition = (i: number) => setEditExhibitions((prev) => prev.filter((_, idx) => idx !== i));
+  const moveExhibition = (i: number, dir: -1 | 1) => setEditExhibitions((prev) => moveInList(prev, i, dir));
   const updateExhibition = (i: number, field: 'year' | 'venue' | 'kind', value: string) => {
     setEditExhibitions((prev) => prev.map((e, idx) => (idx === i ? { ...e, [field]: value } : e)));
   };
@@ -305,6 +336,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                     <CapV2 size={10} color={muted}>Kind</CapV2>
                     <input value={e.kind ?? ''} onChange={(ev) => updateExhibition(i, 'kind', ev.target.value)} placeholder="Solo / Group" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                   </div>
+                  <ReorderBtns index={i} total={editExhibitions.length} onMove={(dir) => moveExhibition(i, dir)} />
                   <AdminBtn danger onClick={() => removeExhibition(i)}>Remove</AdminBtn>
                 </div>
               ))}
@@ -406,6 +438,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                     <CapV2 size={10} color={muted}>Kind</CapV2>
                     <input value={a.kind ?? ''} onChange={(ev) => setEditAwards((prev) => prev.map((x, idx) => idx === i ? { ...x, kind: ev.target.value } : x))} placeholder="Finalist / Honourable Mention" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
                   </div>
+                  <ReorderBtns index={i} total={editAwards.length} onMove={(dir) => setEditAwards((prev) => moveInList(prev, i, dir))} />
                   <AdminBtn danger onClick={() => setEditAwards((prev) => prev.filter((_, idx) => idx !== i))}>Remove</AdminBtn>
                 </div>
               ))}
