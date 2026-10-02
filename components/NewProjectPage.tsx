@@ -252,17 +252,24 @@ const NewProjectPage: React.FC<NewProjectPageProps> = ({ data, onRefresh }) => {
       return;
     }
     const slug = slugify(trimmedTitle);
-    if (!slug || isReservedSlug(slug)) {
+    if (slug && isReservedSlug(slug)) {
       alert('That title produces a URL that conflicts with a site page. Please choose a different title.');
       return;
     }
-    if (data.projects.some((p) => slugify(p.title) === slug)) {
+    // A title with no letters or digits at all (emoji, punctuation) has no slug to
+    // compare, so fall back to matching the title itself for the duplicate check.
+    const duplicate = slug
+      ? data.projects.some((p) => slugify(p.title) === slug)
+      : data.projects.some((p) => p.title.trim() === trimmedTitle);
+    if (duplicate) {
       alert('A project with this title already exists. Please choose a different title.');
       return;
     }
     try {
       setIsSaving(true);
-      const id = slug;
+      // Slugless titles still get a project: it lives at a generated id, which is
+      // what projectPath() and findProjectBySlug() fall back to for its URL.
+      const id = slug || `p-${Date.now().toString(36)}`;
       // Upload any inline base64 plates to Storage first so the row stays tiny.
       const uploadedGallery = await Promise.all(
         gallery.map((url) => (isStorageUrl(url) ? Promise.resolve(url) : uploadImageToStorage(url, id))),

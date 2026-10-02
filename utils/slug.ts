@@ -3,12 +3,24 @@ import type { Project } from '../types';
 /** Paths handled by their own <Route> — a project whose title slugifies to one of these would shadow the real page, so we reject that title at creation time. */
 const RESERVED_SLUGS = new Set(['', 'about', 'contact', 'admin', 'a', 'project']);
 
-/** Convert a project title into a URL slug: lowercase, non-alphanumerics → dashes, trim dashes. Stable across repeated calls. */
+/**
+ * Convert a project title into a URL slug: lowercase, accents folded onto their
+ * base letter ("Afurodīte" → "afurodite"), runs of anything that is not a letter
+ * or digit collapsed to dashes, dashes trimmed. Stable across repeated calls.
+ *
+ * Letters are kept in EVERY script, so a title written in Japanese, Korean or
+ * Cyrillic keeps its own characters instead of slugifying to nothing — browsers
+ * percent-encode them in the address bar and decode them back for the router. A
+ * title with no letters or digits at all (emoji, punctuation) still yields '',
+ * and the caller falls back to the project id for the URL.
+ */
 export function slugify(title: string): string {
   return title
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '') // drop combining marks left by NFKD
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/[^\p{Letter}\p{Number}]+/gu, '-')
     .replace(/^-+|-+$/g, '');
 }
 

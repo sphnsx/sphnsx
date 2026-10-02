@@ -70,13 +70,16 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const editor = useEditor({
     extensions,
     content: initialContent,
+    // Create the editor from an effect rather than during render, so there is no
+    // window where an editor instance exists without a mounted view.
+    immediatelyRender: false,
     editorProps: {
       attributes: {
         class: 'prose prose-sm max-w-none font-sans text-textPrimary focus:outline-none min-h-[8rem]',
       },
       handleDOMEvents: {
         blur: () => {
-          if (editor) onChange(editor.getHTML());
+          if (editor && !editor.isDestroyed) onChange(editor.getHTML());
         },
       },
     },
@@ -86,15 +89,24 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   }, [extensions]);
 
   useEffect(() => {
-    if (!editor) return;
-    const current = editor.getHTML();
-    const valueEmpty = !value?.trim();
-    const next = valueEmpty ? '<p></p>' : (value.includes('<') ? value : plainTextToHtml(value));
-    if (document.activeElement === editor.view.dom) return;
-    // Never replace real editor content with an empty doc because parent state lagged (blur/paste races).
-    if (!htmlHasVisibleText(next) && htmlHasVisibleText(current)) return;
-    if (current !== next) {
-      editor.commands.setContent(next, { emitUpdate: false });
+    // `editor.view` is a proxy that THROWS when the view is not mounted ("The
+    // editor view is not available…"), and both the focus check and setContent go
+    // through it. An unguarded throw here propagates out of the effect and takes
+    // the whole page down, so bail unless the view is live and swallow any
+    // remaining race: a skipped sync is invisible, a blank site is not.
+    if (!editor || editor.isDestroyed || !editor.isInitialized) return;
+    try {
+      const current = editor.getHTML();
+      const valueEmpty = !value?.trim();
+      const next = valueEmpty ? '<p></p>' : (value.includes('<') ? value : plainTextToHtml(value));
+      if (document.activeElement === editor.view.dom) return;
+      // Never replace real editor content with an empty doc because parent state lagged (blur/paste races).
+      if (!htmlHasVisibleText(next) && htmlHasVisibleText(current)) return;
+      if (current !== next) {
+        editor.commands.setContent(next, { emitUpdate: false });
+      }
+    } catch (e) {
+      console.warn('Rich text content sync skipped (editor not ready):', e);
     }
   }, [editor, value]);
 
