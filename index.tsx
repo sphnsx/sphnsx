@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import RootErrorBoundary from './components/RootErrorBoundary';
 import { getPortfolioDataAsync } from './services/storageService';
 
 // Start loading portfolio as early as possible (helps private/incognito where there is no cache).
@@ -36,9 +37,17 @@ if (!rootElement) {
   throw new Error('Could not find root element to mount to');
 }
 
+// Mounting is the success signal for the stale-asset self-heal in index.html:
+// release its guard so a future stale deploy in this tab can reload once again.
+try {
+  sessionStorage.removeItem('sphnsx_stale_asset_reload');
+} catch (_) {}
+
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <App />
+    <RootErrorBoundary>
+      <App />
+    </RootErrorBoundary>
   </React.StrictMode>
 );

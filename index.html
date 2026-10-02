@@ -18,6 +18,42 @@
       not distributed as one.
     -->
     <link rel="stylesheet" href="https://use.typekit.net/rgr4xrc.css" />
+    <!--
+      Stale-cache self-heal. Each build emits a new hashed bundle and drops the
+      previous one, so a browser holding an older index.html (open tab, edge
+      cache, Safari back/forward cache) requests a script that is now a 404 and
+      renders nothing but a white page. Catch that failure once and re-fetch the
+      page past the cache; the guard key keeps it from looping when the asset is
+      genuinely unreachable (offline, outage).
+    -->
+    <script>
+      (function () {
+        var KEY = 'sphnsx_stale_asset_reload';
+        window.addEventListener(
+          'error',
+          function (e) {
+            var el = e.target;
+            if (!el || (el.tagName !== 'SCRIPT' && el.tagName !== 'LINK')) return;
+            var src = el.src || el.href || '';
+            if (src.indexOf('/assets/') === -1) return;
+            try {
+              if (sessionStorage.getItem(KEY)) return;
+              sessionStorage.setItem(KEY, '1');
+            } catch (_) {}
+            location.replace(location.pathname + '?r=' + Date.now() + location.hash);
+          },
+          true
+        );
+        // The guard is released by index.tsx once the app has actually mounted, so a
+        // genuinely missing asset fails visibly instead of reloading forever.
+        window.addEventListener('load', function () {
+          // Drop the cache-busting param so the URL the visitor sees stays clean.
+          if (/[?&]r=\d+/.test(location.search)) {
+            history.replaceState(null, '', location.pathname + location.hash);
+          }
+        });
+      })();
+    </script>
   </head>
   <body class="font-sans antialiased">
     <div id="root"></div>
