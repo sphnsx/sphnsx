@@ -112,7 +112,6 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
   const listSections = [
     {
       label: 'Exhibitions',
-      hue: HUES.yellow,
       entries: exhibitions.map((e) => ({ year: e.year, label: e.venue, kind: e.kind })),
       entryFieldLabel: 'Venue',
       entryFieldPlaceholder: 'Venue, City',
@@ -124,7 +123,6 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
     },
     {
       label: 'Awards',
-      hue: HUES.mint,
       entries: awards.map((a) => ({ year: a.year, label: a.title, kind: a.kind })),
       entryFieldLabel: 'Title',
       entryFieldPlaceholder: 'Award title',
@@ -136,7 +134,6 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
     },
     {
       label: 'Publications',
-      hue: HUES.coral,
       entries: publications.map((p) => ({ year: p.year, label: p.title, kind: p.kind })),
       entryFieldLabel: 'Title',
       entryFieldPlaceholder: 'Publication or piece',
@@ -148,7 +145,6 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
     },
     {
       label: 'Recognitions',
-      hue: HUES.mint,
       entries: recognitions.map((r) => ({ year: r.year, label: r.title, kind: r.kind })),
       entryFieldLabel: 'Title',
       entryFieldPlaceholder: 'What it was for',
@@ -350,7 +346,6 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
         <AboutListSection
           key={section.label}
           label={section.label}
-          hue={section.hue}
           entries={section.entries}
           entryFieldLabel={section.entryFieldLabel}
           entryFieldPlaceholder={section.entryFieldPlaceholder}

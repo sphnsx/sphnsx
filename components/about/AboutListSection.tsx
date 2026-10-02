@@ -1,6 +1,7 @@
 import React from 'react';
 import toast from 'react-hot-toast';
 import { PALETTE, hueForYear } from '../../constants';
+import { sectionHue } from '../../utils/aboutSections';
 import CapV2 from '../optc/CapV2';
 import TagPillV2 from '../optc/TagPillV2';
 import AdminBtn from '../optc/admin/AdminBtn';
@@ -46,7 +47,6 @@ export const ReorderBtns: React.FC<{ index: number; total: number; onMove: (dir:
 export interface AboutListSectionProps {
   /** Section name, shown in the tag pill and used by the A–Z ordering. */
   label: string;
-  hue: string;
   entries: AboutEntry[];
   /** Column header + placeholder for the middle field, e.g. 'Venue' or 'Title'. */
   entryFieldLabel: string;
@@ -69,7 +69,6 @@ export interface AboutListSectionProps {
  */
 const AboutListSection: React.FC<AboutListSectionProps> = ({
   label,
-  hue,
   entries,
   entryFieldLabel,
   entryFieldPlaceholder,
@@ -128,7 +127,8 @@ const AboutListSection: React.FC<AboutListSectionProps> = ({
   return (
     <section style={{ borderBottom: `1px solid ${ink}` }}>
       <header style={{ display: 'flex', justifyContent: 'flex-end', padding: `32px ${padX}px` }}>
-        <TagPillV2 hue={hue} label={label} size={isMobile ? 10 : 12} chip={isMobile ? 10 : 14} />
+        {/* The chip wears the hue of this section's newest entry. */}
+        <TagPillV2 hue={sectionHue(entries)} label={label} size={isMobile ? 10 : 12} chip={isMobile ? 10 : 14} />
       </header>
 
       {showAdminControls && isEditing ? (

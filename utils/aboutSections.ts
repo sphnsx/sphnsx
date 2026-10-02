@@ -1,4 +1,5 @@
 import type { AboutSectionSort } from '../types';
+import { HUES, hueForYear } from '../constants';
 
 /** Minimum a section needs to be ordered: its name and its entries' years. */
 export interface SortableSection {
@@ -37,4 +38,14 @@ export function sortAboutSections<T extends SortableSection>(sections: T[], sort
     if (diff !== 0 && !Number.isNaN(diff)) return diff;
     return byName(a, b);
   });
+}
+
+/**
+ * The hue a section wears on its tag pill: the hue of its newest entry, so the
+ * chip tracks the section's most recent year as entries are added. A section
+ * with no usable year falls back to the neutral yellow.
+ */
+export function sectionHue(entries: { year: string }[]): string {
+  const newest = newestYear(entries);
+  return Number.isFinite(newest) ? hueForYear(newest) : HUES.yellow;
 }

@@ -72,7 +72,8 @@ const HUE_CYCLE_ANCHOR_YEAR = 2024;
 export function hueForYear(year: string | number | undefined | null): string {
   if (year == null) return HUES.yellow;
   const n = typeof year === 'number' ? year : parseInt(String(year).trim(), 10);
-  if (Number.isNaN(n)) return HUES.yellow;
+  // Non-finite covers NaN and ±Infinity; either would index the cycle with NaN.
+  if (!Number.isFinite(n)) return HUES.yellow;
   // Double modulo keeps years before the anchor on a positive index.
   const i = (((n - HUE_CYCLE_ANCHOR_YEAR) % HUE_CYCLE.length) + HUE_CYCLE.length) % HUE_CYCLE.length;
   return HUE_CYCLE[i];
