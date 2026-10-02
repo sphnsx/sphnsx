@@ -42,6 +42,32 @@ export interface Award {
   kind?: string;
 }
 
+/** Publication entry (press, print feature, zine) shown on the About page when populated. */
+export interface Publication {
+  /** Year string, e.g. "2026". */
+  year: string;
+  /** Publication or piece title, e.g. "Arxipelag — Issue 4". */
+  title: string;
+  /** Kind / format, e.g. "Print feature", "Interview". */
+  kind?: string;
+}
+
+/** Recognition entry (selection, nomination, listing) shown on the About page when populated. */
+export interface Recognition {
+  /** Year string, e.g. "2026". */
+  year: string;
+  /** What the recognition was for. */
+  title: string;
+  /** Kind / status, e.g. "Shortlisted", "Selected". */
+  kind?: string;
+}
+
+/**
+ * Rule that orders the four list sections on the About page.
+ * 'recent' = newest entry first (top to bottom, new to old); 'alpha' = by section name.
+ */
+export type AboutSectionSort = 'recent' | 'alpha';
+
 export interface PortfolioData {
   aboutMe: string;
   projects: Project[];
@@ -53,6 +79,12 @@ export interface PortfolioData {
   exhibitions?: Exhibition[];
   /** Awards & recognition entries shown on the About page when populated. */
   awards?: Award[];
+  /** Publications list. Renders on the About page only when populated. */
+  publications?: Publication[];
+  /** Recognitions list. Renders on the About page only when populated. */
+  recognitions?: Recognition[];
+  /** How the About page orders its list sections. Defaults to 'recent'. */
+  aboutSectionSort?: AboutSectionSort;
   /** @deprecated Use contactMethods. Kept for backward compatibility; migrate at read time. */
   contact?: { email: string; instagramUrl?: string };
 }

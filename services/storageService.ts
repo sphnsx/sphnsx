@@ -1,5 +1,5 @@
 
-import { PortfolioData, Project, ContactMethod, Exhibition, Award } from '../types';
+import { PortfolioData, Project, ContactMethod, Exhibition, Award, Publication, Recognition, AboutSectionSort } from '../types';
 import { INITIAL_DATA } from '../constants';
 import { isSupabaseConfigured, getPortfolioFromSupabase, publishPortfolioToSupabase, isStorageUrl, uploadImageToStorage } from './supabase';
 
@@ -310,18 +310,46 @@ export async function updateContactMethods(methods: ContactMethod[]): Promise<Po
   return data;
 }
 
+/*
+ * The About-page list updaters return a NEW PortfolioData rather than mutating
+ * the cached one. The cached object is the same reference React holds in state,
+ * so returning it unchanged makes setData() a no-op and the save looks lost even
+ * though it reached storage.
+ */
 export async function updateExhibitions(list: Exhibition[]): Promise<PortfolioData> {
   const data = await getPortfolioDataAsync();
-  data.exhibitions = list;
-  await writePortfolioData(data);
-  return data;
+  const updated = { ...data, exhibitions: list };
+  await writePortfolioData(updated);
+  return updated;
 }
 
 export async function updateAwards(list: Award[]): Promise<PortfolioData> {
   const data = await getPortfolioDataAsync();
-  data.awards = list;
-  await writePortfolioData(data);
-  return data;
+  const updated = { ...data, awards: list };
+  await writePortfolioData(updated);
+  return updated;
+}
+
+export async function updatePublications(list: Publication[]): Promise<PortfolioData> {
+  const data = await getPortfolioDataAsync();
+  const updated = { ...data, publications: list };
+  await writePortfolioData(updated);
+  return updated;
+}
+
+export async function updateRecognitions(list: Recognition[]): Promise<PortfolioData> {
+  const data = await getPortfolioDataAsync();
+  const updated = { ...data, recognitions: list };
+  await writePortfolioData(updated);
+  return updated;
+}
+
+/** Persist the rule that orders the About page's list sections. */
+export async function updateAboutSectionSort(sort: AboutSectionSort): Promise<PortfolioData> {
+  const data = await getPortfolioDataAsync();
+  const updated = { ...data, aboutSectionSort: sort };
+  await writePortfolioData(updated);
+  return updated;
 }
 
 /**

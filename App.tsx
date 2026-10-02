@@ -7,7 +7,7 @@ import AdminLoginPage from './components/AdminLoginPage';
 import DeploymentPage from './components/DeploymentPage';
 import NewProjectPage, { AdminProjectListPage } from './components/NewProjectPage';
 import ProjectDetailPage from './components/ProjectDetailPage';
-import { PortfolioData, ContactMethod, Exhibition, Award } from './types';
+import { PortfolioData, ContactMethod, AboutSectionSort } from './types';
 import {
   getPortfolioData,
   getPortfolioDataAsync,
@@ -17,8 +17,11 @@ import {
   updateContactMethods,
   updateExhibitions,
   updateAwards,
+  updatePublications,
+  updateRecognitions,
+  updateAboutSectionSort,
 } from './services/storageService';
-import { PALETTE, HUES, hueForYear, INITIAL_DATA } from './constants';
+import { PALETTE, HUES, INITIAL_DATA } from './constants';
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
 import { useIsMobile } from './hooks/useMediaQuery';
 import RichTextEditor from './components/RichTextEditor';
@@ -30,8 +33,9 @@ import TopRibbon from './components/optc/TopRibbon';
 import Footer from './components/optc/Footer';
 import CapV2 from './components/optc/CapV2';
 import TagPillV2 from './components/optc/TagPillV2';
-import YearMarkV2 from './components/optc/YearMarkV2';
 import AdminBtn from './components/optc/admin/AdminBtn';
+import AboutListSection, { AboutEntry } from './components/about/AboutListSection';
+import { sortAboutSections } from './utils/aboutSections';
 
 /** Redirect /project/:slug > /:slug. */
 const LegacyProjectRedirect: React.FC<{ data: PortfolioData }> = ({ data }) => {
@@ -60,36 +64,6 @@ const ProjectDetailsPage: React.FC<{ data: PortfolioData; onRefresh: () => void 
   return <ProjectDetailPage key={project.id} project={project} onRefresh={onRefresh} nextProject={nextProject && nextProject.id !== project.id ? nextProject : undefined} index={idx} total={data.projects.length} />;
 };
 
-/** Swap `idx` with its neighbour in `dir`; returns the list untouched at either end. */
-function moveInList<T>(list: T[], idx: number, dir: -1 | 1): T[] {
-  const target = idx + dir;
-  if (target < 0 || target >= list.length) return list;
-  const next = [...list];
-  [next[target], next[idx]] = [next[idx], next[target]];
-  return next;
-}
-
-/** ↑/↓ pair for admin list editors — matches the projects reorder chrome. */
-const ReorderBtns: React.FC<{ index: number; total: number; onMove: (dir: -1 | 1) => void }> = ({ index, total, onMove }) => {
-  const ink = PALETTE.textPrimary;
-  const btn = (disabled: boolean): React.CSSProperties => ({
-    background: 'transparent',
-    border: `1px solid ${ink}`,
-    color: ink,
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    opacity: disabled ? 0.35 : 1,
-    padding: '4px 8px',
-    lineHeight: 1,
-    borderRadius: 0,
-  });
-  return (
-    <span style={{ display: 'inline-flex', gap: 6 }}>
-      <button type="button" aria-label="Move up" disabled={index <= 0} onClick={() => onMove(-1)} style={btn(index <= 0)}>↑</button>
-      <button type="button" aria-label="Move down" disabled={index >= total - 1} onClick={() => onMove(1)} style={btn(index >= total - 1)}>↓</button>
-    </span>
-  );
-};
-
 function paragraphsOfPlain(raw: string): string[] {
   if (!raw) return [];
   const hasTags = /<[a-z][\s\S]*>/i.test(raw);
@@ -109,44 +83,83 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
   const [isEditing, setIsEditing] = React.useState(false);
   const [aboutText, setAboutText] = React.useState(data.aboutMe);
   const [isUploading, setIsUploading] = React.useState(false);
-  const [isEditingExhibitions, setIsEditingExhibitions] = React.useState(false);
-  const [editExhibitions, setEditExhibitions] = React.useState<Exhibition[]>(data.exhibitions ?? []);
-  const [isSavingExhibitions, setIsSavingExhibitions] = React.useState(false);
-  const [isEditingAwards, setIsEditingAwards] = React.useState(false);
-  const [editAwards, setEditAwards] = React.useState<Award[]>(data.awards ?? []);
-  const [isSavingAwards, setIsSavingAwards] = React.useState(false);
+  const [isSavingSort, setIsSavingSort] = React.useState(false);
 
   // Fall back to CV-derived defaults from INITIAL_DATA when the live data is missing these fields.
   const exhibitions = (data.exhibitions && data.exhibitions.length > 0) ? data.exhibitions : (INITIAL_DATA.exhibitions ?? []);
   const awards = (data.awards && data.awards.length > 0) ? data.awards : (INITIAL_DATA.awards ?? []);
+  const publications = data.publications ?? [];
+  const recognitions = data.recognitions ?? [];
+  const sectionSort: AboutSectionSort = data.aboutSectionSort ?? 'recent';
 
   React.useEffect(() => { setAboutText(data.aboutMe); }, [data.aboutMe]);
-  React.useEffect(() => { setEditExhibitions(data.exhibitions ?? []); }, [data.exhibitions]);
-  React.useEffect(() => { setEditAwards(data.awards ?? []); }, [data.awards]);
 
-  const handleSaveExhibitions = async () => {
-    setIsSavingExhibitions(true);
+  const handleSortChange = async (next: AboutSectionSort) => {
+    if (next === sectionSort) return;
+    setIsSavingSort(true);
     try {
-      const cleaned = editExhibitions
-        .map((e) => ({ year: e.year.trim(), venue: e.venue.trim(), kind: e.kind?.trim() || undefined }))
-        .filter((e) => e.year || e.venue);
-      const updated = await updateExhibitions(cleaned);
-      onRefresh(updated);
-      setIsEditingExhibitions(false);
-      toast.success('Exhibitions saved');
+      onRefresh(await updateAboutSectionSort(next));
+      toast.success(next === 'recent' ? 'Sections ordered by newest entry' : 'Sections ordered A–Z');
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Save failed');
     } finally {
-      setIsSavingExhibitions(false);
+      setIsSavingSort(false);
     }
   };
 
-  const addExhibition = () => setEditExhibitions((prev) => [...prev, { year: '', venue: '', kind: '' }]);
-  const removeExhibition = (i: number) => setEditExhibitions((prev) => prev.filter((_, idx) => idx !== i));
-  const moveExhibition = (i: number, dir: -1 | 1) => setEditExhibitions((prev) => moveInList(prev, i, dir));
-  const updateExhibition = (i: number, field: 'year' | 'venue' | 'kind', value: string) => {
-    setEditExhibitions((prev) => prev.map((e, idx) => (idx === i ? { ...e, [field]: value } : e)));
-  };
+  // The four list sections, each mapped to the shape AboutListSection renders and
+  // back to its own stored shape on save. Order comes from `sectionSort`.
+  const listSections = [
+    {
+      label: 'Exhibitions',
+      hue: HUES.yellow,
+      entries: exhibitions.map((e) => ({ year: e.year, label: e.venue, kind: e.kind })),
+      entryFieldLabel: 'Venue',
+      entryFieldPlaceholder: 'Venue, City',
+      kindPlaceholder: 'Solo / Group',
+      itemNoun: 'exhibition',
+      onSave: async (rows: AboutEntry[]) => {
+        onRefresh(await updateExhibitions(rows.map((r) => ({ year: r.year, venue: r.label, kind: r.kind }))));
+      },
+    },
+    {
+      label: 'Awards',
+      hue: HUES.mint,
+      entries: awards.map((a) => ({ year: a.year, label: a.title, kind: a.kind })),
+      entryFieldLabel: 'Title',
+      entryFieldPlaceholder: 'Award title',
+      kindPlaceholder: 'Finalist / Honourable Mention',
+      itemNoun: 'award',
+      onSave: async (rows: AboutEntry[]) => {
+        onRefresh(await updateAwards(rows.map((r) => ({ year: r.year, title: r.label, kind: r.kind }))));
+      },
+    },
+    {
+      label: 'Publications',
+      hue: HUES.coral,
+      entries: publications.map((p) => ({ year: p.year, label: p.title, kind: p.kind })),
+      entryFieldLabel: 'Title',
+      entryFieldPlaceholder: 'Publication or piece',
+      kindPlaceholder: 'Print feature / Interview',
+      itemNoun: 'publication',
+      onSave: async (rows: AboutEntry[]) => {
+        onRefresh(await updatePublications(rows.map((r) => ({ year: r.year, title: r.label, kind: r.kind }))));
+      },
+    },
+    {
+      label: 'Recognitions',
+      hue: HUES.mint,
+      entries: recognitions.map((r) => ({ year: r.year, label: r.title, kind: r.kind })),
+      entryFieldLabel: 'Title',
+      entryFieldPlaceholder: 'What it was for',
+      kindPlaceholder: 'Selected / Shortlisted',
+      itemNoun: 'recognition',
+      onSave: async (rows: AboutEntry[]) => {
+        onRefresh(await updateRecognitions(rows.map((r) => ({ year: r.year, title: r.label, kind: r.kind }))));
+      },
+    },
+  ];
+  const orderedSections = sortAboutSections(listSections, sectionSort);
 
   const handleSave = async () => {
     try {
@@ -314,218 +327,41 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
         </div>
       </section>
 
-      {/* EXHIBITIONS */}
-      {(exhibitions.length > 0 || showAdminControls) && (
-        <section style={{ borderBottom: `1px solid ${ink}` }}>
-          <header style={{ display: 'flex', justifyContent: 'flex-end', padding: `32px ${padX}px` }}>
-            <TagPillV2 hue={HUES.yellow} label="Exhibitions" size={isMobile ? 10 : 12} chip={isMobile ? 10 : 14} />
-          </header>
-          {showAdminControls && isEditingExhibitions ? (
-            <div style={{ padding: `0 ${padX}px 32px`, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {editExhibitions.map((e, i) => (
-                <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', padding: 14, border: `1px solid ${ink}`, flexWrap: 'wrap' }}>
-                  <div style={{ width: 120 }}>
-                    <CapV2 size={10} color={muted}>Year</CapV2>
-                    <input value={e.year} onChange={(ev) => updateExhibition(i, 'year', ev.target.value)} placeholder="2024" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
-                  </div>
-                  <div style={{ flex: 2, minWidth: 200 }}>
-                    <CapV2 size={10} color={muted}>Venue</CapV2>
-                    <input value={e.venue} onChange={(ev) => updateExhibition(i, 'venue', ev.target.value)} placeholder="Venue, City" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 140 }}>
-                    <CapV2 size={10} color={muted}>Kind</CapV2>
-                    <input value={e.kind ?? ''} onChange={(ev) => updateExhibition(i, 'kind', ev.target.value)} placeholder="Solo / Group" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
-                  </div>
-                  <ReorderBtns index={i} total={editExhibitions.length} onMove={(dir) => moveExhibition(i, dir)} />
-                  <AdminBtn danger onClick={() => removeExhibition(i)}>Remove</AdminBtn>
-                </div>
-              ))}
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <AdminBtn onClick={addExhibition}>+ Add exhibition</AdminBtn>
-                <AdminBtn primary onClick={handleSaveExhibitions} disabled={isSavingExhibitions}>
-                  {isSavingExhibitions ? 'Saving…' : 'Save'}
-                </AdminBtn>
-                <AdminBtn onClick={() => { setIsEditingExhibitions(false); setEditExhibitions(data.exhibitions ?? []); }}>Cancel</AdminBtn>
-              </div>
-            </div>
-          ) : (
-            <>
-              {exhibitions.length ? (
-                exhibitions.map((row, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: 'grid',
-                      // auto-sized year + bar + flexible title + kind + arrow.
-                      // `auto` columns sit on their content width so the bar gets
-                      // even gaps on both sides via a single column-gap.
-                      gridTemplateColumns: isMobile ? 'auto auto 1fr' : 'auto auto 1fr 320px 60px',
-                      alignItems: 'center',
-                      padding: `24px ${padX}px`,
-                      color: ink,
-                      gap: 20,
-                    }}
-                  >
-                    {/* Year (own cell) — chevron + year, no bar */}
-                    <span
-                      style={{
-                        fontFamily: '"abril-text", ui-serif, Georgia, serif',
-                        fontSize: isMobile ? 32 : 48,
-                        fontWeight: 500,
-                        letterSpacing: '-0.04em',
-                        lineHeight: 0.95,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      <span style={{ fontWeight: 400 }}>{'> '}</span>
-                      {row.year}
-                    </span>
-                    {/* Bar (own cell) — balanced grid gap on both sides */}
-                    <span
-                      aria-hidden
-                      style={{
-                        display: 'inline-block',
-                        width: isMobile ? 26 : 36,
-                        height: isMobile ? 8 : 10,
-                        background: hueForYear(row.year),
-                        alignSelf: 'center',
-                        flexShrink: 0,
-                      }}
-                    />
-                    <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 24, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{row.venue}</span>
-                    {!isMobile && <CapV2 size={10} color={muted}>{row.kind ?? ''}</CapV2>}
-                    {!isMobile && <span />}
-                  </div>
-                ))
-              ) : (
-                showAdminControls && (
-                  <div style={{ padding: `12px ${padX}px 32px` }}>
-                    <CapV2 size={11} color={muted}>No exhibitions yet</CapV2>
-                  </div>
-                )
-              )}
-              {showAdminControls && !isEditingExhibitions && (
-                <div style={{ padding: `12px ${padX}px 32px` }}>
-                  <AdminBtn onClick={() => { setEditExhibitions(data.exhibitions ?? INITIAL_DATA.exhibitions ?? []); setIsEditingExhibitions(true); }}>
-                    {exhibitions.length ? 'Edit exhibitions' : 'Add exhibitions'}
-                  </AdminBtn>
-                </div>
-              )}
-            </>
-          )}
+      {/* SECTION ORDER — admin picks the rule; it persists with the rest of the portfolio. */}
+      {showAdminControls && (
+        <section style={{ borderBottom: `1px solid ${ink}`, padding: `20px ${padX}px`, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+          <CapV2 size={10} color={muted}>Section order</CapV2>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <AdminBtn primary={sectionSort === 'recent'} disabled={isSavingSort} onClick={() => handleSortChange('recent')}>
+              Newest entry first
+            </AdminBtn>
+            <AdminBtn primary={sectionSort === 'alpha'} disabled={isSavingSort} onClick={() => handleSortChange('alpha')}>
+              A–Z by section
+            </AdminBtn>
+          </div>
+          <CapV2 size={10} color={muted}>
+            {(sectionSort === 'recent' ? 'Top to bottom, new to old · ' : 'A–Z · ') + orderedSections.map((s) => s.label).join(' · ')}
+          </CapV2>
         </section>
       )}
 
-      {/* AWARDS & RECOGNITION */}
-      {(awards.length > 0 || showAdminControls) && (
-        <section style={{ borderBottom: `1px solid ${ink}` }}>
-          <header style={{ display: 'flex', justifyContent: 'flex-end', padding: `32px ${padX}px` }}>
-            <TagPillV2 hue={HUES.mint} label="Awards" size={isMobile ? 10 : 12} chip={isMobile ? 10 : 14} />
-          </header>
-          {showAdminControls && isEditingAwards ? (
-            <div style={{ padding: `0 ${padX}px 32px`, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {editAwards.map((a, i) => (
-                <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', padding: 14, border: `1px solid ${ink}`, flexWrap: 'wrap' }}>
-                  <div style={{ width: 120 }}>
-                    <CapV2 size={10} color={muted}>Year</CapV2>
-                    <input value={a.year} onChange={(ev) => setEditAwards((prev) => prev.map((x, idx) => idx === i ? { ...x, year: ev.target.value } : x))} placeholder="2025" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
-                  </div>
-                  <div style={{ flex: 2, minWidth: 200 }}>
-                    <CapV2 size={10} color={muted}>Title</CapV2>
-                    <input value={a.title} onChange={(ev) => setEditAwards((prev) => prev.map((x, idx) => idx === i ? { ...x, title: ev.target.value } : x))} placeholder="Award title" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 140 }}>
-                    <CapV2 size={10} color={muted}>Kind</CapV2>
-                    <input value={a.kind ?? ''} onChange={(ev) => setEditAwards((prev) => prev.map((x, idx) => idx === i ? { ...x, kind: ev.target.value } : x))} placeholder="Finalist / Honourable Mention" style={{ width: '100%', padding: '10px 12px', border: `1px solid ${ink}`, fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 16, borderRadius: 0, outline: 'none', marginTop: 6 }} />
-                  </div>
-                  <ReorderBtns index={i} total={editAwards.length} onMove={(dir) => setEditAwards((prev) => moveInList(prev, i, dir))} />
-                  <AdminBtn danger onClick={() => setEditAwards((prev) => prev.filter((_, idx) => idx !== i))}>Remove</AdminBtn>
-                </div>
-              ))}
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <AdminBtn onClick={() => setEditAwards((prev) => [...prev, { year: '', title: '', kind: '' }])}>+ Add award</AdminBtn>
-                <AdminBtn primary disabled={isSavingAwards} onClick={async () => {
-                  setIsSavingAwards(true);
-                  try {
-                    const cleaned = editAwards.map((a) => ({ year: a.year.trim(), title: a.title.trim(), kind: a.kind?.trim() || undefined })).filter((a) => a.year || a.title);
-                    const updated = await updateAwards(cleaned);
-                    onRefresh(updated);
-                    setIsEditingAwards(false);
-                    toast.success('Awards saved');
-                  } catch (e) {
-                    toast.error(e instanceof Error ? e.message : 'Save failed');
-                  } finally { setIsSavingAwards(false); }
-                }}>{isSavingAwards ? 'Saving…' : 'Save'}</AdminBtn>
-                <AdminBtn onClick={() => { setIsEditingAwards(false); setEditAwards(data.awards ?? []); }}>Cancel</AdminBtn>
-              </div>
-            </div>
-          ) : (
-            <>
-              {awards.length ? (
-                awards.map((row, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: 'grid',
-                      // auto-sized year + bar + flexible title + kind + arrow.
-                      // `auto` columns sit on their content width so the bar gets
-                      // even gaps on both sides via a single column-gap.
-                      gridTemplateColumns: isMobile ? 'auto auto 1fr' : 'auto auto 1fr 320px 60px',
-                      alignItems: 'center',
-                      padding: `24px ${padX}px`,
-                      color: ink,
-                      gap: 20,
-                    }}
-                  >
-                    {/* Year (own cell) — chevron + year, no bar */}
-                    <span
-                      style={{
-                        fontFamily: '"abril-text", ui-serif, Georgia, serif',
-                        fontSize: isMobile ? 32 : 48,
-                        fontWeight: 500,
-                        letterSpacing: '-0.04em',
-                        lineHeight: 0.95,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      <span style={{ fontWeight: 400 }}>{'> '}</span>
-                      {row.year}
-                    </span>
-                    {/* Bar (own cell) — balanced grid gap on both sides */}
-                    <span
-                      aria-hidden
-                      style={{
-                        display: 'inline-block',
-                        width: isMobile ? 26 : 36,
-                        height: isMobile ? 8 : 10,
-                        background: hueForYear(row.year),
-                        alignSelf: 'center',
-                        flexShrink: 0,
-                      }}
-                    />
-                    <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 24, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{row.title}</span>
-                    {!isMobile && <CapV2 size={10} color={muted}>{row.kind ?? ''}</CapV2>}
-                    {!isMobile && <span />}
-                  </div>
-                ))
-              ) : (
-                showAdminControls && (
-                  <div style={{ padding: `12px ${padX}px 32px` }}>
-                    <CapV2 size={11} color={muted}>No awards yet</CapV2>
-                  </div>
-                )
-              )}
-              {showAdminControls && !isEditingAwards && (
-                <div style={{ padding: `12px ${padX}px 32px` }}>
-                  <AdminBtn onClick={() => { setEditAwards(data.awards ?? INITIAL_DATA.awards ?? []); setIsEditingAwards(true); }}>
-                    {awards.length ? 'Edit awards' : 'Add awards'}
-                  </AdminBtn>
-                </div>
-              )}
-            </>
-          )}
-        </section>
-      )}
+      {/* EXHIBITIONS · AWARDS · PUBLICATIONS · RECOGNITIONS */}
+      {orderedSections.map((section) => (
+        <AboutListSection
+          key={section.label}
+          label={section.label}
+          hue={section.hue}
+          entries={section.entries}
+          entryFieldLabel={section.entryFieldLabel}
+          entryFieldPlaceholder={section.entryFieldPlaceholder}
+          kindPlaceholder={section.kindPlaceholder}
+          itemNoun={section.itemNoun}
+          showAdminControls={showAdminControls}
+          isMobile={isMobile}
+          padX={padX}
+          onSave={section.onSave}
+        />
+      ))}
 
       {/* BOTTOM NAV */}
       <section style={{ borderBottom: `1px solid ${ink}`, padding: `32px ${padX}px`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
