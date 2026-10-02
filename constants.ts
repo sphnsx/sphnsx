@@ -51,20 +51,31 @@ export const STATUS_HUE = {
 } as const;
 
 /**
- * Resolve a project year to its accent hue. Single source of truth used
- * everywhere a year is depicted (catalogue, exhibitions, awards, project page).
+ * Year accent hues, in cycle order, anchored at HUE_CYCLE_ANCHOR_YEAR.
  *
- *   2025 → coral  (current / active edition)
- *   2024 → mint   (recent)
- *   anything else (2023 & older, 2026 & future, non-numeric) → yellow
+ *   2024 mint · 2025 coral · 2026 yellow
+ *   2027 mint · 2028 coral · 2029 yellow · …
+ *
+ * Every year picks the next hue and the sequence keeps running forward on its
+ * own, so a future year is never left on a catch-all colour.
+ */
+const HUE_CYCLE = [HUES.mint, HUES.coral, HUES.yellow] as const;
+const HUE_CYCLE_ANCHOR_YEAR = 2024;
+
+/**
+ * Resolve a project year to its accent hue. Single source of truth used
+ * everywhere a year is depicted (catalogue, exhibitions, awards, publications,
+ * recognitions, project page). See HUE_CYCLE for the sequence; years before the
+ * anchor run the same cycle backwards. A missing or non-numeric year falls back
+ * to yellow.
  */
 export function hueForYear(year: string | number | undefined | null): string {
   if (year == null) return HUES.yellow;
   const n = typeof year === 'number' ? year : parseInt(String(year).trim(), 10);
   if (Number.isNaN(n)) return HUES.yellow;
-  if (n === 2025) return HUES.coral;
-  if (n === 2024) return HUES.mint;
-  return HUES.yellow;
+  // Double modulo keeps years before the anchor on a positive index.
+  const i = (((n - HUE_CYCLE_ANCHOR_YEAR) % HUE_CYCLE.length) + HUE_CYCLE.length) % HUE_CYCLE.length;
+  return HUE_CYCLE[i];
 }
 
 /** Viewport width below this (px) is treated as phone for layout. */
