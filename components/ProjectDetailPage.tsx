@@ -16,6 +16,7 @@ import TopRibbon from './optc/TopRibbon';
 import Footer from './optc/Footer';
 import CapV2 from './optc/CapV2';
 import TagPillV2 from './optc/TagPillV2';
+import FitOneLine from './optc/FitOneLine';
 import MarkerTitleV2 from './optc/MarkerTitleV2';
 import AdminBtn from './optc/admin/AdminBtn';
 
@@ -206,7 +207,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
           </div>
           <MarkerTitleV2 title={project.title} hue={hue} size={44} washHeight={0.5} />
           {meta.length > 0 && (
-            <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '72px 1fr', rowGap: 10, columnGap: 12 }}>
+            <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '72px 1fr', rowGap: 10, columnGap: 12, alignItems: 'baseline' }}>
               {meta.map(([k, v], i) => (
                 <React.Fragment key={i}>
                   <CapV2 size={9} color={muted}>{k}</CapV2>
@@ -224,6 +225,8 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
               <TagPillV2 hue={HUES.yellow} label="Statement" size={10} chip={10} />
             </header>
             <div style={{ padding: '8px 16px 0' }}>
+              {/* Wraps normally: the one-line rule is desktop only, since a phone column
+                  would force the lead below the size of the body text beneath it. */}
               <h2 style={{ margin: 0, fontFamily: '"sarvatrik-latin-variable", ui-serif, Georgia, serif', fontSize: 26, fontWeight: 400, fontStyle: 'italic', letterSpacing: '-0.02em', lineHeight: 1.2 }}>{pullQuote}</h2>
             </div>
             <div style={{ padding: '12px 16px 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -436,7 +439,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <MarkerTitleV2 title={project.title} hue={hue} size={80} washHeight={0.5} />
           {meta.length > 0 && (
-            <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '100px 1fr', rowGap: 12, columnGap: 16, maxWidth: 520 }}>
+            <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '100px 1fr', rowGap: 12, columnGap: 16, maxWidth: 520, alignItems: 'baseline' }}>
               {meta.map(([k, v], i) => (
                 <React.Fragment key={i}>
                   <CapV2 size={10} color={muted}>{k}</CapV2>
@@ -476,8 +479,13 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
                 <TagPillV2 hue={HUES.yellow} label="Statement" />
               </header>
               <div style={{ padding: '12px 32px 12px', borderBottom: `1px solid ${ink}` }}>
-                {/* Editorial pull quote: lighter weight, italic, generous leading — easier to read for long sentences. */}
-                <h2 style={{ margin: 0, fontFamily: '"sarvatrik-latin-variable", ui-serif, Georgia, serif', fontSize: 48, fontWeight: 400, fontStyle: 'italic', letterSpacing: '-0.025em', lineHeight: 1.18, maxWidth: 1100 }}>{pullQuote}</h2>
+                {/* Editorial pull quote: lighter weight, italic, and always one line — long sentences shrink to fit. */}
+                <FitOneLine
+                  text={pullQuote}
+                  size={48}
+                  minSize={18}
+                  style={{ margin: 0, fontFamily: '"sarvatrik-latin-variable", ui-serif, Georgia, serif', fontWeight: 400, fontStyle: 'italic', letterSpacing: '-0.025em', lineHeight: 1.18 }}
+                />
               </div>
             </>
           )}
