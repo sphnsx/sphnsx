@@ -93,7 +93,7 @@ const TopRibbon: React.FC<TopRibbonProps> = ({ active = null }) => {
   if (isMobile) {
     return (
       <div style={{ borderBottom: `1px solid ${ink}`, flexShrink: 0, background: paper, position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
           {wordmark}
           <button
             type="button"
@@ -126,7 +126,7 @@ const TopRibbon: React.FC<TopRibbonProps> = ({ active = null }) => {
               display: 'flex',
               flexDirection: 'column',
               gap: 6,
-              padding: '4px 20px 16px',
+              padding: '4px 16px 16px',
               borderTop: `1px solid ${ink}`,
               background: paper,
             }}
@@ -155,7 +155,7 @@ const TopRibbon: React.FC<TopRibbonProps> = ({ active = null }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '18px 40px',
+        padding: '18px 32px',
         borderBottom: `1px solid ${ink}`,
         flexShrink: 0,
       }}

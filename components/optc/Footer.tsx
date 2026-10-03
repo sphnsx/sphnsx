@@ -16,7 +16,7 @@ interface FooterProps {
 const Footer: React.FC<FooterProps> = ({ floatToBottom = false }) => (
   <div
     style={{
-      padding: '20px 40px',
+      padding: '16px 32px',
       background: PALETTE.textPrimary,
       color: PALETTE.backgroundMain,
       display: 'flex',

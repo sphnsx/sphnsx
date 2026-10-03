@@ -126,13 +126,13 @@ const AboutListSection: React.FC<AboutListSectionProps> = ({
 
   return (
     <section style={{ borderBottom: `1px solid ${ink}` }}>
-      <header style={{ display: 'flex', justifyContent: 'flex-end', padding: `32px ${padX}px` }}>
+      <header style={{ display: 'flex', justifyContent: 'flex-end', padding: `24px ${padX}px` }}>
         {/* The chip wears the hue of this section's newest entry. */}
         <TagPillV2 hue={sectionHue(entries)} label={label} size={isMobile ? 10 : 12} chip={isMobile ? 10 : 14} />
       </header>
 
       {showAdminControls && isEditing ? (
-        <div style={{ padding: `0 ${padX}px 32px`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ padding: `0 ${padX}px 24px`, display: 'flex', flexDirection: 'column', gap: 12 }}>
           {draft.map((e, i) => (
             <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', padding: 14, border: `1px solid ${ink}`, flexWrap: 'wrap' }}>
               <div style={{ width: 120 }}>
@@ -170,9 +170,9 @@ const AboutListSection: React.FC<AboutListSectionProps> = ({
                   // even gaps on both sides via a single column-gap.
                   gridTemplateColumns: isMobile ? 'auto auto 1fr' : 'auto auto 1fr 320px 60px',
                   alignItems: 'center',
-                  padding: `24px ${padX}px`,
+                  padding: `18px ${padX}px`,
                   color: ink,
-                  gap: 20,
+                  gap: 16,
                 }}
               >
                 {/* Year (own cell) — chevron + year, no bar */}
@@ -208,13 +208,13 @@ const AboutListSection: React.FC<AboutListSectionProps> = ({
             ))
           ) : (
             showAdminControls && (
-              <div style={{ padding: `12px ${padX}px 32px` }}>
+              <div style={{ padding: `12px ${padX}px 24px` }}>
                 <CapV2 size={11} color={muted}>No {label.toLowerCase()} yet</CapV2>
               </div>
             )
           )}
           {showAdminControls && (
-            <div style={{ padding: `12px ${padX}px 32px` }}>
+            <div style={{ padding: `12px ${padX}px 24px` }}>
               <AdminBtn onClick={() => { setDraft(entries); setIsEditing(true); }}>
                 {entries.length ? `Edit ${label.toLowerCase()}` : `Add ${label.toLowerCase()}`}
               </AdminBtn>
