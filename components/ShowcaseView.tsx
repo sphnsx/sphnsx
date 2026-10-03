@@ -152,9 +152,6 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
             <div key={y} style={{ borderBottom: gi < years.length - 1 ? `1px solid ${ink}` : 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
                 <YearMarkV2 year={y} hue={hue} size={28} barW={24} barH={6} />
-                <CapV2 size={10} color={muted}>
-                  {String(rows.length).padStart(2, '0')} / {String(rows.length).padStart(2, '0')}
-                </CapV2>
               </div>
               {rows.map((p) => {
                 // Caption rule: when locations are populated, show them INSTEAD of the plate count.
@@ -170,8 +167,8 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
                   <Link
                     key={p.id}
                     to={projectPath(p)}
-                    // Left padding 60 = 20 (section) + ~40 (width of `> ` at year size 36) so titles align with the `2` of `2025`.
-                    style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '4px 16px 12px 60px', textDecoration: 'none', color: ink }}
+                    // Flush left with the year mark above it, on the page gutter.
+                    style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '4px 16px 12px', textDecoration: 'none', color: ink }}
                   >
                     <span style={{ fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 24, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 0.98 }}>
                       {p.title}
@@ -199,11 +196,8 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
           <div key={y} style={{ borderBottom: gi < years.length - 1 ? `1px solid ${ink}` : 'none' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 32px 12px' }}>
               <YearMarkV2 year={y} hue={hue} size={48} barW={38} barH={9} />
-              <CapV2 size={11} color={muted}>
-                {String(rows.length).padStart(2, '0')} / {String(rows.length).padStart(2, '0')}
-              </CapV2>
             </div>
-            {rows.map((p, ri) => {
+            {rows.map((p) => {
               // Caption rule: locations win over plate count when populated.
               const slash: string[] = [];
               if (p.medium) slash.push(p.medium);
@@ -218,7 +212,9 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
                   to={projectPath(p)}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: '160px 1fr 320px 60px',
+                    // Was '160px 1fr …' with a counter in the first column; with the
+                    // counter gone the title takes the gutter, as it does on phones.
+                    gridTemplateColumns: '1fr 320px 60px',
                     alignItems: 'baseline',
                     padding: '12px 32px 12px',
                     gap: 12,
@@ -226,9 +222,6 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
                     color: ink,
                   }}
                 >
-                  <CapV2 size={10} color={muted}>
-                    {String(ri + 1).padStart(2, '0')} / {String(rows.length).padStart(2, '0')}
-                  </CapV2>
                   <span style={{ fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 40, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 0.95 }}>
                     {p.title}
                   </span>
