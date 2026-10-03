@@ -10,6 +10,7 @@ import RichTextEditor from './RichTextEditor';
 import LocationsField from './admin/LocationsField';
 import { PortfolioData, Project } from '../types';
 import { projectPath } from '../utils/slug';
+import { countLabel } from '../utils/countLabel';
 import { PALETTE, HUES, hueForYear, LEADING } from '../constants';
 import Arrow from './Arrow';
 import TopRibbon from './optc/TopRibbon';
@@ -463,7 +464,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
                 textDecoration: 'none',
               }}
             >
-              <CapV2 size={11} color={paper}>Browse all {String(plates).padStart(2, '0')} plates</CapV2>
+              <CapV2 size={11} color={paper}>Browse all {countLabel(plates, 'plate')}</CapV2>
               <Arrow dir="right" size={13} stroke={paper} />
             </a>
           )}

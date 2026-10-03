@@ -77,7 +77,7 @@ export interface PortfolioData {
   contactMethods?: ContactMethod[];
   /** Exhibitions list (year/venue/kind). Renders on the About page only when populated. */
   exhibitions?: Exhibition[];
-  /** Awards & recognition entries shown on the About page when populated. */
+  /** Awards list. Renders on the About page only when populated. */
   awards?: Award[];
   /** Publications list. Renders on the About page only when populated. */
   publications?: Publication[];

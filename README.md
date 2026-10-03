@@ -1,6 +1,6 @@
 # SPHNSX — Portfolio
 
-A portfolio website for a London-based fine art photographer. Projects are shown in a modular three-column layout; visitors can browse work, read the biography, and get in touch. The site includes a private admin area for adding and editing projects, covers, and copy.
+A portfolio website for a London-based fine art photographer. Work is listed as a catalogue grouped by year; visitors can browse projects, read the biography, and get in touch. The site includes a private admin area for adding and editing projects, covers, and copy.
 
 **Live:** [sphnsx.com](https://sphnsx.com)
 
@@ -8,8 +8,8 @@ A portfolio website for a London-based fine art photographer. Projects are shown
 
 - **React 19** + **TypeScript** + **Vite**
 - **Tailwind CSS** for layout and styling
-- **React Router** (hash-based routing)
-- **IndexedDB**, **localStorage**, **sessionStorage**, and optional **remote JSON** for persisting portfolio data
+- **React Router** (path-based routing; legacy `#/` links are redirected on load)
+- **Supabase** (Postgres + Storage) as the authoritative store, with **IndexedDB**, **localStorage**, **sessionStorage** and a cookie as local caches, plus an optional static **remote JSON** fallback
 - **TipTap** for rich-text biography editing; **react-easy-crop** for cover crop/zoom
 
 ## Run locally
@@ -19,7 +19,7 @@ npm install
 npm run dev
 ```
 
-Open the URL shown in the terminal (e.g. `http://localhost:5173`).
+Open the URL shown in the terminal (`http://localhost:3000`, set in `vite.config.ts`).
 
 ## Build
 
@@ -48,10 +48,11 @@ Push to `main` runs the workflow in `.github/workflows/deploy.yml`: it builds wi
 ## Project structure
 
 - `App.tsx` — Router, admin bar, route definitions
-- `components/` — Showcase (three-column home), project detail, about, contact, admin login, new/edit project, deployment
+- `components/` — Showcase (home catalogue), project detail, about, contact, admin login, new/edit project, deployment
 - `contexts/` — Admin auth
-- `services/` — Data (IndexedDB / localStorage)
+- `services/` — Supabase client and the portfolio store (Supabase + local caches)
 - `hooks/` — Media queries (e.g. mobile)
-- `constants.ts` — Palette, copy, config
+- `constants.ts` — Palette, year hue cycle, leading scale, initial copy, config
+- `utils/` — Slugs, About section ordering, image helpers
 
-Admin: go to `/#/admin` (or `/admin` on the live domain) and sign in to add projects, edit covers and text, and manage deployment.
+Admin: go to `/admin` and sign in to add projects, edit covers and text, and manage deployment.

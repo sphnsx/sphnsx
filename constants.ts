@@ -8,11 +8,11 @@ import { PortfolioData } from './types';
  * colour. Black ink type sits on top.
  */
 export const HUES = {
-  /** 2025 / current / "action" */
+  /** Second in the year cycle (2025, 2028, …); also the "action" accent. */
   coral: '#EC6777',
-  /** 2024 / recent / "live / verified" */
+  /** First in the year cycle (2024, 2027, …); also "live / verified". */
   mint: '#7FE2C1',
-  /** 2023 & older / archive / "pending or draft" */
+  /** Third in the year cycle (2026, 2029, …); also "pending or draft". */
   yellow: '#FFF89C',
   // ── Back-compat aliases. New code should reach for coral / mint / yellow. ──
   /** @deprecated → coral */

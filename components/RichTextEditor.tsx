@@ -230,7 +230,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           type="button"
           onClick={() => editor.chain().focus().setTextAlign('center').run()}
           className={`px-2 py-1.5 rounded-sm border border-paletteBorder ${editor.isActive({ textAlign: 'center' }) ? 'bg-neutral-300' : 'bg-bgMain text-textPrimary'}`}
-          title="Align center"
+          title="Align centre"
         >
           ≡
         </button>

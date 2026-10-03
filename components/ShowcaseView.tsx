@@ -5,6 +5,7 @@ import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { PALETTE, HUES, hueForYear, INITIAL_DATA, LEADING } from '../constants';
 import { projectPath } from '../utils/slug';
+import { countLabel } from '../utils/countLabel';
 import Arrow from './Arrow';
 import TopRibbon from './optc/TopRibbon';
 import Footer from './optc/Footer';
@@ -172,7 +173,7 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
                 if (p.locations?.length) {
                   slash.push(p.locations.join(' · '));
                 } else if (p.gallery.length > 0) {
-                  slash.push(`${String(p.gallery.length).padStart(2, '0')} plates`);
+                  slash.push(countLabel(p.gallery.length, 'plate'));
                 }
                 return (
                   <Link
@@ -215,7 +216,7 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
               if (p.locations?.length) {
                 slash.push(p.locations.join(' · '));
               } else if (p.gallery.length > 0) {
-                slash.push(`${String(p.gallery.length).padStart(2, '0')} plates`);
+                slash.push(countLabel(p.gallery.length, 'plate'));
               }
               return (
                 <Link
@@ -303,7 +304,7 @@ const AboutTeaser: React.FC<AboutTeaserProps> = ({ aboutMe, mobile }) => {
         <div style={{ padding: '0 32px 16px', display: 'flex', alignItems: 'flex-start' }}>
           <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 88, fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 1 }}>Silvia.</h2>
         </div>
-        {/* Body text top-aligned with the cap height of "Silvia." (~22% of the 144px line). */}
+        {/* Body text top-aligned with the cap height of "Silvia." beside it. */}
         <div style={{ padding: '12px 32px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <p style={{ margin: 0, fontSize: 18, lineHeight: LEADING.body, maxWidth: 520 }}>{intro}</p>
           <Link
