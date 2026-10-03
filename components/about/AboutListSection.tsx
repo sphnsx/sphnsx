@@ -74,7 +74,7 @@ export interface AboutListSectionProps {
 }
 
 /**
- * One About-page list section (Exhibitions, Awards, Publications, Recognitions):
+ * One About-page list section (Exhibitions, Awards, Publications, Recognition):
  * year + hue bar + entry + kind, with the admin editor for the same rows.
  *
  * The sections differ only in label, hue, field naming and where they save, so

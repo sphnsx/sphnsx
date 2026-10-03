@@ -65,7 +65,7 @@ const HUE_CYCLE_ANCHOR_YEAR = 2024;
 /**
  * Resolve a project year to its accent hue. Single source of truth used
  * everywhere a year is depicted (catalogue, exhibitions, awards, publications,
- * recognitions, project page). See HUE_CYCLE for the sequence; years before the
+ * recognition, project page). See HUE_CYCLE for the sequence; years before the
  * anchor run the same cycle backwards. A missing or non-numeric year falls back
  * to yellow.
  */

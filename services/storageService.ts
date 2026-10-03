@@ -108,6 +108,18 @@ async function readFromIDB(): Promise<PortfolioData | null> {
   });
 }
 
+/**
+ * Fold legacy shapes into the current one as data comes in, so the rest of the
+ * app only ever sees today's field names. Rows written before the Recognition
+ * section was renamed carry `recognitions`; move them across and drop the old
+ * key, which also cleans the stored row the next time anything saves.
+ */
+function normalizePortfolio(data: PortfolioData): PortfolioData {
+  if (!data.recognitions) return data;
+  const { recognitions, ...rest } = data;
+  return rest.recognition?.length ? rest : { ...rest, recognition: recognitions };
+}
+
 /** Sync get for initial render. Uses cache, else tries localStorage (so refresh shows saved data before async runs), else INITIAL_DATA. */
 export const getPortfolioData = (): PortfolioData => {
   if (cache !== null) return cache;
@@ -116,7 +128,7 @@ export const getPortfolioData = (): PortfolioData => {
     if (raw) {
       const data = JSON.parse(raw) as PortfolioData;
       if (data && Array.isArray(data.projects)) {
-        cache = data;
+        cache = normalizePortfolio(data);
         return cache;
       }
     }
@@ -126,14 +138,14 @@ export const getPortfolioData = (): PortfolioData => {
     if (sessionRaw) {
       const data = JSON.parse(sessionRaw) as PortfolioData;
       if (data && Array.isArray(data.projects)) {
-        cache = data;
+        cache = normalizePortfolio(data);
         return cache;
       }
     }
   } catch (_) {}
   const fromCookie = readFromCookie();
   if (fromCookie) {
-    cache = fromCookie;
+    cache = normalizePortfolio(fromCookie);
     return cache;
   }
   return INITIAL_DATA;
@@ -151,25 +163,25 @@ async function getPortfolioDataAsyncImpl(): Promise<PortfolioData> {
   if (isSupabaseConfigured()) {
     const fromSupabase = await getPortfolioFromSupabase();
     if (fromSupabase) {
-      cache = fromSupabase;
-      writePortfolioData(fromSupabase).catch(() => {});
-      return fromSupabase;
+      cache = normalizePortfolio(fromSupabase);
+      writePortfolioData(cache).catch(() => {});
+      return cache;
     }
   }
   if (REMOTE_PORTFOLIO_URL) {
     const fromRemote = await fetchFromRemote();
     if (fromRemote) {
-      cache = fromRemote;
-      writePortfolioData(fromRemote).catch(() => {}); // seed local storage for offline / fast subsequent loads
-      return fromRemote;
+      cache = normalizePortfolio(fromRemote);
+      writePortfolioData(cache).catch(() => {}); // seed local storage for offline / fast subsequent loads
+      return cache;
     }
   }
   try {
     const fromIDB = await readFromIDB();
     if (fromIDB) {
-      cache = fromIDB;
-      writePortfolioData(fromIDB).catch(() => {}); // sync to localStorage + sessionStorage + cookie
-      return fromIDB;
+      cache = normalizePortfolio(fromIDB);
+      writePortfolioData(cache).catch(() => {}); // sync to localStorage + sessionStorage + cookie
+      return cache;
     }
   } catch (_) {}
   const local = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
@@ -177,9 +189,9 @@ async function getPortfolioDataAsyncImpl(): Promise<PortfolioData> {
     try {
       const data = JSON.parse(local) as PortfolioData;
       if (data && Array.isArray(data.projects)) {
-        cache = data;
-        writePortfolioData(data).catch(() => {});
-        return data;
+        cache = normalizePortfolio(data);
+        writePortfolioData(cache).catch(() => {});
+        return cache;
       }
     } catch (_) {}
   }
@@ -188,17 +200,17 @@ async function getPortfolioDataAsyncImpl(): Promise<PortfolioData> {
     try {
       const data = JSON.parse(sessionRaw) as PortfolioData;
       if (data && Array.isArray(data.projects)) {
-        cache = data;
-        writePortfolioData(data).catch(() => {}); // sync back to IDB and localStorage
-        return data;
+        cache = normalizePortfolio(data);
+        writePortfolioData(cache).catch(() => {}); // sync back to IDB and localStorage
+        return cache;
       }
     } catch (_) {}
   }
   const fromCookie = readFromCookie();
   if (fromCookie) {
-    cache = fromCookie;
-    writePortfolioData(fromCookie).catch(() => {});
-    return fromCookie;
+    cache = normalizePortfolio(fromCookie);
+    writePortfolioData(cache).catch(() => {});
+    return cache;
   }
   cache = INITIAL_DATA;
   return INITIAL_DATA;
@@ -337,9 +349,9 @@ export async function updatePublications(list: Publication[]): Promise<Portfolio
   return updated;
 }
 
-export async function updateRecognitions(list: Recognition[]): Promise<PortfolioData> {
+export async function updateRecognition(list: Recognition[]): Promise<PortfolioData> {
   const data = await getPortfolioDataAsync();
-  const updated = { ...data, recognitions: list };
+  const updated = { ...data, recognition: list };
   await writePortfolioData(updated);
   return updated;
 }

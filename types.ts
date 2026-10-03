@@ -81,10 +81,12 @@ export interface PortfolioData {
   awards?: Award[];
   /** Publications list. Renders on the About page only when populated. */
   publications?: Publication[];
-  /** Recognitions list. Renders on the About page only when populated. */
-  recognitions?: Recognition[];
+  /** Recognition entries. Renders on the About page only when populated. */
+  recognition?: Recognition[];
   /** How the About page orders its list sections. Defaults to 'recent'. */
   aboutSectionSort?: AboutSectionSort;
   /** @deprecated Use contactMethods. Kept for backward compatibility; migrate at read time. */
   contact?: { email: string; instagramUrl?: string };
+  /** @deprecated Use recognition. Rows saved before the rename; migrated at read time. */
+  recognitions?: Recognition[];
 }

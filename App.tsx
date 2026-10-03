@@ -18,7 +18,7 @@ import {
   updateExhibitions,
   updateAwards,
   updatePublications,
-  updateRecognitions,
+  updateRecognition,
   updateAboutSectionSort,
 } from './services/storageService';
 import { PALETTE, HUES, INITIAL_DATA, LEADING } from './constants';
@@ -89,7 +89,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
   const exhibitions = (data.exhibitions && data.exhibitions.length > 0) ? data.exhibitions : (INITIAL_DATA.exhibitions ?? []);
   const awards = (data.awards && data.awards.length > 0) ? data.awards : (INITIAL_DATA.awards ?? []);
   const publications = data.publications ?? [];
-  const recognitions = data.recognitions ?? [];
+  const recognitionEntries = data.recognition ?? [];
   const sectionSort: AboutSectionSort = data.aboutSectionSort ?? 'recent';
 
   React.useEffect(() => { setAboutText(data.aboutMe); }, [data.aboutMe]);
@@ -144,14 +144,14 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
       },
     },
     {
-      label: 'Recognitions',
-      entries: recognitions.map((r) => ({ year: r.year, label: r.title, kind: r.kind })),
+      label: 'Recognition',
+      entries: recognitionEntries.map((r) => ({ year: r.year, label: r.title, kind: r.kind })),
       entryFieldLabel: 'Title',
       entryFieldPlaceholder: 'What it was for',
       kindPlaceholder: 'Selected / Shortlisted',
       itemNoun: 'recognition',
       onSave: async (rows: AboutEntry[]) => {
-        onRefresh(await updateRecognitions(rows.map((r) => ({ year: r.year, title: r.label, kind: r.kind }))));
+        onRefresh(await updateRecognition(rows.map((r) => ({ year: r.year, title: r.label, kind: r.kind }))));
       },
     },
   ];
