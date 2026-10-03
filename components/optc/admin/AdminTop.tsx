@@ -21,7 +21,7 @@ const AdminTop: React.FC<AdminTopProps> = ({ trail }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '14px 32px',
+          padding: '14px 28px',
         }}
       >
         <Link
@@ -65,7 +65,7 @@ const AdminTop: React.FC<AdminTopProps> = ({ trail }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '12px 32px',
+          padding: '12px 28px',
           borderTop: `1px solid ${ink}`,
           background: 'rgba(0,0,0,0.04)',
         }}

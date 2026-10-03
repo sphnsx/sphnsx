@@ -107,15 +107,15 @@ const DeploymentPage: React.FC = () => {
     <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: paper, color: ink, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif' }}>
       <AdminTop trail={['Admin', 'Deployment']} />
 
-      <section style={{ padding: '32px 32px 24px', borderBottom: `1px solid ${ink}` }}>
+      <section style={{ padding: '22px 28px 16px', borderBottom: `1px solid ${ink}` }}>
         <CapV2 size={10} color={muted}>Site operations</CapV2>
-        <h1 style={{ margin: '12px 0 0', fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>Deployment.</h1>
-        <p style={{ marginTop: 16, fontSize: 16, lineHeight: LEADING.body, color: muted, maxWidth: 720 }}>
+        <h1 style={{ margin: '12px 0 0', fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 40, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>Deployment.</h1>
+        <p style={{ marginTop: 12, fontSize: 16, lineHeight: LEADING.body, color: muted, maxWidth: 720 }}>
           Publishing, backups and domain configuration. Changes here affect the live site.
         </p>
       </section>
 
-      <section style={{ padding: '32px 32px 48px', display: 'flex', flexDirection: 'column', gap: 32 }}>
+      <section style={{ padding: '22px 28px 28px', display: 'flex', flexDirection: 'column', gap: 22 }}>
         {isSupabaseConfigured() && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <CapV2 size={10} color={muted}>01 · Live publish (automatic)</CapV2>
@@ -123,7 +123,7 @@ const DeploymentPage: React.FC = () => {
               When signed in, every save in Admin updates the live site instantly.
             </p>
             {supabaseUser ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', border: `1px solid ${ink}`, background: PALETTE.greySoft, gap: 16, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', border: `1px solid ${ink}`, background: PALETTE.greySoft, gap: 12, flexWrap: 'wrap' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ width: 8, height: 8, background: HUES.mint }} />
                   <CapV2 size={11}>Signed in · saves update the live site</CapV2>

@@ -32,7 +32,7 @@ const AdminLoginPage: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '14px 32px',
+          padding: '14px 28px',
           borderBottom: `1px solid ${ink}`,
           flexShrink: 0,
         }}
@@ -45,10 +45,10 @@ const AdminLoginPage: React.FC = () => {
       </div>
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 48 }}>
-        <form onSubmit={handleSubmit} style={{ width: 460, maxWidth: '100%', display: 'flex', flexDirection: 'column', gap: 32 }}>
+        <form onSubmit={handleSubmit} style={{ width: 460, maxWidth: '100%', display: 'flex', flexDirection: 'column', gap: 22 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <CapV2 size={11} color={muted}>Restricted access</CapV2>
-            <h1 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>
+            <h1 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 40, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>
               Admin login.
             </h1>
           </div>

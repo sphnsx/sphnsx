@@ -93,7 +93,7 @@ const TopRibbon: React.FC<TopRibbonProps> = ({ active = null }) => {
   if (isMobile) {
     return (
       <div style={{ borderBottom: `1px solid ${ink}`, flexShrink: 0, background: paper, position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
           {wordmark}
           <button
             type="button"
@@ -161,7 +161,7 @@ const TopRibbon: React.FC<TopRibbonProps> = ({ active = null }) => {
       }}
     >
       {wordmark}
-      <nav style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+      <nav style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
         {LINKS.map((l) => (
           <NavPill key={l.key} to={l.to} label={l.label} isActive={active === l.key} ink={ink} paper={paper} />
         ))}

@@ -52,7 +52,7 @@ class RootErrorBoundary extends React.Component<{ children: React.ReactNode }, S
         }}
       >
         <span style={{ ...label, color: muted }}>Something went wrong</span>
-        <h1 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 72, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 0.95 }}>
+        <h1 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 48, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 0.95 }}>
           Reload the page.
         </h1>
         <p style={{ margin: 0, maxWidth: 560, fontSize: 16, lineHeight: LEADING.body, color: muted }}>

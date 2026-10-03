@@ -104,6 +104,8 @@ const AboutListSection: React.FC<AboutListSectionProps> = ({
 
   const ink = PALETTE.textPrimary;
   const muted = PALETTE.textSecondary;
+  // Drives both the numerals and the bar's optical nudge, so the two cannot drift.
+  const yearSize = isMobile ? 26 : 36;
 
   if (entries.length === 0 && !showAdminControls) return null;
 
@@ -139,13 +141,13 @@ const AboutListSection: React.FC<AboutListSectionProps> = ({
 
   return (
     <section style={{ borderBottom: `1px solid ${ink}` }}>
-      <header style={{ display: 'flex', justifyContent: 'flex-end', padding: `16px ${padX}px` }}>
+      <header style={{ display: 'flex', justifyContent: 'flex-end', padding: `12px ${padX}px` }}>
         {/* The chip wears the hue of this section's newest entry. */}
         <TagPillV2 hue={sectionHue(entries)} label={label} size={isMobile ? 10 : 12} chip={isMobile ? 10 : 14} />
       </header>
 
       {showAdminControls && isEditing ? (
-        <div style={{ padding: `0 ${padX}px 16px`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ padding: `0 ${padX}px 12px`, display: 'flex', flexDirection: 'column', gap: 12 }}>
           {draft.map((e, i) => (
             <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', padding: 14, border: `1px solid ${ink}`, flexWrap: 'wrap' }}>
               <div style={{ width: 120 }}>
@@ -185,14 +187,14 @@ const AboutListSection: React.FC<AboutListSectionProps> = ({
                   alignItems: 'center',
                   padding: `12px ${padX}px`,
                   color: ink,
-                  gap: 16,
+                  gap: 12,
                 }}
               >
                 {/* Year (own cell) — chevron + year, no bar */}
                 <span
                   style={{
                     fontFamily: '"abril-text", ui-serif, Georgia, serif',
-                    fontSize: isMobile ? 32 : 48,
+                    fontSize: yearSize,
                     fontWeight: 500,
                     letterSpacing: '-0.04em',
                     lineHeight: 0.95,
@@ -214,7 +216,7 @@ const AboutListSection: React.FC<AboutListSectionProps> = ({
                     flexShrink: 0,
                     // Centre on the digits themselves, not on their line box.
                     position: 'relative',
-                    top: (isMobile ? 32 : 48) * YEAR_BODY_CENTRE_OFFSET_EM,
+                    top: yearSize * YEAR_BODY_CENTRE_OFFSET_EM,
                   }}
                 />
                 <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 24, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{row.label}</span>
@@ -224,13 +226,13 @@ const AboutListSection: React.FC<AboutListSectionProps> = ({
             ))
           ) : (
             showAdminControls && (
-              <div style={{ padding: `12px ${padX}px 16px` }}>
+              <div style={{ padding: `12px ${padX}px 12px` }}>
                 <CapV2 size={11} color={muted}>No {label.toLowerCase()} yet</CapV2>
               </div>
             )
           )}
           {showAdminControls && (
-            <div style={{ padding: `12px ${padX}px 16px` }}>
+            <div style={{ padding: `12px ${padX}px 12px` }}>
               <AdminBtn onClick={() => { setDraft(entries); setIsEditing(true); }}>
                 {entries.length ? `Edit ${label.toLowerCase()}` : `Add ${label.toLowerCase()}`}
               </AdminBtn>
