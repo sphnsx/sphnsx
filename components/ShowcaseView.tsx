@@ -11,7 +11,7 @@ import Footer from './optc/Footer';
 import CapV2 from './optc/CapV2';
 import ChipV2 from './optc/ChipV2';
 import TagPillV2 from './optc/TagPillV2';
-import YearMarkV2 from './optc/YearMarkV2';
+import YearMarkV2, { yearDigitsOffset, yearChipOffset } from './optc/YearMarkV2';
 
 interface ShowcaseProps {
   data: PortfolioData;
@@ -59,6 +59,17 @@ function yearNum(y: string): number {
 }
 
 const CYCLE_HUES = [HUES.coral, HUES.mint, HUES.yellow];
+
+/**
+ * The works index mark sizes, kept here because the project rows beneath each
+ * mark align to its parts: on phones a title starts at the year's digits, on
+ * desktop at the colour chip. Deriving both from the mark means they cannot
+ * drift apart when a size changes.
+ */
+const YEAR_MARK_MOBILE = { size: 28, barW: 24, barH: 6 };
+const YEAR_MARK_DESKTOP = { size: 48, barW: 38, barH: 9 };
+const GUTTER_MOBILE = 16;
+const GUTTER_DESKTOP = 32;
 
 /* ─── Pieces shared between desktop + mobile ──────────────────── */
 
@@ -151,7 +162,7 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
           return (
             <div key={y} style={{ borderBottom: gi < years.length - 1 ? `1px solid ${ink}` : 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
-                <YearMarkV2 year={y} hue={hue} size={28} barW={24} barH={6} />
+                <YearMarkV2 year={y} hue={hue} {...YEAR_MARK_MOBILE} />
               </div>
               {rows.map((p) => {
                 // Caption rule: when locations are populated, show them INSTEAD of the plate count.
@@ -167,8 +178,8 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
                   <Link
                     key={p.id}
                     to={projectPath(p)}
-                    // Flush left with the year mark above it, on the page gutter.
-                    style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '4px 16px 12px', textDecoration: 'none', color: ink }}
+                    // Indented to the year's digits above it, clearing the "> ".
+                    style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: `4px ${GUTTER_MOBILE}px 12px ${GUTTER_MOBILE + yearDigitsOffset(YEAR_MARK_MOBILE.size)}px`, textDecoration: 'none', color: ink }}
                   >
                     <span style={{ fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 24, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 0.98 }}>
                       {p.title}
@@ -195,7 +206,7 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
         return (
           <div key={y} style={{ borderBottom: gi < years.length - 1 ? `1px solid ${ink}` : 'none' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 32px 12px' }}>
-              <YearMarkV2 year={y} hue={hue} size={48} barW={38} barH={9} />
+              <YearMarkV2 year={y} hue={hue} {...YEAR_MARK_DESKTOP} />
             </div>
             {rows.map((p) => {
               // Caption rule: locations win over plate count when populated.
@@ -212,11 +223,10 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
                   to={projectPath(p)}
                   style={{
                     display: 'grid',
-                    // Was '160px 1fr …' with a counter in the first column; with the
-                    // counter gone the title takes the gutter, as it does on phones.
                     gridTemplateColumns: '1fr 320px 60px',
                     alignItems: 'baseline',
-                    padding: '12px 32px 12px',
+                    // Title starts at the colour chip of the year mark above it.
+                    padding: `12px ${GUTTER_DESKTOP}px 12px ${GUTTER_DESKTOP + yearChipOffset(YEAR_MARK_DESKTOP.size)}px`,
                     gap: 12,
                     textDecoration: 'none',
                     color: ink,

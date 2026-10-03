@@ -12,6 +12,26 @@ interface YearMarkV2Props {
 }
 
 /**
+ * Widths inside the mark, as fractions of its font size — the "> " arrow and a
+ * four-digit year. Measured from the live font and verified at two sizes, so
+ * callers can line other rows up with the mark's parts instead of guessing.
+ */
+const ARROW_EM = 0.51;
+const YEAR_DIGITS_EM = 2.07;
+/** Matches the component's own default `gap`. */
+const DEFAULT_GAP = 18;
+
+/** Left offset, in px, of the year's digits within a mark of this size. */
+export function yearDigitsOffset(size: number, gap: number = DEFAULT_GAP): number {
+  return Math.round(size * ARROW_EM + gap);
+}
+
+/** Left offset, in px, of the colour chip within a mark of this size. */
+export function yearChipOffset(size: number, gap: number = DEFAULT_GAP): number {
+  return Math.round(size * (ARROW_EM + YEAR_DIGITS_EM) + gap * 2);
+}
+
+/**
  * Abril Display sets lining figures, whose ink box sits well above the centre of
  * the line box `align-items: center` would otherwise use — so the bar reads low
  * against the year. This raises it onto the digits' centre; it is in em, so it
@@ -27,7 +47,7 @@ const YearMarkV2: React.FC<YearMarkV2Props> = ({
   color = PALETTE.textPrimary,
   barW = 44,
   barH = 10,
-  gap = 18,
+  gap = DEFAULT_GAP,
 }) => (
   <span
     style={{
