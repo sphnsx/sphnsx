@@ -200,13 +200,13 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
         </div>
 
         {/* HERO — title + meta only (cover plate image removed per request) */}
-        <section style={{ padding: '16px 16px 20px', borderBottom: `1px solid ${ink}` }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+        <section style={{ padding: '12px 16px 14px', borderBottom: `1px solid ${ink}` }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
             <TagPillV2 hue={hue} label={project.year} size={10} chip={10} />
           </div>
           <MarkerTitleV2 title={project.title} hue={hue} size={64} washHeight={0.5} />
           {meta.length > 0 && (
-            <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '72px 1fr', rowGap: 10, columnGap: 12 }}>
+            <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '72px 1fr', rowGap: 10, columnGap: 12 }}>
               {meta.map(([k, v], i) => (
                 <React.Fragment key={i}>
                   <CapV2 size={9} color={muted}>{k}</CapV2>
@@ -220,13 +220,13 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
         {/* STATEMENT — pull quote + body (no second horizontal divider) */}
         {allParas.length > 0 && (
           <section style={{ borderBottom: `1px solid ${ink}` }}>
-            <header style={{ display: 'flex', justifyContent: 'flex-end', padding: '18px 16px' }}>
+            <header style={{ display: 'flex', justifyContent: 'flex-end', padding: '12px 16px' }}>
               <TagPillV2 hue={HUES.yellow} label="Statement" size={10} chip={10} />
             </header>
             <div style={{ padding: '8px 16px 0' }}>
               <h2 style={{ margin: 0, fontFamily: '"sarvatrik-latin-variable", ui-serif, Georgia, serif', fontSize: 32, fontWeight: 400, fontStyle: 'italic', letterSpacing: '-0.02em', lineHeight: 1.2 }}>{pullQuote}</h2>
             </div>
-            <div style={{ padding: '16px 16px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ padding: '12px 16px 14px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               {bodyParas.map((p, i) => (
                 <p key={i} style={{ margin: 0, fontSize: 14, lineHeight: LEADING.bodySmall }}>{p}</p>
               ))}
@@ -249,7 +249,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
                 />
               ))
             ) : (
-              <div style={{ padding: '16px', textAlign: 'center' }}>
+              <div style={{ padding: '12px', textAlign: 'center' }}>
                 <CapV2 size={10} color={muted}>Upload plates via Admin</CapV2>
               </div>
             )}
@@ -257,7 +257,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
         )}
 
         {/* Bottom nav — back to All works + Next project */}
-        <section style={{ padding: '16px', borderBottom: `1px solid ${ink}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 'auto' }}>
+        <section style={{ padding: '12px', borderBottom: `1px solid ${ink}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 'auto' }}>
           <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             <Arrow dir="left" size={18} stroke={ink} />
             <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 18, fontWeight: 500 }}>All works</span>
@@ -285,7 +285,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
     return (
       <div className="fixed inset-0 flex flex-col overflow-y-auto" style={{ background: paper, color: ink }}>
         <TopRibbon active="works" />
-        <section style={{ padding: '24px 32px', borderBottom: `1px solid ${ink}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        <section style={{ padding: '16px 32px', borderBottom: `1px solid ${ink}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <CapV2 size={10} color={muted}>Editing project</CapV2>
             <h1 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>{editProject.title || initialProject.title}</h1>
@@ -297,7 +297,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
           </div>
         </section>
         <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr' }}>
-          <div style={{ borderRight: `1px solid ${ink}`, padding: '24px 28px 28px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div style={{ borderRight: `1px solid ${ink}`, padding: '16px 28px 20px', display: 'flex', flexDirection: 'column', gap: 18 }}>
             {([
               ['Title', editProject.title, (v: string) => setEditProject((p) => ({ ...p, title: v }))],
               ['Year', editProject.year, (v: string) => setEditProject((p) => ({ ...p, year: v }))],
@@ -336,8 +336,8 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
               />
             </div>
           </div>
-          <div style={{ padding: '24px 28px 28px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+          <div style={{ padding: '16px 28px 20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <CapV2 size={10}>Plates · {String(editProject.gallery.length).padStart(2, '0')}</CapV2>
               <label style={{ cursor: 'pointer' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 14px', border: `1px solid ${ink}`, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', color: ink }}>+ Upload</span>
@@ -398,7 +398,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '16px 32px',
+          padding: '12px 32px',
           borderBottom: `1px solid ${ink}`,
           flexShrink: 0,
         }}
@@ -428,15 +428,15 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
       </div>
 
       {/* HERO — title + meta only (cover plate image + counter removed per request) */}
-      <section style={{ background: paper, borderBottom: `1px solid ${ink}`, padding: '28px 32px 40px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 24 }}>
+      <section style={{ background: paper, borderBottom: `1px solid ${ink}`, padding: '20px 32px 28px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 16 }}>
           <TagPillV2 hue={hue} label={project.year} />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <MarkerTitleV2 title={project.title} hue={hue} size={120} washHeight={0.5} />
           {meta.length > 0 && (
-            <div style={{ marginTop: 26, display: 'grid', gridTemplateColumns: '100px 1fr', rowGap: 16, columnGap: 16, maxWidth: 520 }}>
+            <div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: '100px 1fr', rowGap: 16, columnGap: 16, maxWidth: 520 }}>
               {meta.map(([k, v], i) => (
                 <React.Fragment key={i}>
                   <CapV2 size={10} color={muted}>{k}</CapV2>
@@ -449,7 +449,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
             <a
               href="#plates"
               style={{
-                marginTop: 26,
+                marginTop: 18,
                 alignSelf: 'flex-start',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -472,10 +472,10 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
         <section style={{ borderBottom: `1px solid ${ink}` }} id="plates">
           {allParas.length > 0 && (
             <>
-              <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '24px 32px', gap: 16 }}>
+              <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '16px 32px', gap: 16 }}>
                 <TagPillV2 hue={HUES.yellow} label="Statement" />
               </header>
-              <div style={{ padding: '24px 32px 24px', borderBottom: `1px solid ${ink}` }}>
+              <div style={{ padding: '16px 32px 16px', borderBottom: `1px solid ${ink}` }}>
                 {/* Editorial pull quote: lighter weight, italic, generous leading — easier to read for long sentences. */}
                 <h2 style={{ margin: 0, fontFamily: '"sarvatrik-latin-variable", ui-serif, Georgia, serif', fontSize: 68, fontWeight: 400, fontStyle: 'italic', letterSpacing: '-0.025em', lineHeight: 1.18, maxWidth: 1100 }}>{pullQuote}</h2>
               </div>
@@ -488,7 +488,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
           */}
           <div style={{ position: 'relative' }}>
             {/* Left 2/5 — all body paragraphs stacked (sets section height) */}
-            <div style={{ width: '40%', padding: '24px 32px', borderRight: `1px solid ${ink}`, display: 'flex', flexDirection: 'column', gap: 18, boxSizing: 'border-box' }}>
+            <div style={{ width: '40%', padding: '16px 32px', borderRight: `1px solid ${ink}`, display: 'flex', flexDirection: 'column', gap: 18, boxSizing: 'border-box' }}>
               {bodyParas.map((p, i) => (
                 <p key={i} style={{ margin: 0, fontSize: 16, lineHeight: LEADING.body }}>{p}</p>
               ))}
@@ -516,7 +516,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
                   />
                 ))
               ) : isAdmin ? (
-                <div style={{ padding: '28px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <div style={{ padding: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <CapV2 size={11} color={muted}>Upload plates via Admin</CapV2>
                 </div>
               ) : null}
@@ -526,7 +526,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
       )}
 
       {/* Bottom nav — both sides share the same chevron+label layout */}
-      <section style={{ borderBottom: `1px solid ${ink}`, padding: '24px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
+      <section style={{ borderBottom: `1px solid ${ink}`, padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
         <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
           <Arrow dir="left" size={22} stroke={ink} />
           <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em' }}>All works</span>

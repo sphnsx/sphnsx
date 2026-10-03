@@ -11,6 +11,14 @@ interface YearMarkV2Props {
   gap?: number;
 }
 
+/**
+ * Abril Display sets lining figures, whose ink box sits well above the centre of
+ * the line box `align-items: center` would otherwise use — so the bar reads low
+ * against the year. This raises it onto the digits' centre; it is in em, so it
+ * follows the `size` prop. Measured from the live font.
+ */
+const DIGIT_CENTRE_OFFSET_EM = -0.059;
+
 /** > YYYY ─ motif. The colour-bearing year header for the works index. */
 const YearMarkV2: React.FC<YearMarkV2Props> = ({
   year,
@@ -38,7 +46,7 @@ const YearMarkV2: React.FC<YearMarkV2Props> = ({
     <span>{year}</span>
     <span
       aria-hidden="true"
-      style={{ display: 'inline-block', width: barW, height: barH, background: hue, flexShrink: 0 }}
+      style={{ display: 'inline-block', width: barW, height: barH, background: hue, flexShrink: 0, position: 'relative', top: `${DIGIT_CENTRE_OFFSET_EM}em` }}
     />
   </span>
 );

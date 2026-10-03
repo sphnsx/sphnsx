@@ -14,6 +14,19 @@ export interface AboutEntry {
   kind?: string;
 }
 
+/**
+ * Abril Text sets years in OLD-STYLE figures: 2 and 0 sit on the x-height band
+ * while 6 and 8 ascend and 4, 5, 7 and 9 drop below the baseline. So a year's ink
+ * box moves with the digits in it — "2026" and "2024" do not share a centre — and
+ * chasing each year's own ink box would make the bars hop from row to row.
+ *
+ * The bar instead centres on the figures' body band, which is fixed per font: the
+ * baseline sits (fontAscent − fontDescent) / 2 = 0.406em below the line box centre
+ * a bar is otherwise aligned to, and the body band is 0.548em tall, leaving this
+ * much to nudge the bar down. Measured from the live font, not guessed.
+ */
+const YEAR_BODY_CENTRE_OFFSET_EM = 0.132;
+
 /** Swap `idx` with its neighbour in `dir`; returns the list untouched at either end. */
 export function moveInList<T>(list: T[], idx: number, dir: -1 | 1): T[] {
   const target = idx + dir;
@@ -126,13 +139,13 @@ const AboutListSection: React.FC<AboutListSectionProps> = ({
 
   return (
     <section style={{ borderBottom: `1px solid ${ink}` }}>
-      <header style={{ display: 'flex', justifyContent: 'flex-end', padding: `24px ${padX}px` }}>
+      <header style={{ display: 'flex', justifyContent: 'flex-end', padding: `16px ${padX}px` }}>
         {/* The chip wears the hue of this section's newest entry. */}
         <TagPillV2 hue={sectionHue(entries)} label={label} size={isMobile ? 10 : 12} chip={isMobile ? 10 : 14} />
       </header>
 
       {showAdminControls && isEditing ? (
-        <div style={{ padding: `0 ${padX}px 24px`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ padding: `0 ${padX}px 16px`, display: 'flex', flexDirection: 'column', gap: 12 }}>
           {draft.map((e, i) => (
             <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', padding: 14, border: `1px solid ${ink}`, flexWrap: 'wrap' }}>
               <div style={{ width: 120 }}>
@@ -170,7 +183,7 @@ const AboutListSection: React.FC<AboutListSectionProps> = ({
                   // even gaps on both sides via a single column-gap.
                   gridTemplateColumns: isMobile ? 'auto auto 1fr' : 'auto auto 1fr 320px 60px',
                   alignItems: 'center',
-                  padding: `18px ${padX}px`,
+                  padding: `12px ${padX}px`,
                   color: ink,
                   gap: 16,
                 }}
@@ -199,6 +212,9 @@ const AboutListSection: React.FC<AboutListSectionProps> = ({
                     background: hueForYear(row.year),
                     alignSelf: 'center',
                     flexShrink: 0,
+                    // Centre on the digits themselves, not on their line box.
+                    position: 'relative',
+                    top: (isMobile ? 32 : 48) * YEAR_BODY_CENTRE_OFFSET_EM,
                   }}
                 />
                 <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 24, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.2 }}>{row.label}</span>
@@ -208,13 +224,13 @@ const AboutListSection: React.FC<AboutListSectionProps> = ({
             ))
           ) : (
             showAdminControls && (
-              <div style={{ padding: `12px ${padX}px 24px` }}>
+              <div style={{ padding: `12px ${padX}px 16px` }}>
                 <CapV2 size={11} color={muted}>No {label.toLowerCase()} yet</CapV2>
               </div>
             )
           )}
           {showAdminControls && (
-            <div style={{ padding: `12px ${padX}px 24px` }}>
+            <div style={{ padding: `12px ${padX}px 16px` }}>
               <AdminBtn onClick={() => { setDraft(entries); setIsEditing(true); }}>
                 {entries.length ? `Edit ${label.toLowerCase()}` : `Add ${label.toLowerCase()}`}
               </AdminBtn>

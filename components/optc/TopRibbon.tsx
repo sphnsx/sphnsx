@@ -126,7 +126,7 @@ const TopRibbon: React.FC<TopRibbonProps> = ({ active = null }) => {
               display: 'flex',
               flexDirection: 'column',
               gap: 6,
-              padding: '4px 16px 16px',
+              padding: '4px 16px 12px',
               borderTop: `1px solid ${ink}`,
               background: paper,
             }}
@@ -155,7 +155,7 @@ const TopRibbon: React.FC<TopRibbonProps> = ({ active = null }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '18px 32px',
+        padding: '12px 32px',
         borderBottom: `1px solid ${ink}`,
         flexShrink: 0,
       }}

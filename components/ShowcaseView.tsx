@@ -91,14 +91,14 @@ const ConceptSection: React.FC<ConceptProps> = ({ description, mobile }) => {
   if (mobile) {
     return (
       <section style={{ borderBottom: `1px solid ${ink}` }}>
-        <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '18px 16px' }}>
+        <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '12px 16px' }}>
           <TagPillV2 hue={HUES.yellow} label="Concept" size={10} chip={10} />
         </header>
-        <div style={{ padding: '16px 16px 0', borderBottom: `1px solid ${ink}` }}>
+        <div style={{ padding: '12px 16px 0', borderBottom: `1px solid ${ink}` }}>
           <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 44, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>{quote}</h2>
         </div>
         {bodyParas.length > 0 && (
-          <div style={{ padding: '16px 16px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ padding: '12px 16px 12px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             {bodyParas.map((p, i) => (
               <p key={i} style={{ margin: 0, fontSize: 14, lineHeight: LEADING.bodySmall }}>{p}</p>
             ))}
@@ -110,14 +110,14 @@ const ConceptSection: React.FC<ConceptProps> = ({ description, mobile }) => {
 
   return (
     <section style={{ borderBottom: `1px solid ${ink}` }}>
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '24px 32px', gap: 16 }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '16px 32px', gap: 16 }}>
         <TagPillV2 hue={HUES.yellow} label="Concept" />
       </header>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'stretch' }}>
-        <div style={{ padding: '8px 32px 32px', display: 'flex', alignItems: 'flex-start' }}>
+        <div style={{ padding: '8px 32px 22px', display: 'flex', alignItems: 'flex-start' }}>
           <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 72, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1.02 }}>{quote}</h2>
         </div>
-        <div style={{ padding: '14px 32px 32px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ padding: '14px 32px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           {bodyParas.map((p, i) => (
             <p key={i} style={{ margin: 0, fontSize: 16, lineHeight: LEADING.body }}>{p}</p>
           ))}
@@ -142,7 +142,7 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
   if (mobile) {
     return (
       <section id="works" style={{ borderBottom: `1px solid ${ink}`, scrollMarginTop: 16 }}>
-        <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '18px 16px' }}>
+        <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '12px 16px' }}>
           <TagPillV2 hue={HUES.yellow} label="All works" size={10} chip={10} to="#works" />
         </header>
         {years.map((y, gi) => {
@@ -150,7 +150,7 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
           const hue = hueForYear(y);
           return (
             <div key={y} style={{ borderBottom: gi < years.length - 1 ? `1px solid ${ink}` : 'none' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 16px 8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 8px' }}>
                 <YearMarkV2 year={y} hue={hue} size={36} barW={32} barH={8} />
                 <CapV2 size={10} color={muted}>
                   {String(rows.length).padStart(2, '0')} / {String(rows.length).padStart(2, '0')}
@@ -171,7 +171,7 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
                     key={p.id}
                     to={projectPath(p)}
                     // Left padding 60 = 20 (section) + ~40 (width of `> ` at year size 36) so titles align with the `2` of `2025`.
-                    style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '4px 16px 16px 60px', textDecoration: 'none', color: ink }}
+                    style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '4px 16px 12px 60px', textDecoration: 'none', color: ink }}
                   >
                     <span style={{ fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 0.98 }}>
                       {p.title}
@@ -189,7 +189,7 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
 
   return (
     <section id="works" style={{ borderBottom: `1px solid ${ink}`, scrollMarginTop: 16 }}>
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '24px 32px', gap: 16 }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '16px 32px', gap: 16 }}>
         <TagPillV2 hue={HUES.yellow} label="All works" to="#works" />
       </header>
       {years.map((y, gi) => {
@@ -197,7 +197,7 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
         const hue = hueForYear(y);
         return (
           <div key={y} style={{ borderBottom: gi < years.length - 1 ? `1px solid ${ink}` : 'none' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 32px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 32px 12px' }}>
               <YearMarkV2 year={y} hue={hue} size={72} barW={56} barH={12} />
               <CapV2 size={11} color={muted}>
                 {String(rows.length).padStart(2, '0')} / {String(rows.length).padStart(2, '0')}
@@ -220,7 +220,7 @@ const WorksIndex: React.FC<IndexProps> = ({ years, byYear, mobile }) => {
                     display: 'grid',
                     gridTemplateColumns: '160px 1fr 320px 60px',
                     alignItems: 'baseline',
-                    padding: '14px 32px 24px',
+                    padding: '14px 32px 16px',
                     gap: 16,
                     textDecoration: 'none',
                     color: ink,
@@ -262,13 +262,13 @@ const AboutTeaser: React.FC<AboutTeaserProps> = ({ aboutMe, mobile }) => {
   if (mobile) {
     return (
       <section style={{ borderBottom: `1px solid ${ink}` }}>
-        <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '18px 16px' }}>
+        <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '12px 16px' }}>
           <TagPillV2 hue={HUES.mint} label="About" size={10} chip={10} to="/about" />
         </header>
-        <div style={{ padding: '16px 16px 0' }}>
+        <div style={{ padding: '12px 16px 0' }}>
           <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 80, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 1 }}>Silvia.</h2>
         </div>
-        <div style={{ padding: '16px 16px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ padding: '12px 16px 12px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           <p style={{ margin: 0, fontSize: 14, lineHeight: LEADING.bodySmall }}>{intro}</p>
           <Link
             to="/about"
@@ -293,15 +293,15 @@ const AboutTeaser: React.FC<AboutTeaserProps> = ({ aboutMe, mobile }) => {
 
   return (
     <section style={{ borderBottom: `1px solid ${ink}` }}>
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '24px 32px', gap: 16 }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '16px 32px', gap: 16 }}>
         <TagPillV2 hue={HUES.mint} label="About" to="/about" />
       </header>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'start' }}>
-        <div style={{ padding: '0 32px 32px', display: 'flex', alignItems: 'flex-start' }}>
+        <div style={{ padding: '0 32px 22px', display: 'flex', alignItems: 'flex-start' }}>
           <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 144, fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 1 }}>Silvia.</h2>
         </div>
         {/* Body text top-aligned with the cap height of "Silvia." (~22% of the 144px line). */}
-        <div style={{ padding: '24px 32px 32px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ padding: '16px 32px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <p style={{ margin: 0, fontSize: 18, lineHeight: LEADING.body, maxWidth: 520 }}>{intro}</p>
           <Link
             to="/about"
@@ -338,7 +338,7 @@ export const ContactRows: React.FC<ContactSectionProps> = ({ methods, mobile }) 
 
   if (mobile) {
     return (
-      <div style={{ padding: '16px 16px 18px' }}>
+      <div style={{ padding: '12px 16px 12px' }}>
         {methods.map((c, idx) => {
           const hue = CYCLE_HUES[idx % CYCLE_HUES.length];
           const isEmail = c.value.includes('@') && !c.value.startsWith('http');
@@ -349,7 +349,7 @@ export const ContactRows: React.FC<ContactSectionProps> = ({ methods, mobile }) 
               href={href}
               target={isEmail ? undefined : '_blank'}
               rel={isEmail ? undefined : 'noopener noreferrer'}
-              style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '18px 0', textDecoration: 'none', color: ink }}
+              style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '12px 0', textDecoration: 'none', color: ink }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <ChipV2 color={hue} size={10} />
@@ -368,7 +368,7 @@ export const ContactRows: React.FC<ContactSectionProps> = ({ methods, mobile }) 
   }
 
   return (
-    <div style={{ padding: '0 32px 32px' }}>
+    <div style={{ padding: '0 32px 22px' }}>
       {methods.map((c, idx) => {
         const hue = CYCLE_HUES[idx % CYCLE_HUES.length];
         const isEmail = c.value.includes('@') && !c.value.startsWith('http');
@@ -384,7 +384,7 @@ export const ContactRows: React.FC<ContactSectionProps> = ({ methods, mobile }) 
               gridTemplateColumns: '40px 60px 180px 1fr 40px',
               alignItems: 'center',
               gap: 16,
-              padding: '20px 0',
+              padding: '14px 0',
               textDecoration: 'none',
               color: ink,
             }}
@@ -432,26 +432,26 @@ const ContactSection: React.FC<{ mobile?: boolean }> = ({ mobile }) => {
   if (mobile) {
     return (
       <section style={{ borderBottom: `1px solid ${ink}` }}>
-        <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '18px 16px' }}>
+        <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '12px 16px' }}>
           <TagPillV2 hue={HUES.coral} label="Contact" size={10} chip={10} to="/contact" />
         </header>
-        <div style={{ padding: '16px 16px 0' }}>
+        <div style={{ padding: '12px 16px 0' }}>
           <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 80, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 1, textAlign: 'right' }}>Get in touch.</h2>
         </div>
-        <div style={{ padding: '16px 16px 18px', display: 'flex', justifyContent: 'flex-end' }}>{cta}</div>
+        <div style={{ padding: '12px 16px 12px', display: 'flex', justifyContent: 'flex-end' }}>{cta}</div>
       </section>
     );
   }
 
   return (
     <section style={{ borderBottom: `1px solid ${ink}` }}>
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '24px 32px', gap: 16 }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '16px 32px', gap: 16 }}>
         <TagPillV2 hue={HUES.coral} label="Contact" to="/contact" />
       </header>
-      <div style={{ padding: '24px 32px 0' }}>
+      <div style={{ padding: '16px 32px 0' }}>
         <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 168, fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 1, textAlign: 'right' }}>Get in touch.</h2>
       </div>
-      <div style={{ padding: '24px 32px 32px', display: 'flex', justifyContent: 'flex-end' }}>{cta}</div>
+      <div style={{ padding: '16px 32px 22px', display: 'flex', justifyContent: 'flex-end' }}>{cta}</div>
     </section>
   );
 };

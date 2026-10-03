@@ -206,8 +206,8 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
       <TopRibbon active="about" />
 
       {/* HERO */}
-      <section style={{ borderBottom: `1px solid ${ink}`, padding: `24px ${padX}px 40px` }}>
-        <header style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 0 18px' }}>
+      <section style={{ borderBottom: `1px solid ${ink}`, padding: `16px ${padX}px 28px` }}>
+        <header style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 0 12px' }}>
           <TagPillV2 hue={HUES.yellow} label="About" size={isMobile ? 10 : 12} chip={isMobile ? 10 : 14} />
         </header>
         <div
@@ -234,7 +234,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
           )}
         </div>
         {showAdminControls && (
-          <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
+          <div style={{ marginTop: 12, display: 'flex', gap: 10 }}>
             <label style={{ cursor: 'pointer' }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 14px', border: `1px solid ${ink}`, fontFamily: 'Sukhumvit Set, -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', color: ink }}>
                 {data.aboutImage ? 'Change photo' : 'Upload portrait'}
@@ -251,11 +251,11 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
       {/* BIO */}
       {(bioParas.length > 0 || (showAdminControls && isEditing)) && (
         <section style={{ borderBottom: `1px solid ${ink}` }}>
-          <header style={{ display: 'flex', justifyContent: 'flex-end', padding: `24px ${padX}px` }}>
+          <header style={{ display: 'flex', justifyContent: 'flex-end', padding: `16px ${padX}px` }}>
             <TagPillV2 hue={HUES.mint} label="Biography" size={isMobile ? 10 : 12} chip={isMobile ? 10 : 14} />
           </header>
           {showAdminControls && isEditing ? (
-            <div style={{ padding: `0 ${padX}px 32px`, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ padding: `0 ${padX}px 22px`, display: 'flex', flexDirection: 'column', gap: 16 }}>
               <RichTextEditor value={aboutText} onChange={setAboutText} placeholder="About me…" minHeight="16rem" />
               <div style={{ display: 'flex', gap: 10 }}>
                 <AdminBtn primary onClick={handleSave}>Save</AdminBtn>
@@ -269,7 +269,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                   {(() => {
                     const half = Math.ceil(bioParas.length / 2);
                     return [bioParas.slice(0, half), bioParas.slice(half)].map((col, i) => (
-                      <div key={i} style={{ padding: '8px 32px 32px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      <div key={i} style={{ padding: '8px 32px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
                         {col.map((p, j) => (
                           <p key={j} style={{ margin: 0, fontSize: 16, lineHeight: LEADING.body }}>{p}</p>
                         ))}
@@ -278,14 +278,14 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                   })()}
                 </div>
               ) : (
-                <div style={{ padding: '8px 16px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ padding: '8px 16px 12px', display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {bioParas.map((p, j) => (
                     <p key={j} style={{ margin: 0, fontSize: 14, lineHeight: LEADING.bodySmall }}>{p}</p>
                   ))}
                 </div>
               )}
               {showAdminControls && (
-                <div style={{ padding: `0 ${padX}px 18px` }}>
+                <div style={{ padding: `0 ${padX}px 12px` }}>
                   <AdminBtn onClick={() => setIsEditing(true)}>Edit biography</AdminBtn>
                 </div>
               )}
@@ -296,12 +296,12 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
 
       {/* PRACTICE — Working notes derived from the CV (static, not admin-editable for now) */}
       <section style={{ borderBottom: `1px solid ${ink}` }}>
-        <header style={{ display: 'flex', justifyContent: 'flex-end', padding: `24px ${padX}px` }}>
+        <header style={{ display: 'flex', justifyContent: 'flex-end', padding: `16px ${padX}px` }}>
           <TagPillV2 hue={HUES.coral} label="Practice" size={isMobile ? 10 : 12} chip={isMobile ? 10 : 14} />
         </header>
-        <div style={{ padding: `8px ${padX}px 32px` }}>
+        <div style={{ padding: `8px ${padX}px 22px` }}>
           <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: isMobile ? 56 : 96, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 1 }}>Working notes.</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(2, 1fr)', marginTop: 26 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(2, 1fr)', marginTop: 18 }}>
             {[
               ['Medium', 'Analogue film'],
               ['Cameras', 'Mamiya 7II · Contax G2 · Contax T3 · Pentax 17 · Polaroid SLR 690'],
@@ -309,7 +309,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
               <div
                 key={i}
                 style={{
-                  padding: '16px 18px 18px',
+                  padding: '12px 18px 12px',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 10,
@@ -325,7 +325,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
 
       {/* SECTION ORDER — admin picks the rule; it persists with the rest of the portfolio. */}
       {showAdminControls && (
-        <section style={{ borderBottom: `1px solid ${ink}`, padding: `16px ${padX}px`, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+        <section style={{ borderBottom: `1px solid ${ink}`, padding: `12px ${padX}px`, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
           <CapV2 size={10} color={muted}>Section order</CapV2>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <AdminBtn primary={sectionSort === 'recent'} disabled={isSavingSort} onClick={() => handleSortChange('recent')}>
@@ -359,7 +359,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
       ))}
 
       {/* BOTTOM NAV */}
-      <section style={{ borderBottom: `1px solid ${ink}`, padding: `24px ${padX}px`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
+      <section style={{ borderBottom: `1px solid ${ink}`, padding: `16px ${padX}px`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
         <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
           <Arrow dir="left" size={isMobile ? 18 : 22} stroke={ink} />
           <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Works</span>
@@ -416,7 +416,7 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
       <TopRibbon active="contact" />
 
       <section style={{ borderBottom: `1px solid ${ink}` }}>
-        <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: `24px ${padX}px`, gap: 16 }}>
+        <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: `16px ${padX}px`, gap: 16 }}>
           <TagPillV2 hue={HUES.coral} label="Contact" size={isMobile ? 10 : 12} chip={isMobile ? 10 : 14} />
         </header>
         <div style={{ padding: `${isMobile ? '20px' : '32px'} ${padX}px 0` }}>
@@ -426,7 +426,7 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
         </div>
 
         {showAdminControls && isEditing ? (
-          <div style={{ padding: `18px ${padX}px 32px`, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ padding: `12px ${padX}px 22px`, display: 'flex', flexDirection: 'column', gap: 14 }}>
             {editMethods.map((m, i) => (
               <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-end', padding: 14, border: `1px solid ${ink}`, flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: 160 }}>
@@ -450,7 +450,7 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
           <>
             <ContactRows methods={methods} mobile={isMobile} />
             {showAdminControls && (
-              <div style={{ padding: `0 ${padX}px 24px` }}>
+              <div style={{ padding: `0 ${padX}px 16px` }}>
                 <AdminBtn onClick={() => setIsEditing(true)}>Edit contact</AdminBtn>
               </div>
             )}
@@ -458,7 +458,7 @@ const ContactPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Por
         )}
       </section>
 
-      <section style={{ borderBottom: `1px solid ${ink}`, padding: `24px ${padX}px`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
+      <section style={{ borderBottom: `1px solid ${ink}`, padding: `16px ${padX}px`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
         <Link to="/" style={{ textDecoration: 'none', color: ink, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
           <Arrow dir="left" size={isMobile ? 18 : 22} stroke={ink} />
           <span style={{ fontFamily: '"abril-text", ui-serif, Georgia, serif', fontSize: isMobile ? 18 : 22, fontWeight: 500, letterSpacing: '-0.02em' }}>Works</span>
