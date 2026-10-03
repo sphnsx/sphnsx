@@ -10,7 +10,7 @@ import RichTextEditor from './RichTextEditor';
 import LocationsField from './admin/LocationsField';
 import { PortfolioData, Project } from '../types';
 import { projectPath } from '../utils/slug';
-import { PALETTE, HUES, hueForYear } from '../constants';
+import { PALETTE, HUES, hueForYear, LEADING } from '../constants';
 import Arrow from './Arrow';
 import TopRibbon from './optc/TopRibbon';
 import Footer from './optc/Footer';
@@ -228,7 +228,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
             </div>
             <div style={{ padding: '20px 20px 28px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               {bodyParas.map((p, i) => (
-                <p key={i} style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>{p}</p>
+                <p key={i} style={{ margin: 0, fontSize: 14, lineHeight: LEADING.bodySmall }}>{p}</p>
               ))}
             </div>
           </section>
@@ -490,7 +490,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
             {/* Left 2/5 — all body paragraphs stacked (sets section height) */}
             <div style={{ width: '40%', padding: '32px 40px', borderRight: `1px solid ${ink}`, display: 'flex', flexDirection: 'column', gap: 18, boxSizing: 'border-box' }}>
               {bodyParas.map((p, i) => (
-                <p key={i} style={{ margin: 0, fontSize: 16, lineHeight: 1.65 }}>{p}</p>
+                <p key={i} style={{ margin: 0, fontSize: 16, lineHeight: LEADING.body }}>{p}</p>
               ))}
             </div>
             {/* Right 3/5 — plates stacked, independently scrollable */}

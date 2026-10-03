@@ -9,7 +9,7 @@ import {
   getSupabaseUser,
 } from '../services/supabase';
 import type { User } from '@supabase/supabase-js';
-import { PALETTE, HUES } from '../constants';
+import { PALETTE, HUES, LEADING } from '../constants';
 import AdminTop from './optc/admin/AdminTop';
 import AdminBtn from './optc/admin/AdminBtn';
 import CapV2 from './optc/CapV2';
@@ -110,7 +110,7 @@ const DeploymentPage: React.FC = () => {
       <section style={{ padding: '32px 32px 24px', borderBottom: `1px solid ${ink}` }}>
         <CapV2 size={10} color={muted}>Site operations</CapV2>
         <h1 style={{ margin: '12px 0 0', fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1 }}>Deployment.</h1>
-        <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.55, color: muted, maxWidth: 720 }}>
+        <p style={{ marginTop: 16, fontSize: 16, lineHeight: LEADING.body, color: muted, maxWidth: 720 }}>
           Publishing, backups and domain configuration. Changes here affect the live site.
         </p>
       </section>
@@ -119,7 +119,7 @@ const DeploymentPage: React.FC = () => {
         {isSupabaseConfigured() && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <CapV2 size={10} color={muted}>01 · Live publish (automatic)</CapV2>
-            <p style={{ margin: '0 0 12px', fontSize: 14, color: muted, lineHeight: 1.55, maxWidth: 720 }}>
+            <p style={{ margin: '0 0 12px', fontSize: 14, color: muted, lineHeight: LEADING.body, maxWidth: 720 }}>
               When signed in, every save in Admin updates the live site instantly.
             </p>
             {supabaseUser ? (
@@ -158,7 +158,7 @@ const DeploymentPage: React.FC = () => {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <CapV2 size={10} color={muted}>02 · Manual publish (fallback)</CapV2>
-          <p style={{ margin: '0 0 12px', fontSize: 14, color: muted, lineHeight: 1.55, maxWidth: 720 }}>
+          <p style={{ margin: '0 0 12px', fontSize: 14, color: muted, lineHeight: LEADING.body, maxWidth: 720 }}>
             If live publish is offline, download portfolio.json and drop it into the public/ folder of the static site.
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -172,7 +172,7 @@ const DeploymentPage: React.FC = () => {
         {/* Storage migration — run once to move base64 plates out of the JSON row. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <CapV2 size={10} color={muted}>03 · Image storage</CapV2>
-          <p style={{ margin: '0 0 12px', fontSize: 14, color: muted, lineHeight: 1.55, maxWidth: 720 }}>
+          <p style={{ margin: '0 0 12px', fontSize: 14, color: muted, lineHeight: LEADING.body, maxWidth: 720 }}>
             Move existing inline base64 plate images to Supabase Storage. The JSON row drops from
             many megabytes to a few KB so saves never hit the statement timeout. Re-runnable — only
             images that aren't yet in Storage are uploaded.
@@ -193,7 +193,7 @@ const DeploymentPage: React.FC = () => {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <CapV2 size={10} color={muted}>04 · Domain setup</CapV2>
-          <p style={{ margin: 0, fontSize: 14, color: muted, lineHeight: 1.55, maxWidth: 720 }}>
+          <p style={{ margin: 0, fontSize: 14, color: muted, lineHeight: LEADING.body, maxWidth: 720 }}>
             Configure your custom domain at your DNS provider. DNS changes can take 24–48 hours to propagate globally.
           </p>
         </div>

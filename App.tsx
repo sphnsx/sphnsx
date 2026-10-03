@@ -21,7 +21,7 @@ import {
   updateRecognitions,
   updateAboutSectionSort,
 } from './services/storageService';
-import { PALETTE, HUES, INITIAL_DATA } from './constants';
+import { PALETTE, HUES, INITIAL_DATA, LEADING } from './constants';
 import { AdminAuthProvider, useAdminAuth } from './contexts/AdminAuthContext';
 import { useIsMobile } from './hooks/useMediaQuery';
 import RichTextEditor from './components/RichTextEditor';
@@ -271,7 +271,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
                     return [bioParas.slice(0, half), bioParas.slice(half)].map((col, i) => (
                       <div key={i} style={{ padding: '8px 40px 48px', display: 'flex', flexDirection: 'column', gap: 16 }}>
                         {col.map((p, j) => (
-                          <p key={j} style={{ margin: 0, fontSize: 16, lineHeight: 1.65 }}>{p}</p>
+                          <p key={j} style={{ margin: 0, fontSize: 16, lineHeight: LEADING.body }}>{p}</p>
                         ))}
                       </div>
                     ));
@@ -280,7 +280,7 @@ const AboutPage: React.FC<{ data: PortfolioData; onRefresh: (updatedData?: Portf
               ) : (
                 <div style={{ padding: '8px 20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {bioParas.map((p, j) => (
-                    <p key={j} style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>{p}</p>
+                    <p key={j} style={{ margin: 0, fontSize: 14, lineHeight: LEADING.bodySmall }}>{p}</p>
                   ))}
                 </div>
               )}

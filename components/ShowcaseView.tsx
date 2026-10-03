@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { PortfolioData, Project, ContactMethod } from '../types';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import { useIsMobile } from '../hooks/useMediaQuery';
-import { PALETTE, HUES, hueForYear, INITIAL_DATA } from '../constants';
+import { PALETTE, HUES, hueForYear, INITIAL_DATA, LEADING } from '../constants';
 import { projectPath } from '../utils/slug';
 import Arrow from './Arrow';
 import TopRibbon from './optc/TopRibbon';
@@ -100,7 +100,7 @@ const ConceptSection: React.FC<ConceptProps> = ({ description, mobile }) => {
         {bodyParas.length > 0 && (
           <div style={{ padding: '20px 20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             {bodyParas.map((p, i) => (
-              <p key={i} style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>{p}</p>
+              <p key={i} style={{ margin: 0, fontSize: 14, lineHeight: LEADING.bodySmall }}>{p}</p>
             ))}
           </div>
         )}
@@ -119,7 +119,7 @@ const ConceptSection: React.FC<ConceptProps> = ({ description, mobile }) => {
         </div>
         <div style={{ padding: '14px 40px 48px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           {bodyParas.map((p, i) => (
-            <p key={i} style={{ margin: 0, fontSize: 16, lineHeight: 1.6 }}>{p}</p>
+            <p key={i} style={{ margin: 0, fontSize: 16, lineHeight: LEADING.body }}>{p}</p>
           ))}
         </div>
       </div>
@@ -269,7 +269,7 @@ const AboutTeaser: React.FC<AboutTeaserProps> = ({ aboutMe, mobile }) => {
           <h2 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 80, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 1 }}>Silvia.</h2>
         </div>
         <div style={{ padding: '20px 20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>{intro}</p>
+          <p style={{ margin: 0, fontSize: 14, lineHeight: LEADING.bodySmall }}>{intro}</p>
           <Link
             to="/about"
             style={{
@@ -302,7 +302,7 @@ const AboutTeaser: React.FC<AboutTeaserProps> = ({ aboutMe, mobile }) => {
         </div>
         {/* Body text top-aligned with the cap height of "Silvia." (~22% of the 144px line). */}
         <div style={{ padding: '32px 40px 48px', display: 'flex', flexDirection: 'column', gap: 22 }}>
-          <p style={{ margin: 0, fontSize: 18, lineHeight: 1.55, maxWidth: 520 }}>{intro}</p>
+          <p style={{ margin: 0, fontSize: 18, lineHeight: LEADING.body, maxWidth: 520 }}>{intro}</p>
           <Link
             to="/about"
             style={{

@@ -1,5 +1,5 @@
 import React from 'react';
-import { PALETTE } from '../constants';
+import { PALETTE, LEADING } from '../constants';
 
 interface State {
   error: Error | null;
@@ -55,7 +55,7 @@ class RootErrorBoundary extends React.Component<{ children: React.ReactNode }, S
         <h1 style={{ margin: 0, fontFamily: '"abril-display", ui-serif, Georgia, serif', fontSize: 72, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 0.95 }}>
           Reload the page.
         </h1>
-        <p style={{ margin: 0, maxWidth: 560, fontSize: 16, lineHeight: 1.6, color: muted }}>
+        <p style={{ margin: 0, maxWidth: 560, fontSize: 16, lineHeight: LEADING.body, color: muted }}>
           {error.message || 'The page failed to render.'}
         </p>
         <button

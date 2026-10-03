@@ -79,6 +79,23 @@ export function hueForYear(year: string | number | undefined | null): string {
   return HUE_CYCLE[i];
 }
 
+/**
+ * Leading for running copy. Display type (hero titles, year marks) sets its own
+ * much tighter values inline; these are the paragraph settings.
+ *
+ * Abril Text has a tall x-height, so it reads tighter than its size suggests and
+ * does not need the 1.6+ leading a smaller-eyed serif would. Smaller copy keeps
+ * slightly more room, as short measures and small type need it to stay legible.
+ */
+export const LEADING = {
+  /** Paragraphs at 16px and up. */
+  body: 1.45,
+  /** Paragraphs at 13–14px. */
+  bodySmall: 1.5,
+  /** Meta rows, single-line values. */
+  meta: 1.3,
+} as const;
+
 /** Viewport width below this (px) is treated as phone for layout. */
 export const MOBILE_BREAKPOINT_PX = 768;
 
